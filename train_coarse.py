@@ -14,66 +14,18 @@ from eval import eval_net
 from unet import InvNet
 #from unet import LossNetwork
 
-from torch.utils.tensorboard import SummaryWriter
+#from torch.utils.tensorboard import SummaryWriter
 from utils.dataset import BasicDataset2
 from torch.utils.data import DataLoader, random_split
 import torchvision.models as models
+from vgg import VGGPerception
+
 
 vgg16 = models.vgg16(pretrained=True)
-dir_img = 'data/nyu_v1_images/'     ####### QM:change data directory path
-dir_features = 'data/nyu_v1_features/'
+dir_img = '../data/nyu_v1_images/'     ####### QM:change data directory path
+dir_features = '../data/nyu_v1_features/'
 dir_checkpoint = 'checkpoints/'
-dir_depth = 'data/nyu_v1_depth/'
-
-# vgg_model = vgg.vgg16(pretrained=True)
-# if torch.cuda.is_available():
-#     vgg_model.cuda()
-# loss_network = LossNetwork(vgg_model)
-# loss_network.eval()
-import torchvision
-
-########### QM:Perception loss need to change the input size ########
-class VGGPerceptualLoss(torch.nn.Module):
-    def __init__(self, resize=True):
-        super(VGGPerceptualLoss, self).__init__()
-        blocks = []
-        blocks.append(torchvision.models.vgg16(pretrained=True).features[:4].eval())
-        blocks.append(torchvision.models.vgg16(pretrained=True).features[4:9].eval())
-        blocks.append(torchvision.models.vgg16(pretrained=True).features[9:16].eval())
-        blocks.append(torchvision.models.vgg16(pretrained=True).features[16:23].eval())
-        for bl in blocks:
-            for p in bl:
-                p.requires_grad = False
-        self.blocks = torch.nn.ModuleList(blocks)
-        self.transform = torch.nn.functional.interpolate
-        self.mean = torch.nn.Parameter(torch.tensor([0.485, 0.456, 0.406]).view(1,3,1,1))
-        self.std = torch.nn.Parameter(torch.tensor([0.229, 0.224, 0.225]).view(1,3,1,1))
-        self.resize = resize
-
-    def forward(self, input, target, feature_layers=[0, 1, 2, 3], style_layers=[]):
-        if input.shape[1] != 3:
-            input = input.repeat(1, 3, 1, 1)
-            target = target.repeat(1, 3, 1, 1)
-        input = (input-self.mean) / self.std
-        target = (target-self.mean) / self.std
-        if self.resize:
-            input = self.transform(input, mode='bilinear', size=(224, 224), align_corners=False)
-            target = self.transform(target, mode='bilinear', size=(224, 224), align_corners=False)
-        loss = 0.0
-        x = input
-        y = target
-        for i, block in enumerate(self.blocks):
-            x = block(x)
-            y = block(y)
-            if i in feature_layers:
-                loss += torch.nn.functional.l1_loss(x, y)
-            if i in style_layers:
-                act_x = x.reshape(x.shape[0], x.shape[1], -1)
-                act_y = y.reshape(y.shape[0], y.shape[1], -1)
-                gram_x = act_x @ act_x.permute(0, 2, 1)
-                gram_y = act_y @ act_y.permute(0, 2, 1)
-                loss += torch.nn.functional.l1_loss(gram_x, gram_y)
-        return loss
+dir_depth = '../data/nyu_v1_depth/'
 
     
 def train_net(net,
@@ -110,12 +62,17 @@ def train_net(net,
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min' if net.n_classes > 1 else 'max', patience=2)
 
     #criterion = VGGPerceptualLoss()
-    pixel_loss = nn.L1Loss()       ##### QM: only L1 loss problem: image and feature not match
+    pixel_criterion = nn.L1Loss()       ##### QM: only L1 loss problem: image and feature not match
+    percepton_criterion = VGGPerception()
+    percepton_criterion.to(device=device)
+    l2_loss = nn.MSELoss()
     #torch.nn.functional.l1_loss
     #if net.n_classes > 1:
     #    criterion = nn.CrossEntropyLoss()
     #else:
     #    criterion = nn.BCEWithLogitsLoss()
+    pix_loss_wt = 0.5
+    per_loss_wt = 0.5
 
     for epoch in range(epochs):
         net.train()
@@ -136,10 +93,14 @@ def train_net(net,
 
                 pred = net(input_features)
                 cpred = (pred+1.)*127.5
-                print(type(cpred))
+                print(np.shape(true_imgs))
                 print(np.shape(cpred))
-                loss = pixel_loss(cpred, true_imgs)
-
+                
+                P_pred = percepton_criterion(cpred)
+                P_img = percepton_criterion(true_imgs)
+                perception_loss = ( l2_loss(P_pred[0],P_img[0]) + l2_loss(P_pred[1],P_img[1]) + l2_loss(P_pred[2],P_img[2])) / 3
+                pixel_loss = pixel_criterion(cpred,true_imgs)
+                loss = pixel_loss*pix_loss_wt + perception_loss*per_loss_wt
 
                 epoch_loss += loss.item()
                 #writer.add_scalar('Loss/train', loss.item(), global_step)
@@ -248,7 +209,7 @@ if __name__ == '__main__':
     #   - For 1 class and background, use n_classes=1
     #   - For 2 classes, use n_classes=1
     #   - For N > 2 classes, use n_classes=N
-    net = InvNet(n_channels=256, n_classes=1)   # input should be 256
+    net = InvNet(n_channels=32, n_classes=1)   # input should be 256, resize to 32 so ram enough
     logging.info(f'Network:\n'
                  f'\t{net.n_channels} input channels\n'
                  f'\t{net.n_classes} output channels (grey brightness)')

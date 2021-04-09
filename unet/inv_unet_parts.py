@@ -85,7 +85,7 @@ class OutConv(nn.Module):
         super(OutConv, self).__init__()
         self.outconv = nn.Sequential(
             nn.ReflectionPad2d((1, 1, 1, 1)),
-            nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1),
+            nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=1),
             nn.Tanh()
         )
     def forward(self, x):

@@ -35,7 +35,7 @@ class BasicDataset2(Dataset):
         #assert newW > 0 and newH > 0, 'Scale is too small'
         #pil_img = pil_img.resize((newW, newH))
         feature_nd = np.array(pil_feature)
-        #img_nd = np.resize(img_nd,(224,168,32))  #### QM: resize so ram enough
+        feature_nd = np.resize(feature_nd,(224,168,32))  #### QM: resize so ram enough
 
 
         #if len(img_nd.shape) == 2:
@@ -54,6 +54,7 @@ class BasicDataset2(Dataset):
         depth_file = glob(self.depth_dir + idx + '.*')
         feature_file = glob(self.feature_dir + idx + '.*')
         img_file = glob(self.imgs_dir + idx + '.*')
+        #cv2.imread(path,0)
 
         assert len(depth_file) == 1, \
             f'Either no mask or multiple masks found for the ID {idx}: {depth_file}'
@@ -73,11 +74,11 @@ class BasicDataset2(Dataset):
         feature = self.preprocess(feature, self.scale)   ### QM: the process only transpose channel, need more data augumentation
         img = np.array(img)
         #print(np.shape(img))   # return 480 x 640 height x width, but np.shape return 640x480
-        #img = np.resize(img,(170,226))
+        img = np.resize(img,(168,224))
         if len(img.shape) == 2:
             img = np.expand_dims(img, axis=2)
-        img_trans = img.transpose((2, 0, 1))  # CHW
-        #print(np.shape(img_trans))
+        
+        img_trans = img.transpose((2, 0, 1))  # CHWape(img_trans))
 
         return {
             'feature': torch.from_numpy(feature).type(torch.FloatTensor),
