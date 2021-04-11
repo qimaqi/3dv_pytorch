@@ -215,7 +215,7 @@ if __name__ == '__main__':
     #   - For 1 class and background, use n_classes=1
     #   - For 2 classes, use n_classes=1
     #   - For N > 2 classes, use n_classes=N
-    net = InvNet(n_channels=32, n_classes=1)   # input should be 256, resize to 32 so ram enough
+    net = InvNet(n_channels=256, n_classes=1)   # input should be 256, resize to 32 so ram enough
     logging.info(f'Network:\n'
                  f'\t{net.n_channels} input channels\n'
                  f'\t{net.n_classes} output channels (grey brightness)')

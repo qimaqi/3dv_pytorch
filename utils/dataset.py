@@ -171,8 +171,8 @@ class BasicDataset3(Dataset):
         img_trans = img_nd.transpose(( 2, 0, 1))    # batch
         #if img_trans.max() > 1:
         #    img_trans = img_trans / 255
-        feature_trans = np.resize(feature_trans,(32 ,168, 224))  #### QM: resize so ram enough
-        img_trans = np.resize(img_trans,(1,168,224))
+        #feature_trans = np.resize(feature_trans,(32 ,168, 224))  #### QM: resize so ram enough
+        #img_trans = np.resize(img_trans,(1,168,224))
 
         return feature_trans, img_trans
 
