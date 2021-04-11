@@ -1,3 +1,6 @@
+# Edited By Qi Ma 
+# qimaqi@student.ethz.ch
+
 import argparse
 import logging
 import os
@@ -12,19 +15,19 @@ import cv2
 
 from eval import eval_net
 from unet import InvNet
-#from unet import LossNetwork
 
 #from torch.utils.tensorboard import SummaryWriter
-from utils.dataset import BasicDataset2
+#from utils.dataset import BasicDataset2
 from utils.dataset import BasicDataset3
 from torch.utils.data import DataLoader, random_split
 import torchvision.models as models
 from vgg import VGGPerception
 
 
-vgg16 = models.vgg16(pretrained=True)
+
+#some default dir need images descripton, pos and depth. Attention this time desc and pos is in json !!!!!!!!!!
 dir_img = '../data/nyu_v1_images/'     ####### QM:change data directory path
-dir_features = '../data/nyu_v1_features/'
+#dir_features = '../data/nyu_v1_features/'
 dir_desc = '../data/nyu_v1_desc/'
 dir_checkpoint = 'checkpoints/'
 dir_depth = '../data/nyu_v1_depth/'
@@ -33,8 +36,7 @@ dir_pos = '../data/nyu_v1_pos/'
 def train_net(net,
               device,
               pct_3D_points,
-              crop_size,
-              scale_size, 
+              crop_size, 
               per_loss_wt,
               pix_loss_wt,
               epochs=5,
@@ -44,7 +46,7 @@ def train_net(net,
               save_cp=False,  ### QM: no checkpoint
               img_scale=0.5):
 
-    #dataset = BasicDataset2(dir_img, dir_depth, dir_features, img_scale)
+    #dataset = BasicDataset2(dir_img, dir_depth, dir_features, img_scale)  #without dataaugumentation and load direct feature npz
     dataset = BasicDataset3(dir_img, dir_depth, dir_pos, dir_desc, img_scale, pct_3D_points, crop_size)
     n_val = int(len(dataset) * val_percent)
     n_train = len(dataset) - n_val
@@ -69,18 +71,16 @@ def train_net(net,
     optimizer = optim.RMSprop(net.parameters(), lr=lr, weight_decay=1e-8, momentum=0.9)
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min' if net.n_classes > 1 else 'max', patience=2)
 
-    #criterion = VGGPerceptualLoss()
     pixel_criterion = nn.L1Loss()       ##### QM: only L1 loss problem: image and feature not match
     percepton_criterion = VGGPerception()
     percepton_criterion.to(device=device)
     l2_loss = nn.MSELoss()
-    #torch.nn.functional.l1_loss
-    #if net.n_classes > 1:
+
+    #if net.n_classes > 1:    # RGB need to reform
     #    criterion = nn.CrossEntropyLoss()
     #else:
     #    criterion = nn.BCEWithLogitsLoss()
-    #pix_loss_wt = 0.5
-    #per_loss_wt = 0.5
+
 
     for epoch in range(epochs):
         net.train()
@@ -101,8 +101,6 @@ def train_net(net,
 
                 pred = net(input_features)
                 cpred = (pred+1.)*127.5
-                #print(np.shape(true_imgs))
-                #print(np.shape(cpred))
                 
                 P_pred = percepton_criterion(cpred)
                 P_img = percepton_criterion(true_imgs)
@@ -181,8 +179,6 @@ def get_args():
     #                help="%(type)s: Per-point attributes to inlcude in input tensor (default: %(default)s)")            
     parser.add_argument("--crop_size", type=int, default=256,     # to do
                         help="%(type)s: Size to crop images to (default: %(default)s)")
-    parser.add_argument("--scale_size", type=lambda s: [int(i) for i in s.split(',')], default=[296,394,512],    # to do
-                        help="int,int,int: Sizes to randomly scale images to before cropping them (default: 296,394,512)")
     parser.add_argument("--pct_3D_points", type=lambda s: [float(i) for i in s.split(',')][:2], default=[5.,100.],     # to do
                         help="float,float: Min and max percent of 3D points to keep when performing random subsampling for data augmentation "+\
                         "(default: 5.,100.)")
@@ -243,7 +239,6 @@ if __name__ == '__main__':
                   pct_3D_points = args.pct_3D_points,
                   img_scale=args.scale,
                   crop_size = args.crop_size,
-                  scale_size = args.scale_size,
                   per_loss_wt = args.per_loss_wt,
                   pix_loss_wt = args.pix_loss_wt,
                   val_percent=args.val / 100)

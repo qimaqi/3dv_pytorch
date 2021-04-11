@@ -119,25 +119,26 @@ class BasicDataset3(Dataset):
 
     @classmethod
     def preprocess(cls, feature, img, scale, crop_size):
-        # feature: HWC, img in np: HWC
-        h, w, c = np.shape(feature) # 480, 640, 256
-        #print(h,w,c)
-        #h2, w2 = np.shape(img)[:2]
-        # h is 480 when w is 640
+        # feature: HWC, img in np shape: HWC. img in size WHC
+        h, w, c = np.shape(feature) 
+        #print(h,w,c) # 480, 640, 256
+  
         feature_nd = np.array(feature)
         img_nd = np.array(img)
-        if len(img_nd.shape) == 2:
+
+        if len(img_nd.shape) == 2:  # add channel to grey image
             img_nd = np.expand_dims(img_nd, axis=2)  # HWC
 
         #print(img_nd.shape)
         #print(feature_nd.shape)
+
         if scale != 1:
-            step = (1.0 /scale)  #1/scale better be a integer  down to intger, step 1.6 ?
+            step = (1.0 /scale)  # Attention here, in the outside of images may have lost problem
             w_num = 0
             h_num = 0
             newW, newH = int(scale * w), int(scale * h)
             assert newW > 0 and newH > 0, 'Scale is too small'
-            new_img = np.zeros([newH,newW])
+            new_img = np.zeros([newH,newW])   
             new_feature = np.zeros([newH,newW,c])
             for i in range(h):
                 for j in range(w):
@@ -160,7 +161,7 @@ class BasicDataset3(Dataset):
 
         # HWC to CHW 
         feature_trans = feature_nd.transpose((2, 0, 1)) # channel x 480 x 640
-        feature_trans = (feature_trans/127.5)-1
+        #feature_trans = (feature_trans/127.5)-1   # normalization 127.5 is for RGB, do we need this number here?
         img_trans = img_nd.transpose(( 2, 0, 1))    # batch
         #if img_trans.max() > 1:
         #    img_trans = img_trans / 255
