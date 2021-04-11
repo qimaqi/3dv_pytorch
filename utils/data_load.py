@@ -42,9 +42,10 @@ def Mat2img():
 
 def load_json(path):
     f = open(path,'r')
+    #with open(path,'r', encoding='utf-8') as f:
     content = f.read()
     a = json.loads(content)
-    return a
+    return a.popitem()[1]
 
 def load_img(path,mode=0):
     # mode 1 color,0 grey scale, -1 unchange

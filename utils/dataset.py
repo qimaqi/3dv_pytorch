@@ -6,8 +6,17 @@ import torch
 from torch.utils.data import Dataset
 import logging
 from PIL import Image
-#import cv2 
 
+
+from utils import data_load
+
+
+# #import cv2 
+# def load_json(path):
+#     f = open(path,'r')
+#     content = f.read()
+#     a = json.loads(content)
+#     return a.popitem()[1]
 
 ###### QM:very important to change
 # problem1: the load npz is 640x480x256, np.shape is always 640x480 when image size is 480 x 640
@@ -90,12 +99,15 @@ class BasicDataset2(Dataset):
 
 
 
-class BasicDataset(Dataset):
-    def __init__(self, imgs_dir, masks_dir, scale=1, mask_suffix=''):
+class BasicDataset3(Dataset):
+    def __init__(self, imgs_dir, depth_dir, pos_dir, desc_dir, scale, pct_3D_points, crop_size):
         self.imgs_dir = imgs_dir
-        self.masks_dir = masks_dir
+        self.pos_dir = pos_dir
+        self.desc_dir = desc_dir
+        self.depth_dir = depth_dir
         self.scale = scale
-        self.mask_suffix = mask_suffix
+        self.pct_3D_points = pct_3D_points
+        self.crop_size = crop_size
         assert 0 < scale <= 1, 'Scale must be between 0 and 1'
 
         self.ids = [splitext(file)[0] for file in listdir(imgs_dir)
@@ -106,48 +118,106 @@ class BasicDataset(Dataset):
         return len(self.ids)
 
     @classmethod
-    def preprocess(cls, pil_img, scale):
-        w, h = pil_img.size
-        newW, newH = int(scale * w), int(scale * h)
-        assert newW > 0 and newH > 0, 'Scale is too small'
-        pil_img = pil_img.resize((newW, newH))
-
-        img_nd = np.array(pil_img)
-
+    def preprocess(cls, feature, img, scale, crop_size):
+        # feature: HWC, img in np: HWC
+        h, w, c = np.shape(feature) # 480, 640, 256
+        #print(h,w,c)
+        #h2, w2 = np.shape(img)[:2]
+        # h is 480 when w is 640
+        feature_nd = np.array(feature)
+        img_nd = np.array(img)
         if len(img_nd.shape) == 2:
-            img_nd = np.expand_dims(img_nd, axis=2)
+            img_nd = np.expand_dims(img_nd, axis=2)  # HWC
 
-        # HWC to CHW
-        img_trans = img_nd.transpose((2, 0, 1))
-        if img_trans.max() > 1:
-            img_trans = img_trans / 255
+        #print(img_nd.shape)
+        #print(feature_nd.shape)
+        if scale != 1:
+            step = (1.0 /scale)  #1/scale better be a integer  down to intger, step 1.6 ?
+            w_num = 0
+            h_num = 0
+            newW, newH = int(scale * w), int(scale * h)
+            assert newW > 0 and newH > 0, 'Scale is too small'
+            new_img = np.zeros([newH,newW])
+            new_feature = np.zeros([newH,newW,c])
+            for i in range(h):
+                for j in range(w):
+                    if (i == int(h_num * step) and (j == int(w_num * step))):
+                        new_img[h_num,w_num] = img_nd[i,j,:]
+                        new_feature[h_num,w_num] = feature_nd[i,j,:]
+                        w_num += 1
+                        h_num += 1
+            print('new size',w_num,h_num)
+            w, h = newW, newH
+            feature_nd = new_feature
+            img_nd = new_img
 
-        return img_trans
+        crop_rand_seed_w = torch.rand(1)
+        crop_rand_seed_h = torch.rand(1)
+        crop_w = int(torch.floor((w - crop_size) * crop_rand_seed_w))
+        crop_h = int(torch.floor((h - crop_size) * crop_rand_seed_h))
+        feature_nd = feature_nd[crop_w:crop_w+crop_size, crop_h:crop_h+crop_size,:]
+        img_nd = img_nd[crop_w:crop_w+crop_size, crop_h:crop_h+crop_size,:]
+
+        # HWC to CHW 
+        feature_trans = feature_nd.transpose((2, 0, 1)) # channel x 480 x 640
+        feature_trans = (feature_trans/127.5)-1
+        img_trans = img_nd.transpose(( 2, 0, 1))    # batch
+        #if img_trans.max() > 1:
+        #    img_trans = img_trans / 255
+        feature_trans = np.resize(feature_trans,(32 ,168, 224))  #### QM: resize so ram enough
+        img_trans = np.resize(img_trans,(1,168,224))
+
+        return feature_trans, img_trans
 
     def __getitem__(self, i):
         idx = self.ids[i]
-        mask_file = glob(self.masks_dir + idx + self.mask_suffix + '.*')
-        img_file = glob(self.imgs_dir + idx + '.*')
+        depth_file = glob(self.depth_dir + idx + '.*')  # one depth npz
+        pos_file = glob(self.pos_dir + idx + '.*')      # one pos json !!! not npz here 
+        desc_file = glob(self.desc_dir + idx + '.*')    # one desc json !!! not npz here
+        img_file = glob(self.imgs_dir + idx + '.*')     # one image jpg
+        #cv2.imread(path,0)
+        #print('start get item',idx)
 
-        assert len(mask_file) == 1, \
-            f'Either no mask or multiple masks found for the ID {idx}: {mask_file}'
+        assert len(depth_file) == 1, \
+            f'Either no mask or multiple masks found for the ID {idx}: {depth_file}'
+        assert len(pos_file) == 1, \
+            f'Either no mask or multiple masks found for the ID {idx}: {feature_file}'
+        assert len(desc_file) == 1, \
+            f'Either no image or multiple images found for the ID {idx}: {img_file}'
         assert len(img_file) == 1, \
             f'Either no image or multiple images found for the ID {idx}: {img_file}'
-        mask = Image.open(mask_file[0])
-        img = Image.open(img_file[0])
 
-        assert img.size == mask.size, \
-            f'Image and mask {idx} should be the same size, but are {img.size} and {mask.size}'
+        #img = data_load.load_img(img_list[i])
+        depth = np.load(depth_file[0])['depth']
+        img = Image.open(img_file[0]).convert('L')
 
-        img = self.preprocess(img, self.scale)
-        mask = self.preprocess(mask, self.scale)
+        #print(pos_file)
+
+        pos = np.array(data_load.load_json(pos_file[0]))   # 3 x points_num  list, the third is confidence
+        desc = np.array(data_load.load_json(desc_file[0]))  # 256 x points_num  list, 256 features
+        pos_num = np.shape(pos)[1]
+        desc_num = np.shape(desc)[1]
+        assert pos_num == desc_num, 'superpoint number matching problem'
+        height, width = np.shape(img)  # 480,640
+        desc_length = np.shape(desc)[0]  # 256
+        #feature = np.zeros([width,height,desc_length])   # build a 640 x 480 x 256 array
+        feature = np.zeros([height,width,desc_length])    # build a 480 x 640 x 256 array   HWC
+        for j in range(pos_num):
+            x = int(pos[0][j])
+            y = int(pos[1][j])
+            feature[y,x] = desc[:,j]   # to compensate with zero
+        
+        assert np.shape(img) == feature.shape[:2], \
+            f'Image and feature {idx} should be the same size, but are {img.size} and {feature.shape[:2]}'
+
+        feature, img = self.preprocess(feature, img, self.scale, self.crop_size)   ### QM: the process only transpose channel, need more data augumentation
+    
 
         return {
-            'image': torch.from_numpy(img).type(torch.FloatTensor),
-            'mask': torch.from_numpy(mask).type(torch.FloatTensor)
+            'feature': torch.from_numpy(feature).type(torch.FloatTensor),
+            'image': torch.from_numpy(img).type(torch.FloatTensor)  # ground truth need to be considered
         }
 
-
-class CarvanaDataset(BasicDataset):
+class CarvanaDataset(BasicDataset2):
     def __init__(self, imgs_dir, masks_dir, scale=1):
         super().__init__(imgs_dir, masks_dir, scale, mask_suffix='_mask')
