@@ -159,6 +159,12 @@ class BasicDataset3(Dataset):
         feature_nd = feature_nd[crop_w:crop_w+crop_size, crop_h:crop_h+crop_size,:]
         img_nd = img_nd[crop_w:crop_w+crop_size, crop_h:crop_h+crop_size,:]
 
+        # random flip
+        flip_rand_seed = torch.rand(1)
+        if flip_rand_seed <= 0.3:
+            feature_nd = np.flip(feature_nd,1)  # left right flip 
+            img_nd = np.flip(img_nd,1)
+
         # HWC to CHW 
         feature_trans = feature_nd.transpose((2, 0, 1)) # channel x 480 x 640
         #feature_trans = (feature_trans/127.5)-1   # normalization 127.5 is for RGB, do we need this number here?
