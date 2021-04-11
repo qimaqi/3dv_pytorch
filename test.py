@@ -25,25 +25,48 @@ import torch
 from torch.utils.data import Dataset
 import logging
 from PIL import Image
+import json
 
 imgs_dir = '../data/nyu_v1_images/'
 dir_features = '../data/nyu_v1_features/'
 ids = [splitext(file)[0] for file in listdir(imgs_dir) if not file.startswith('.')]
 img_file = glob(imgs_dir + ids[0] + '.*')
 feature_file = glob(dir_features + ids[0] + '.*')
+#print(feature_file)
+f1 = np.arange(100)
+print(f1)
+print(f1.shape)
+f1.resize(5,20)
+print(f1)
+f1.resize(20,5)
+print(f1)
+
+
 #img = Image.open(img_file[0]).convert('L')
-img = cv2.imread(img_file[0],0)
-img2 = cv2.imread(img_file[0],0)
+#img = cv2.imread(img_file[0],0)
+#img2 = cv2.imread(img_file[0],0)
 #feature = np.load(feature_file[0])['feature']
 # print(img.size)
 # print(np.shape(img))
-# print(np.shape(feature)[:2])
+#print(np.shape(feature))
+#print(feature[:40,:40,0])
+#f1 = {}
+#f1['feature1'] = feature[:32,:24,0].tolist()
+#w = 320
+#h = 240
+#feature =  np.resize(feature,(w,h,256))
+#f1['feature2'] = feature[:32,:24,0].tolist()
+#print(feature[:40,:40,0])
 # HWC to CHW ... in our feature which is 640x480 WHC -> CHW
+#path = './resizeshow.json'
+#with open(path,'w') as desc_dict_file:
+    #desc_dict_file.write(desc_dict_w)
+#    json.dump(f1, desc_dict_file)
 #img_nd = feature
 #img_trans = img_nd.transpose((2, 1, 0))
 #img_trans = (img_trans/127.5)-1
-t1 = torch.from_numpy(img).type(torch.FloatTensor)
-t2 = torch.from_numpy(img2).type(torch.FloatTensor)
+#t1 = torch.from_numpy(img).type(torch.FloatTensor)
+#t2 = torch.from_numpy(img2).type(torch.FloatTensor)
 #print(img_trans.shape)
 #print(t2.shape[1])
 #pixel_loss = nn.L1Loss()
@@ -52,14 +75,14 @@ t2 = torch.from_numpy(img2).type(torch.FloatTensor)
 #print(grey.shape)
 #input = grey.repeat(1, 3, 1, 1)
 #img = np.expand_dims(img, axis=2)
-zero_channel_1 = np.zeros(img.shape)
-zero_channel_2 = np.zeros(img.shape)
+#zero_channel_1 = np.zeros(img.shape)
+#zero_channel_2 = np.zeros(img.shape)
 #rgb_img = np.concatenate((img,zero_channel_1,zero_channel_2),axis=2)
 #print(rgb_img.shape)
 #img_trans = rgb_img.transpose((2, 0, 1))  # CHW
-t0 = torch.from_numpy(img).type(torch.FloatTensor)
-t1 = torch.from_numpy(zero_channel_1).type(torch.FloatTensor)
-t2 = torch.from_numpy(zero_channel_2).type(torch.FloatTensor)
+#t0 = torch.from_numpy(img).type(torch.FloatTensor)
+#t1 = torch.from_numpy(zero_channel_1).type(torch.FloatTensor)
+#t2 = torch.from_numpy(zero_channel_2).type(torch.FloatTensor)
 #t_3 = torch.cat((t0,t1,t2),0)
 
 #print(t0.shape)
@@ -79,7 +102,7 @@ t2 = torch.from_numpy(zero_channel_2).type(torch.FloatTensor)
 #print(input.shape)
 
 
-import torchvision
+#import torchvision
 
 class VGGPerceptualLoss(torch.nn.Module):
     def __init__(self, resize=True):
