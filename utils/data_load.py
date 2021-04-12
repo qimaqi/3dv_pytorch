@@ -10,7 +10,7 @@ import json
 import cv2
 import os
 
-img_path = '../nyu_depth_data_labeled.mat'
+#img_path = '/cluster/scratch /nyu_depth_data_labeled.mat'
 pos_path = '../desc_dict_all.json'
 des_path = '../pos_dict_all.json'
 output_path = 'H:/nyu/nyu_v1_images' 

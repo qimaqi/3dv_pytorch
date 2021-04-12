@@ -26,11 +26,11 @@ from vgg import VGGPerception
 
 
 #some default dir need images descripton, pos and depth. Attention this time desc and pos is in json !!!!!!!!!!
-dir_img = '../data/nyu_v1_images/'     ####### QM:change data directory path
+dir_img = '/cluster/scratch/qimaqi/nyu_v1_images/'     ####### QM:change data directory path
 #dir_features = '../data/nyu_v1_features/'
-dir_desc = '../data/nyu_v1_desc/'
+dir_desc = '/cluster/scratch/qimaqi/nyu_v1_desc/'
 dir_checkpoint = 'checkpoints/'
-dir_depth = '../data/nyu_v1_depth/'
+dir_depth = '/cluster/scratch/qimaqi/nyu_v1_depth/'
 dir_pos = '../data/nyu_v1_pos/'
     
 def train_net(net,
@@ -40,7 +40,7 @@ def train_net(net,
               per_loss_wt,
               pix_loss_wt,
               epochs=5,
-              batch_size=1,
+              batch_size=4,
               lr=0.001,
               val_percent=0.1,
               save_cp=False,  ### QM: no checkpoint
@@ -51,8 +51,8 @@ def train_net(net,
     n_val = int(len(dataset) * val_percent)
     n_train = len(dataset) - n_val
     train, val = random_split(dataset, [n_train, n_val])
-    train_loader = DataLoader(train, batch_size=batch_size, shuffle=True, num_workers=0, pin_memory=True)
-    val_loader = DataLoader(val, batch_size=batch_size, shuffle=False, num_workers=0, pin_memory=True, drop_last=True)
+    train_loader = DataLoader(train, batch_size=batch_size, shuffle=True, num_workers=8, pin_memory=True)
+    val_loader = DataLoader(val, batch_size=batch_size, shuffle=False, num_workers=8, pin_memory=True, drop_last=True)
 
     #writer = SummaryWriter(comment=f'LR_{lr}_BS_{batch_size}_SCALE_{img_scale}')
     global_step = 0
@@ -165,7 +165,7 @@ def get_args():
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('-e', '--epochs', metavar='E', type=int, default=1,
                         help='Number of epochs', dest='epochs')
-    parser.add_argument('-b', '--batch-size', metavar='B', type=int, nargs='?', default=1,
+    parser.add_argument('-b', '--batch-size', metavar='B', type=int, nargs='?', default=8,
                         help='Batch size', dest='batchsize')
     parser.add_argument('-l', '--learning-rate', metavar='LR', type=float, nargs='?', default=1e-4,
                         help='Learning rate', dest='lr')
@@ -182,8 +182,8 @@ def get_args():
     parser.add_argument("--pct_3D_points", type=lambda s: [float(i) for i in s.split(',')][:2], default=[5.,100.],     # to do
                         help="float,float: Min and max percent of 3D points to keep when performing random subsampling for data augmentation "+\
                         "(default: 5.,100.)")
-    parser.add_argument("--per_loss_wt", type=float, default=0.5, help="%(type)s: Perceptual loss weight (default: %(default)s)")   # to do
-    parser.add_argument("--pix_loss_wt", type=float, default=0.5, help="%(type)s: Pixel loss weight (default: %(default)s)")        # to do
+    parser.add_argument("--per_loss_wt", type=float, default=1.0, help="%(type)s: Perceptual loss weight (default: %(default)s)")   
+    parser.add_argument("--pix_loss_wt", type=float, default=1.0, help="%(type)s: Pixel loss weight (default: %(default)s)")        
     parser.add_argument("--max_iter", type=int, default=1e6, help="%(type)s: Stop training after MAX_ITER iterations (default: %(default)s)")
     parser.add_argument("--chkpt_freq", type=int, default=1e4, help="%(type)s: Save model state every CHKPT_FREQ iterations. Previous model state "+\
                         "is deleted after each new save (default: %(default)s)")   
