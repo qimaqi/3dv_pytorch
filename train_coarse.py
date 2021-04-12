@@ -11,7 +11,7 @@ import torch
 import torch.nn as nn
 from torch import optim
 from tqdm import tqdm
-import cv2
+#import cv2
 
 from eval import eval_net
 from unet import InvNet
