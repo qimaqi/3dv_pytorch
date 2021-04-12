@@ -130,7 +130,7 @@ class BasicDataset3(Dataset):
         if len(img_nd.shape) == 2:  # add channel to grey image
             img_nd = np.expand_dims(img_nd, axis=2)  # HWC
 
-        _, _, c2 = np.shape(img) 
+        _, _, c2 = np.shape(img_nd) 
 
         #print(img_nd.shape)
         #print(feature_nd.shape)
