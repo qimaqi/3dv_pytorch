@@ -150,7 +150,7 @@ class BasicDataset3(Dataset):
                         new_feature[h_num,w_num] = feature_nd[i,j,:]
                         w_num += 1
                         h_num += 1
-            print('new size',w_num,h_num)
+            #print('new size',w_num,h_num)
             w, h = newW, newH
             feature_nd = new_feature
             img_nd = new_img
