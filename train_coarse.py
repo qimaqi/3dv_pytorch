@@ -31,7 +31,7 @@ dir_img = '/cluster/scratch/qimaqi/nyu_v1_images/'     ####### QM:change data di
 dir_desc = '/cluster/scratch/qimaqi/nyu_v1_desc/'
 dir_checkpoint = 'checkpoints/'
 dir_depth = '/cluster/scratch/qimaqi/nyu_v1_depth/'
-dir_pos = '../data/nyu_v1_pos/'
+dir_pos = '/cluster/scratch/qimaqi/nyu_v1_pos/'
     
 def train_net(net,
               device,
