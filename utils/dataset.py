@@ -216,9 +216,10 @@ class BasicDataset3(Dataset):
         #feature = np.zeros([width,height,desc_length])   # build a 640 x 480 x 256 array
         feature = np.zeros([height,width,desc_length+1 ])    # build a 480 x 640 x 257 array   HWC
         for j in range(pos_num):
-            x = int(pos[0][j])
-            y = int(pos[1][j])
+            x = int(pos[0][j]) #640
+            y = int(pos[1][j]) #480
             feature[y,x,1:] = desc[:,j]   # to compensate with zero
+            feature[y,x,1] = np.array(img)[y,x]
         
         #assert np.shape(img) == feature.shape[:2], \
         #    f'Image and feature {idx} should be the same size, but are {img.size} and {feature.shape[:2]}'

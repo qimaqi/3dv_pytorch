@@ -39,8 +39,8 @@ def train_net(net,
               crop_size, 
               per_loss_wt,
               pix_loss_wt,
-              epochs=5,
-              batch_size=4,
+              epochs=10,
+              batch_size=8,
               lr=0.001,
               val_percent=0.1,
               save_cp=True,  ### QM: no checkpoint
@@ -80,8 +80,9 @@ def train_net(net,
     print('Images scaling: ', img_scale)
     print('Crop size: ', crop_size)
 
-    optimizer = optim.RMSprop(net.parameters(), lr=lr, weight_decay=1e-8, momentum=0.9)
-    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min' if net.n_classes > 1 else 'max', patience=2)
+    #optimizer = optim.RMSprop(net.parameters(), lr=lr, weight_decay=1e-8, momentum=0.9)
+    optimizer = optim.Adam(net.parameters(), lr=lr, eps = 1e-8, weight_decay=1e-8, momentum=0.9)
+    #scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min' if net.n_classes > 1 else 'max', patience=2)
 
     pixel_criterion = nn.L1Loss()       ##### QM: only L1 loss problem: image and feature not match
     percepton_criterion = VGGPerception()
@@ -144,16 +145,17 @@ def train_net(net,
                     #writer.add_histogram('weights/' + tag, value.data.cpu().numpy(), global_step)
                     #writer.add_histogram('grads/' + tag, value.grad.data.cpu().numpy(), global_step)
                 val_score = eval_net(net, val_loader, device)
-                scheduler.step(val_score)
+                #scheduler.step(val_score)
+                print('Coarsenet score: ',(val_score))
                 #writer.add_scalar('learning_rate', optimizer.param_groups[0]['lr'], global_step)
 
-                if net.n_classes > 1:
+                #if net.n_classes > 1:
                     #logging.info('Validation cross entropy: {}'.format(val_score))
-                    print('Validation loss: ',(val_score))
+                    #print('Validation loss: ',(val_score))
                     #writer.add_scalar('Loss/test', val_score, global_step)
-                else:
+                #else:
                     #logging.info('Validation Dice Coeff: {}'.format(val_score))
-                    print('Validation Dice Coeff: ',(val_score))
+                    #print('Validation Dice Coeff: ',(val_score))
                     #writer.add_scalar('Dice/test', val_score, global_step)
 
                 #writer.add_images('images', imgs, global_step)
@@ -177,15 +179,15 @@ def train_net(net,
 def get_args():
     parser = argparse.ArgumentParser(description='Train the CoarseNet on images and correspond superpoint descripton',
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('-e', '--epochs', metavar='E', type=int, default=1,
+    parser.add_argument('-e', '--epochs', metavar='E', type=int, default=10,
                         help='Number of epochs', dest='epochs')
-    parser.add_argument('-b', '--batch-size', metavar='B', type=int, nargs='?', default=4,
+    parser.add_argument('-b', '--batch-size', metavar='B', type=int, nargs='?', default=8,
                         help='Batch size', dest='batchsize')
     parser.add_argument('-l', '--learning-rate', metavar='LR', type=float, nargs='?', default=1e-4,
                         help='Learning rate', dest='lr')
     parser.add_argument('-f', '--load', dest='load', type=str, default=False,
                         help='Load model from a pretrain .pth file')
-    parser.add_argument('-s', '--scale', dest='scale', type=float, default=1,
+    parser.add_argument('-s', '--scale', dest='scale', type=float, default=0.8,
                         help='Downscaling factor of the images')
     parser.add_argument('-v', '--validation', dest='val', type=float, default=10.0,
                         help='Percent of the data that is used as validation (0-100)')
@@ -228,7 +230,7 @@ if __name__ == '__main__':
     #   - For 1 class and background, use n_classes=1
     #   - For 2 classes, use n_classes=1
     #   - For N > 2 classes, use n_classes=N
-    net = InvNet(n_channels=256, n_classes=1)   # input should be 256, resize to 32 so ram enough
+    net = InvNet(n_channels=257, n_classes=1)   # input should be 256, resize to 32 so ram enough
     #logging.info(f'Network:\n'
     #             f'\t{net.n_channels} input channels\n'
     #             f'\t{net.n_classes} output channels (grey brightness)')
