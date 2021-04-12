@@ -205,8 +205,7 @@ def get_args():
                         help="%(type)s: Permanently save model state every SAVE_FREQ iterations "+"(default: %(default)s)")
     parser.add_argument("--val_freq", type=int, default=5e2, help="%(type)s: Run validation loop every VAL_FREQ iterations (default: %(default)s)")
     parser.add_argument("--val_iter", type=int, default=128, help="%(type)s: Number of validation samples per validation loop (default: %(default)s)")
-    #parser.add_argument('-s', '--scale', dest='scale', type=float, default= 1.0 ,
-    #                    help='Downscaling factor of the images')
+
     
     return parser.parse_args()
 ########### QM:many parameters need to be used
