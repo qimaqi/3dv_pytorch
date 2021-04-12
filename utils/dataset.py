@@ -221,7 +221,9 @@ class BasicDataset3(Dataset):
         #    f'Image and feature {idx} should be the same size, but are {img.size} and {feature.shape[:2]}'
 
         feature, img = self.preprocess(feature, img, self.scale, self.crop_size)   ### QM: the process only transpose channel, need more data augumentation
-    
+
+        print(feature.shape)
+        print(img.shape)
 
         return {
             'feature': torch.from_numpy(feature.copy()).type(torch.FloatTensor),
