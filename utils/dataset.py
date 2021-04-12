@@ -130,6 +130,8 @@ class BasicDataset3(Dataset):
         if len(img_nd.shape) == 2:  # add channel to grey image
             img_nd = np.expand_dims(img_nd, axis=2)  # HWC
 
+        _, _, c2 = np.shape(img) 
+
         #print(img_nd.shape)
         #print(feature_nd.shape)
 
@@ -139,7 +141,7 @@ class BasicDataset3(Dataset):
             h_num = 0
             newW, newH = int(scale * w), int(scale * h)
             assert newW > 0 and newH > 0, 'Scale is too small'
-            new_img = np.zeros([newH,newW])   
+            new_img = np.zeros([newH,newW,c2])   
             new_feature = np.zeros([newH,newW,c])
             for i in range(h):
                 for j in range(w):
