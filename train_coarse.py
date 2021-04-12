@@ -10,7 +10,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 from torch import optim
-from tqdm import tqdm
+#from tqdm import tqdm
 #import cv2
 
 from eval import eval_net
@@ -86,66 +86,66 @@ def train_net(net,
         net.train()
 
         epoch_loss = 0
-        with tqdm(total=n_train, desc=f'Epoch {epoch + 1}/{epochs}', unit='img') as pbar:
-            for batch in train_loader:
-                input_features = batch['feature']
-                true_imgs = batch['image']
-                assert input_features.shape[1] == net.n_channels, \
-                    f'Network has been defined with {net.n_channels} input channels, ' \
-                    f'but loaded images have {input_features.shape[1]} channels. Please check that ' \
-                    'the images are loaded correctly.'
+        #with tqdm(total=n_train, desc=f'Epoch {epoch + 1}/{epochs}', unit='img') as pbar:
+        for batch in train_loader:
+            input_features = batch['feature']
+            true_imgs = batch['image']
+            assert input_features.shape[1] == net.n_channels, \
+                f'Network has been defined with {net.n_channels} input channels, ' \
+                f'but loaded images have {input_features.shape[1]} channels. Please check that ' \
+                'the images are loaded correctly.'
 
-                input_features = input_features.to(device=device, dtype=torch.float32)
-                mask_type = torch.float32 if net.n_classes == 1 else torch.long
-                true_imgs = true_imgs.to(device=device, dtype=mask_type)
+            input_features = input_features.to(device=device, dtype=torch.float32)
+            mask_type = torch.float32 if net.n_classes == 1 else torch.long
+            true_imgs = true_imgs.to(device=device, dtype=mask_type)
 
-                pred = net(input_features)
-                cpred = (pred+1.)*127.5
-                
-                P_pred = percepton_criterion(cpred)
-                P_img = percepton_criterion(true_imgs)
-                perception_loss = ( l2_loss(P_pred[0],P_img[0]) + l2_loss(P_pred[1],P_img[1]) + l2_loss(P_pred[2],P_img[2])) / 3
-                #print(cpred.size())#([1, 1, 168, 224])
-               # print(true_imgs.size()) #([1, 1, 168, 224])
-                pixel_loss = pixel_criterion(cpred,true_imgs)
-                loss = pixel_loss*pix_loss_wt + perception_loss*per_loss_wt
+            pred = net(input_features)
+            cpred = (pred+1.)*127.5
+            
+            P_pred = percepton_criterion(cpred)
+            P_img = percepton_criterion(true_imgs)
+            perception_loss = ( l2_loss(P_pred[0],P_img[0]) + l2_loss(P_pred[1],P_img[1]) + l2_loss(P_pred[2],P_img[2])) / 3
+            #print(cpred.size())#([1, 1, 168, 224])
+            # print(true_imgs.size()) #([1, 1, 168, 224])
+            pixel_loss = pixel_criterion(cpred,true_imgs)
+            loss = pixel_loss*pix_loss_wt + perception_loss*per_loss_wt
 
-                epoch_loss += loss.item()
-                #writer.add_scalar('Loss/train', loss.item(), global_step)
+            epoch_loss += loss.item()
+            #writer.add_scalar('Loss/train', loss.item(), global_step)
 
-                pbar.set_postfix(**{'loss (batch)': loss.item()})
+            #pbar.set_postfix(**{'loss (batch)': loss.item()})
 
-                optimizer.zero_grad()
+            optimizer.zero_grad()
 
-                # total loss = L1 pixel loss + L2 perceptual loss
-                #total_loss = pix_loss_wt * pix_loss + per_loss_wt * per_loss
+            # total loss = L1 pixel loss + L2 perceptual loss
+            #total_loss = pix_loss_wt * pix_loss + per_loss_wt * per_loss
 
-                loss.backward()
-                nn.utils.clip_grad_value_(net.parameters(), 0.1)
-                optimizer.step()
+            loss.backward()
+            nn.utils.clip_grad_value_(net.parameters(), 0.1)
+            optimizer.step()
 
-                pbar.update(input_features.shape[0])
-                global_step += 1
-                if global_step % (n_train // (10 * batch_size)) == 0:
-                    for tag, value in net.named_parameters():
-                        tag = tag.replace('.', '/')
-                        #writer.add_histogram('weights/' + tag, value.data.cpu().numpy(), global_step)
-                        #writer.add_histogram('grads/' + tag, value.grad.data.cpu().numpy(), global_step)
-                    val_score = eval_net(net, val_loader, device)
-                    scheduler.step(val_score)
-                    #writer.add_scalar('learning_rate', optimizer.param_groups[0]['lr'], global_step)
+            #pbar.update(input_features.shape[0])
+            global_step += 1
+            if global_step % (n_train // (10 * batch_size)) == 0:
+                for tag, value in net.named_parameters():
+                    tag = tag.replace('.', '/')
+                    #writer.add_histogram('weights/' + tag, value.data.cpu().numpy(), global_step)
+                    #writer.add_histogram('grads/' + tag, value.grad.data.cpu().numpy(), global_step)
+                val_score = eval_net(net, val_loader, device)
+                scheduler.step(val_score)
+                #writer.add_scalar('learning_rate', optimizer.param_groups[0]['lr'], global_step)
 
-                    if net.n_classes > 1:
-                        logging.info('Validation cross entropy: {}'.format(val_score))
-                        #writer.add_scalar('Loss/test', val_score, global_step)
-                    else:
-                        logging.info('Validation Dice Coeff: {}'.format(val_score))
-                        #writer.add_scalar('Dice/test', val_score, global_step)
+                if net.n_classes > 1:
+                    logging.info('Validation cross entropy: {}'.format(val_score))
+                    #writer.add_scalar('Loss/test', val_score, global_step)
+                else:
+                    logging.info('Validation Dice Coeff: {}'.format(val_score))
+                    #writer.add_scalar('Dice/test', val_score, global_step)
 
-                    #writer.add_images('images', imgs, global_step)
-                    #if net.n_classes == 1:
-                        #writer.add_images('masks/true', true_masks, global_step)
-                        #writer.add_images('masks/pred', torch.sigmoid(masks_pred) > 0.5, global_step)
+                #writer.add_images('images', imgs, global_step)
+                #if net.n_classes == 1:
+                    #writer.add_images('masks/true', true_masks, global_step)
+                    #writer.add_images('masks/pred', torch.sigmoid(masks_pred) > 0.5, global_step)
 
         if save_cp:
             try:
