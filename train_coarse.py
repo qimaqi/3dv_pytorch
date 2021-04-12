@@ -102,10 +102,10 @@ def train_net(net,
         for batch in train_loader:
             input_features = batch['feature']
             true_imgs = batch['image']
-            assert input_features.shape[1] == net.n_channels, \
-                f'Network has been defined with {net.n_channels} input channels, ' \
-                f'but loaded images have {input_features.shape[1]} channels. Please check that ' \
-                'the images are loaded correctly.'
+            assert input_features.shape[1] == net.n_channels, 'Channel problem'
+            #    f'Network has been defined with {net.n_channels} input channels, ' \
+            #    f'but loaded images have {input_features.shape[1]} channels. Please check that ' \
+            #    'the images are loaded correctly.'
 
             input_features = input_features.to(device=device, dtype=torch.float32)
             mask_type = torch.float32 if net.n_classes == 1 else torch.long
@@ -168,7 +168,7 @@ def train_net(net,
             except OSError:
                 pass
             torch.save(net.state_dict(),
-                       dir_checkpoint + f'CP_epoch{epoch + 1}.pth')
+                       dir_checkpoint + str(epoch+1) + '.pth')
             #logging.info(f'Checkpoint {epoch + 1} saved !')
 
     #writer.close()

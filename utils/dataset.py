@@ -65,19 +65,19 @@ class BasicDataset2(Dataset):
         img_file = glob(self.imgs_dir + idx + '.*')
         #cv2.imread(path,0)
 
-        assert len(depth_file) == 1, \
-            f'Either no mask or multiple masks found for the ID {idx}: {depth_file}'
-        assert len(feature_file) == 1, \
-            f'Either no mask or multiple masks found for the ID {idx}: {feature_file}'
-        assert len(img_file) == 1, \
-            f'Either no image or multiple images found for the ID {idx}: {img_file}'
+        #assert len(depth_file) == 1, \
+        #    f'Either no mask or multiple masks found for the ID {idx}: {depth_file}'
+        #assert len(feature_file) == 1, \
+        #    f'Either no mask or multiple masks found for the ID {idx}: {feature_file}'
+        #assert len(img_file) == 1, \
+        #    f'Either no image or multiple images found for the ID {idx}: {img_file}'
         
         feature = np.load(feature_file[0])['feature']
         depth = np.load(depth_file[0])['depth']
         img = Image.open(img_file[0]).convert('L')
 
-        assert img.size == feature.shape[:2], \
-            f'Image and feature {idx} should be the same size, but are {img.size} and {feature.shape[:2]}'
+        #assert img.size == feature.shape[:2], \
+        #    f'Image and feature {idx} should be the same size, but are {img.size} and {feature.shape[:2]}'
 
         #img = self.preprocess(img, self.scale)
         feature = self.preprocess(feature, self.scale)   ### QM: the process only transpose channel, need more data augumentation
@@ -113,7 +113,7 @@ class BasicDataset3(Dataset):
 
         self.ids = [splitext(file)[0] for file in listdir(imgs_dir)
                     if not file.startswith('.')]
-        logging.info(f'Creating dataset with {len(self.ids)} examples')
+        #logging.info(f'Creating dataset with {len(self.ids)} examples')
 
     def __len__(self):
         return len(self.ids)
@@ -188,14 +188,14 @@ class BasicDataset3(Dataset):
         #cv2.imread(path,0)
         #print('start get item',idx)
 
-        assert len(depth_file) == 1, \
-            f'Either no mask or multiple masks found for the ID {idx}: {depth_file}'
-        assert len(pos_file) == 1, \
-            f'Either no mask or multiple masks found for the ID {idx}: {feature_file}'
-        assert len(desc_file) == 1, \
-            f'Either no image or multiple images found for the ID {idx}: {img_file}'
-        assert len(img_file) == 1, \
-            f'Either no image or multiple images found for the ID {idx}: {img_file}'
+        #assert len(depth_file) == 1, \
+        #    f'Either no mask or multiple masks found for the ID {idx}: {depth_file}'
+        #assert len(pos_file) == 1, \
+        #    f'Either no mask or multiple masks found for the ID {idx}: {feature_file}'
+        #assert len(desc_file) == 1, \
+        #    f'Either no image or multiple images found for the ID {idx}: {img_file}'
+        #assert len(img_file) == 1, \
+        #    f'Either no image or multiple images found for the ID {idx}: {img_file}'
 
         #img = data_load.load_img(img_list[i])
         depth = np.load(depth_file[0])['depth']
@@ -217,8 +217,8 @@ class BasicDataset3(Dataset):
             y = int(pos[1][j])
             feature[y,x] = desc[:,j]   # to compensate with zero
         
-        assert np.shape(img) == feature.shape[:2], \
-            f'Image and feature {idx} should be the same size, but are {img.size} and {feature.shape[:2]}'
+        #assert np.shape(img) == feature.shape[:2], \
+        #    f'Image and feature {idx} should be the same size, but are {img.size} and {feature.shape[:2]}'
 
         feature, img = self.preprocess(feature, img, self.scale, self.crop_size)   ### QM: the process only transpose channel, need more data augumentation
     
