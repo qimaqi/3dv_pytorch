@@ -29,7 +29,7 @@ from vgg import VGGPerception
 dir_img = '/cluster/scratch/qimaqi/nyu_v1_images/'     ####### QM:change data directory path
 #dir_features = '../data/nyu_v1_features/'
 dir_desc = '/cluster/scratch/qimaqi/nyu_v1_desc/'
-dir_checkpoint = '/cluster/home/qimaqi/Workspace/src/3dv_pytorch/checkpoint'
+dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints/'
 dir_depth = '/cluster/scratch/qimaqi/nyu_v1_depth/'
 dir_pos = '/cluster/scratch/qimaqi/nyu_v1_pos/'
     
