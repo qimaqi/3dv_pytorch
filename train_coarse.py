@@ -44,7 +44,7 @@ def train_net(net,
               lr=0.001,
               val_percent=0.1,
               save_cp=False,  ### QM: no checkpoint
-              img_scale=0.5):
+              img_scale=1):
 
     #dataset = BasicDataset2(dir_img, dir_depth, dir_features, img_scale)  #without dataaugumentation and load direct feature npz
     dataset = BasicDataset3(dir_img, dir_depth, dir_pos, dir_desc, img_scale, pct_3D_points, crop_size)
@@ -171,8 +171,8 @@ def get_args():
                         help='Learning rate', dest='lr')
     parser.add_argument('-f', '--load', dest='load', type=str, default=False,
                         help='Load model from a pretrain .pth file')
-    #parser.add_argument('-s', '--scale', dest='scale', type=float, default=0.5,
-    #                    help='Downscaling factor of the images')
+    parser.add_argument('-s', '--scale', dest='scale', type=float, default=1,
+                        help='Downscaling factor of the images')
     parser.add_argument('-v', '--validation', dest='val', type=float, default=10.0,
                         help='Percent of the data that is used as validation (0-100)')
     #parser.add_argument("--input_attr", metavar='Att' type=str, default='super', choices=['depth','depth_sift','depth_rgb','depth_sift_rgb'],
