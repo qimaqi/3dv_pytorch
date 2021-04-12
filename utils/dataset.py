@@ -219,7 +219,7 @@ class BasicDataset3(Dataset):
             x = int(pos[0][j]) #640
             y = int(pos[1][j]) #480
             feature[y,x,1:] = desc[:,j]   # to compensate with zero
-            feature[y,x,1] = np.array(img)[y,x]
+            feature[y,x,1] = (np.array(img)[y,x]/127.5-1)
         
         #assert np.shape(img) == feature.shape[:2], \
         #    f'Image and feature {idx} should be the same size, but are {img.size} and {feature.shape[:2]}'
