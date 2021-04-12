@@ -222,8 +222,8 @@ class BasicDataset3(Dataset):
     
 
         return {
-            'feature': torch.from_numpy(feature).copy().type(torch.FloatTensor),
-            'image': torch.from_numpy(img).copy().type(torch.FloatTensor)  # ground truth need to be considered
+            'feature': torch.from_numpy(feature.copy()).type(torch.FloatTensor),
+            'image': torch.from_numpy(img.copy()).type(torch.FloatTensor)  # ground truth need to be considered
         }
 
 class CarvanaDataset(BasicDataset2):
