@@ -43,7 +43,7 @@ def train_net(net,
               batch_size=4,
               lr=0.001,
               val_percent=0.1,
-              save_cp=False,  ### QM: no checkpoint
+              save_cp=True,  ### QM: no checkpoint
               img_scale=1):
 
     #dataset = BasicDataset2(dir_img, dir_depth, dir_features, img_scale)  #without dataaugumentation and load direct feature npz
