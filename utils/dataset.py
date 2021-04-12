@@ -88,7 +88,8 @@ class BasicDataset2(Dataset):
             img = np.expand_dims(img, axis=2)
         
         img_trans = img.transpose((2, 0, 1))  # CHWape(img_trans))
-
+        #feature = feature.copy()
+        
         return {
             'feature': torch.from_numpy(feature.copy()).type(torch.FloatTensor),
             'image': torch.from_numpy(img_trans.copy()).type(torch.FloatTensor)  # ground truth need to be considered
@@ -221,8 +222,8 @@ class BasicDataset3(Dataset):
     
 
         return {
-            'feature': torch.from_numpy(feature).type(torch.FloatTensor),
-            'image': torch.from_numpy(img).type(torch.FloatTensor)  # ground truth need to be considered
+            'feature': torch.from_numpy(feature).copy().type(torch.FloatTensor),
+            'image': torch.from_numpy(img).copy().type(torch.FloatTensor)  # ground truth need to be considered
         }
 
 class CarvanaDataset(BasicDataset2):
