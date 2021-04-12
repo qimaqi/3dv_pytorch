@@ -162,8 +162,8 @@ class BasicDataset3(Dataset):
         crop_rand_seed_h = torch.rand(1)
         crop_w = int(torch.floor((w - crop_size) * crop_rand_seed_w))
         crop_h = int(torch.floor((h - crop_size) * crop_rand_seed_h))
-        feature_nd = feature_nd[crop_w:crop_w+crop_size, crop_h:crop_h+crop_size,:]
-        img_nd = img_nd[crop_w:crop_w+crop_size, crop_h:crop_h+crop_size,:]
+        feature_nd = feature_nd[crop_h:crop_h+crop_size, crop_w:crop_w+crop_size,:]
+        img_nd = img_nd[crop_h:crop_h+crop_size, crop_w:crop_w+crop_size,:]
 
         # random flip
         flip_rand_seed = torch.rand(1)
@@ -177,8 +177,8 @@ class BasicDataset3(Dataset):
         img_trans = img_nd.transpose(( 2, 0, 1))    # batch
         #if img_trans.max() > 1:
         #    img_trans = img_trans / 255
-        print(feature_trans.shape)
-        print(img_trans.shape)
+        #print(feature_trans.shape)
+        #print(img_trans.shape)
         feature_trans = np.resize(feature_trans,(32 ,168, 224))  #### QM: resize so ram enough
         img_trans = np.resize(img_trans,(1,168,224))
 
@@ -216,11 +216,12 @@ class BasicDataset3(Dataset):
         height, width = np.shape(img)  # 480,640
         desc_length = np.shape(desc)[0]  # 256
         #feature = np.zeros([width,height,desc_length])   # build a 640 x 480 x 256 array
-        feature = np.zeros([height,width,desc_length])    # build a 480 x 640 x 256 array   HWC
+        feature = np.zeros([height,width,desc_length+1])    # build a 480 x 640 x 256 array   HWC
         for j in range(pos_num):
-            x = int(pos[0][j])
-            y = int(pos[1][j])
-            feature[y,x] = desc[:,j]   # to compensate with zero
+            x = int(pos[0][j])   # 640
+            y = int(pos[1][j])   # 480
+            feature[y,x,1:] = desc[:,j]   # to compensate with zero
+            feature[y,x,1] = np.array(img)[y,x]
         
         assert np.shape(img) == feature.shape[:2], \
             f'Image and feature {idx} should be the same size, but are {img.size} and {feature.shape[:2]}'
