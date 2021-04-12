@@ -128,9 +128,15 @@ class BasicDataset3(Dataset):
 
         if len(img_nd.shape) == 2:  # add channel to grey image
             img_nd = np.expand_dims(img_nd, axis=2)  # HWC
+        _,_,c2 = np.shape(img_nd) 
+
+
+        print(feature_nd.shape)
+        print(img_nd.shape)
 
         #print(img_nd.shape)
         #print(feature_nd.shape)
+        scale = 0.5
 
         if scale != 1:
             step = (1.0 /scale)  # Attention here, in the outside of images may have lost problem
@@ -138,7 +144,7 @@ class BasicDataset3(Dataset):
             h_num = 0
             newW, newH = int(scale * w), int(scale * h)
             assert newW > 0 and newH > 0, 'Scale is too small'
-            new_img = np.zeros([newH,newW])   
+            new_img = np.zeros([newH,newW,c2])   
             new_feature = np.zeros([newH,newW,c])
             for i in range(h):
                 for j in range(w):
@@ -171,6 +177,8 @@ class BasicDataset3(Dataset):
         img_trans = img_nd.transpose(( 2, 0, 1))    # batch
         #if img_trans.max() > 1:
         #    img_trans = img_trans / 255
+        print(feature_trans.shape)
+        print(img_trans.shape)
         feature_trans = np.resize(feature_trans,(32 ,168, 224))  #### QM: resize so ram enough
         img_trans = np.resize(img_trans,(1,168,224))
 
