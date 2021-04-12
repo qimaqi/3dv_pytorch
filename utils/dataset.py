@@ -157,10 +157,10 @@ class BasicDataset3(Dataset):
 
         crop_rand_seed_w = torch.rand(1)
         crop_rand_seed_h = torch.rand(1)
-        crop_w = int(torch.floor((w - crop_size) * crop_rand_seed_w))
+        crop_w = int(torch.floor((w - crop_size) * crop_rand_seed_w))   # 640 - 480 
         crop_h = int(torch.floor((h - crop_size) * crop_rand_seed_h))
-        feature_nd = feature_nd[crop_w:crop_w+crop_size, crop_h:crop_h+crop_size,:]
-        img_nd = img_nd[crop_w:crop_w+crop_size, crop_h:crop_h+crop_size,:]
+        feature_nd = feature_nd[crop_h:crop_h+crop_size, crop_w:crop_w+crop_size, :]
+        img_nd = img_nd[crop_h:crop_h+crop_size, crop_w:crop_w+crop_size, :]
 
         # random flip
         flip_rand_seed = torch.rand(1)
