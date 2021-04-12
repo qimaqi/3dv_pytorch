@@ -81,7 +81,7 @@ def train_net(net,
     print('Crop size: ', crop_size)
 
     #optimizer = optim.RMSprop(net.parameters(), lr=lr, weight_decay=1e-8, momentum=0.9)
-    optimizer = optim.Adam(net.parameters(), lr=lr, eps = 1e-8, weight_decay=1e-8, momentum=0.9)
+    optimizer = optim.Adam(net.parameters(), lr=lr, eps = 1e-8)
     #scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min' if net.n_classes > 1 else 'max', patience=2)
 
     pixel_criterion = nn.L1Loss()       ##### QM: only L1 loss problem: image and feature not match
