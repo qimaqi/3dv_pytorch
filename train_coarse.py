@@ -2,7 +2,7 @@
 # qimaqi@student.ethz.ch
 
 import argparse
-import logging
+#import logging
 import os
 import sys
 
@@ -57,16 +57,28 @@ def train_net(net,
     #writer = SummaryWriter(comment=f'LR_{lr}_BS_{batch_size}_SCALE_{img_scale}')
     global_step = 0
 
-    logging.info(f'''Starting training:
-        Epochs:          {epochs}
-        Batch size:      {batch_size}
-        Learning rate:   {lr}
-        Training size:   {n_train}
-        Validation size: {n_val}
-        Checkpoints:     {save_cp}
-        Device:          {device.type}
-        Images scaling:  {img_scale}
-    ''')
+    # logging.info(f'''Starting training:
+    #     Epochs:          {epochs}
+    #     Batch size:      {batch_size}
+    #     Learning rate:   {lr}
+    #     Training size:   {n_train}
+    #     Validation size: {n_val}
+    #     Checkpoints:     {save_cp}
+    #     Device:          {device.type}
+    #     Images scaling:  {img_scale}
+    #     ''')
+
+    print("Starting training:")
+    print('Epochs: ', epochs)
+    print('Batch size: ', batch_size)
+    print('Learning rate: ', lr)
+    print('Training size: ', n_train)
+    print('Validation size: ', n_val)
+    print('Checkpoints: ', save_cp)
+    print('Validation size: ', n_val)
+    print('Device: ', device.type)
+    print('Images scaling: ', img_scale)
+    print('Crop size: ', crop_size)
 
     optimizer = optim.RMSprop(net.parameters(), lr=lr, weight_decay=1e-8, momentum=0.9)
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min' if net.n_classes > 1 else 'max', patience=2)
@@ -136,10 +148,12 @@ def train_net(net,
                 #writer.add_scalar('learning_rate', optimizer.param_groups[0]['lr'], global_step)
 
                 if net.n_classes > 1:
-                    logging.info('Validation cross entropy: {}'.format(val_score))
+                    #logging.info('Validation cross entropy: {}'.format(val_score))
+                    print('Validation loss: ',(val_score))
                     #writer.add_scalar('Loss/test', val_score, global_step)
                 else:
-                    logging.info('Validation Dice Coeff: {}'.format(val_score))
+                    #logging.info('Validation Dice Coeff: {}'.format(val_score))
+                    print('Validation Dice Coeff: ',(val_score))
                     #writer.add_scalar('Dice/test', val_score, global_step)
 
                 #writer.add_images('images', imgs, global_step)
@@ -150,12 +164,12 @@ def train_net(net,
         if save_cp:
             try:
                 os.mkdir(dir_checkpoint)
-                logging.info('Created checkpoint directory')
+                #logging.info('Created checkpoint directory')
             except OSError:
                 pass
             torch.save(net.state_dict(),
                        dir_checkpoint + f'CP_epoch{epoch + 1}.pth')
-            logging.info(f'Checkpoint {epoch + 1} saved !')
+            #logging.info(f'Checkpoint {epoch + 1} saved !')
 
     #writer.close()
 
@@ -198,11 +212,11 @@ def get_args():
 ########### QM:many parameters need to be used
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
+    #logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
     args = get_args()
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     #device = torch.device('cpu')
-    logging.info(f'Using device {device}')
+    #logging.info(f'Using device {device}')
 
     # Create exp dir if does not exist
     #exp_dir = 'wts/{}/coarsenet'.format(prm.input_attr)
@@ -216,15 +230,15 @@ if __name__ == '__main__':
     #   - For 2 classes, use n_classes=1
     #   - For N > 2 classes, use n_classes=N
     net = InvNet(n_channels=256, n_classes=1)   # input should be 256, resize to 32 so ram enough
-    logging.info(f'Network:\n'
-                 f'\t{net.n_channels} input channels\n'
-                 f'\t{net.n_classes} output channels (grey brightness)')
+    #logging.info(f'Network:\n'
+    #             f'\t{net.n_channels} input channels\n'
+    #             f'\t{net.n_classes} output channels (grey brightness)')
 
     if args.load:
         net.load_state_dict(
             torch.load(args.load, map_location=device)
         )
-        logging.info(f'Model loaded from {args.load}')
+        #logging.info(f'Model loaded from {args.load}')
 
     net.to(device=device)
     # faster convolutions, but more memory
@@ -244,7 +258,7 @@ if __name__ == '__main__':
                   val_percent=args.val / 100)
     except KeyboardInterrupt:
         torch.save(net.state_dict(), 'INTERRUPTED.pth')
-        logging.info('Saved interrupt')
+        #logging.info('Saved interrupt')
         try:
             sys.exit(0)
         except SystemExit:
