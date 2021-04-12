@@ -222,8 +222,8 @@ class BasicDataset3(Dataset):
 
         feature, img = self.preprocess(feature, img, self.scale, self.crop_size)   ### QM: the process only transpose channel, need more data augumentation
 
-        print(feature.shape)
-        print(img.shape)
+        #print(feature.shape)
+        #print(img.shape)
 
         return {
             'feature': torch.from_numpy(feature.copy()).type(torch.FloatTensor),
