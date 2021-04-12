@@ -90,8 +90,8 @@ class BasicDataset2(Dataset):
         img_trans = img.transpose((2, 0, 1))  # CHWape(img_trans))
 
         return {
-            'feature': torch.from_numpy(feature).type(torch.FloatTensor),
-            'image': torch.from_numpy(img_trans).type(torch.FloatTensor)  # ground truth need to be considered
+            'feature': torch.from_numpy(feature.copy()).type(torch.FloatTensor),
+            'image': torch.from_numpy(img_trans.copy()).type(torch.FloatTensor)  # ground truth need to be considered
         }
 
 
