@@ -7,7 +7,7 @@ import numpy as np
 #import mat73
 from PIL import Image
 import json
-import cv2
+#import cv2
 import os
 
 #img_path = '/cluster/scratch /nyu_depth_data_labeled.mat'
