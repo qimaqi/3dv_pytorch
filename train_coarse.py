@@ -44,7 +44,7 @@ def train_net(net,
               lr=0.001,
               val_percent=0.1,
               save_cp=True,  ### QM: no checkpoint
-              img_scale=1):
+              img_scale=0.7):
 
     #dataset = BasicDataset2(dir_img, dir_depth, dir_features, img_scale)  #without dataaugumentation and load direct feature npz
     dataset = BasicDataset3(dir_img, dir_depth, dir_pos, dir_desc, img_scale, pct_3D_points, crop_size)
@@ -52,7 +52,7 @@ def train_net(net,
     n_train = len(dataset) - n_val
     train, val = random_split(dataset, [n_train, n_val])
     train_loader = DataLoader(train, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=True)
-    val_loader = DataLoader(val, batch_size=batch_size, shuffle=False, num_workers=0, pin_memory=True, drop_last=True)
+    val_loader = DataLoader(val, batch_size=batch_size, shuffle=False, num_workers=4, pin_memory=True, drop_last=True)
 
     #writer = SummaryWriter(comment=f'LR_{lr}_BS_{batch_size}_SCALE_{img_scale}')
     global_step = 0

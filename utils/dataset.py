@@ -205,17 +205,20 @@ class BasicDataset3(Dataset):
 
         pos = np.array(data_load.load_json(pos_file[0]))   # 3 x points_num  list, the third is confidence
         desc = np.array(data_load.load_json(desc_file[0]))  # 256 x points_num  list, 256 features
+
         pos_num = np.shape(pos)[1]
         desc_num = np.shape(desc)[1]
         assert pos_num == desc_num, 'superpoint number matching problem'
         height, width = np.shape(img)  # 480,640
-        desc_length = np.shape(desc)[0]  # 256
+        desc_length = np.shape(desc)[0]  # 256 
+
+
         #feature = np.zeros([width,height,desc_length])   # build a 640 x 480 x 256 array
-        feature = np.zeros([height,width,desc_length])    # build a 480 x 640 x 256 array   HWC
+        feature = np.zeros([height,width,desc_length+1 ])    # build a 480 x 640 x 257 array   HWC
         for j in range(pos_num):
             x = int(pos[0][j])
             y = int(pos[1][j])
-            feature[y,x] = desc[:,j]   # to compensate with zero
+            feature[y,x,1:] = desc[:,j]   # to compensate with zero
         
         #assert np.shape(img) == feature.shape[:2], \
         #    f'Image and feature {idx} should be the same size, but are {img.size} and {feature.shape[:2]}'
