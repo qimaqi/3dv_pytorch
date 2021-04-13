@@ -40,7 +40,7 @@ if __name__ == '__main__':
     '\tInfer size:       %s\n'
     '\tCheckpoints:      %s\n' 
     '\tDevice:           %s\n'          
-    , batch_size, n_val, dir_checkpoint, device.type
+    , batch_size, n_infer, dir_checkpoint, device.type
     )
 
     for batch in infer_loader:
