@@ -256,6 +256,32 @@ class InferDataset(Dataset):
     def __len__(self):
         return len(self.ids)
 
+        @classmethod
+    def preprocess(cls, feature):
+        # feature: HWC, img in np shape: HWC. img in size WHC
+        h, w, c = np.shape(feature) 
+        #print(h,w,c) # 480, 640, 256
+  
+        feature_nd = np.array(feature)
+
+        #print(feature_nd.shape)
+        # if crop size is 0 then no crop
+        crop_size = 256
+        assert crop_size >= 0, 'Crop Size must be positive'
+        if crop_size != 0:
+            crop_rand_seed_w = torch.rand(1)
+            crop_rand_seed_h = torch.rand(1)
+            crop_w = int(torch.floor((w - crop_size) * crop_rand_seed_w))   # 640 - 480 
+            crop_h = int(torch.floor((h - crop_size) * crop_rand_seed_h))
+            feature_nd = feature_nd[crop_h:crop_h+crop_size, crop_w:crop_w+crop_size, :]
+
+        # HWC to CHW 
+        feature_trans = feature_nd.transpose((2, 0, 1)) # channel x 480 x 640
+        #feature_trans = (feature_trans/127.5)-1   # normalization 127.5 is for RGB, do we need this number here?
+        #feature_trans = np.resize(feature_trans,(32 ,168, 224))  #### QM: resize so ram enough
+        #img_trans = np.resize(img_trans,(1,168,224))
+        return feature_trans
+
     def __getitem__(self, i):
         idx = self.ids[i]
         depth_file = glob(self.depth_dir + idx + '.*')  # one depth npz
@@ -290,14 +316,15 @@ class InferDataset(Dataset):
             feature[y,x,1:] = desc[:,j]   # to compensate with zero
             feature[y,x,1] = (np.array(img)[y,x]/127.5-1)
         
-        feature_nd = np.array(feature)
-        feature_trans = feature_nd.transpose((2, 0, 1))
+        #feature_nd = np.array(feature)
+        #feature_trans = feature_nd.transpose((2, 0, 1))
+        feature = preprocess(feature)
 
         #print(feature.shape)
         #print(img.shape)
 
         return {
-            'feature': torch.from_numpy(feature_trans.copy()).type(torch.FloatTensor),
+            'feature': torch.from_numpy(feature.copy()).type(torch.FloatTensor),
             'index': idx  # feature name
         }
 
