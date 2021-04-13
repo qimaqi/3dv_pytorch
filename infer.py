@@ -30,6 +30,7 @@ if __name__ == '__main__':
     net.load_state_dict(
         torch.load(dir_checkpoint)
         )
+    net.to(device=device)
 
     dataset = InferDataset(dir_img, dir_depth, dir_pos, dir_desc, pct_3D_points)
     infer_loader = DataLoader(dataset, batch_size=batch_size, shuffle=False, num_workers=1, pin_memory=True, drop_last=True)
