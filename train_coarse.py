@@ -159,7 +159,7 @@ def train_net(net,
                 pass
             torch.save(net.state_dict(),
                        dir_checkpoint + str(epoch+1) + '.pth')
-            logging.info(f'Checkpoint {epoch + 1} saved !')
+            logging.info('Checkpoint %s saved! ',epoch+1)
 
     #writer.close()
 
