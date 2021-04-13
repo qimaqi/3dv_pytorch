@@ -11,7 +11,7 @@ from unet import InvNet
 
 infer_output_dir = '/cluster/scratch/qimaqi/infer_output/'
 dir_desc = '/cluster/scratch/qimaqi/nyu_v1_desc/'
-dir_checkpoint = '/cluster/scratch/qimaqi/checkpoint_b6_12_4s/7.pth'
+dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_11_4/5.pth'
 dir_depth = '/cluster/scratch/qimaqi/nyu_v1_depth/'
 dir_pos = '/cluster/scratch/qimaqi/nyu_v1_pos/'
 dir_img = '/cluster/scratch/qimaqi/nyu_v1_images/' 
