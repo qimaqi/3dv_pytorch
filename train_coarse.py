@@ -74,7 +74,7 @@ def train_net(net,
 
     #optimizer = optim.RMSprop(net.parameters(), lr=lr, weight_decay=1e-8, momentum=0.9)
     optimizer = optim.Adam(net.parameters(), lr=lr, eps = 1e-8)
-    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=2)
+    #scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=2)
 
     pixel_criterion = nn.L1Loss()       
     percepton_criterion = VGGPerception()
@@ -133,8 +133,8 @@ def train_net(net,
                     #writer.add_histogram('weights/' + tag, value.data.cpu().numpy(), global_step)
                     #writer.add_histogram('grads/' + tag, value.grad.data.cpu().numpy(), global_step)
                 val_score = eval_net(net, val_loader, device)
-                scheduler.step(val_score)
-                print('Coarsenet score: ',(val_score))
+                #scheduler.step(val_score)
+                print('Coarsenet score: ',(val_score), 'in epoch', epoch )
                 #writer.add_scalar('learning_rate', optimizer.param_groups[0]['lr'], global_step)
 
                 #if net.n_classes > 1:
@@ -167,7 +167,7 @@ def train_net(net,
 def get_args():
     parser = argparse.ArgumentParser(description='Train the CoarseNet on images and correspond superpoint descripton',
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('-e', '--epochs', metavar='E', type=int, default=20,
+    parser.add_argument('-e', '--epochs', metavar='E', type=int, default=10,
                         help='Number of epochs', dest='epochs')
     parser.add_argument('-b', '--batch-size', metavar='B', type=int, nargs='?', default=8,
                         help='Batch size', dest='batchsize')

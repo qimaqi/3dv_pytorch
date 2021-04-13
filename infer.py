@@ -55,11 +55,6 @@ if __name__ == '__main__':
 
 
 def save_image_tensor(input_tensor, filename):
-    """
-    将tensor保存为图片
-    :param input_tensor: 要保存的tensor
-    :param filename: 保存的文件名
-    """
     assert (len(input_tensor.shape) == 4 and input_tensor.shape[0] == 1)
     input_tensor = input_tensor.clone().detach()
     # to cpu
