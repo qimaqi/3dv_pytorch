@@ -2,7 +2,7 @@
 # qimaqi@student.ethz.ch
 
 import argparse
-#import logging
+import logging
 import os
 import sys
 
@@ -10,29 +10,32 @@ import numpy as np
 import torch
 import torch.nn as nn
 from torch import optim
-#from tqdm import tqdm
-#import cv2
 
 from eval import eval_net
 from unet import InvNet
 
-#from torch.utils.tensorboard import SummaryWriter
-#from utils.dataset import BasicDataset2
 from utils.dataset import BasicDataset3
 from torch.utils.data import DataLoader, random_split
 import torchvision.models as models
 from vgg import VGGPerception
 
 
+# To do
+# delete useless code and make it clear
+# to use logging and attribute feature 
+# infer to test the result
+
 
 #some default dir need images descripton, pos and depth. Attention this time desc and pos is in json !!!!!!!!!!
 dir_img = '/cluster/scratch/qimaqi/nyu_v1_images/'     ####### QM:change data directory path
-#dir_features = '../data/nyu_v1_features/'
+#dir_features = '../data/nyu_v1_features/'  # databasic2 can directly process feature
 dir_desc = '/cluster/scratch/qimaqi/nyu_v1_desc/'
 dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints/'
 dir_depth = '/cluster/scratch/qimaqi/nyu_v1_depth/'
 dir_pos = '/cluster/scratch/qimaqi/nyu_v1_pos/'
-    
+#log_dir = '/cluster/scratch/qimaqi/log/'    
+
+
 def train_net(net,
               device,
               pct_3D_points,
@@ -43,7 +46,7 @@ def train_net(net,
               batch_size=8,
               lr=0.001,
               val_percent=0.1,
-              save_cp=True,  ### QM: no checkpoint
+              save_cp=True,
               img_scale=0.7):
 
     #dataset = BasicDataset2(dir_img, dir_depth, dir_features, img_scale)  #without dataaugumentation and load direct feature npz
@@ -54,37 +57,26 @@ def train_net(net,
     train_loader = DataLoader(train, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=True)
     val_loader = DataLoader(val, batch_size=batch_size, shuffle=False, num_workers=4, pin_memory=True, drop_last=True)
 
-    #writer = SummaryWriter(comment=f'LR_{lr}_BS_{batch_size}_SCALE_{img_scale}')
     global_step = 0
 
-    # logging.info(f'''Starting training:
-    #     Epochs:          {epochs}
-    #     Batch size:      {batch_size}
-    #     Learning rate:   {lr}
-    #     Training size:   {n_train}
-    #     Validation size: {n_val}
-    #     Checkpoints:     {save_cp}
-    #     Device:          {device.type}
-    #     Images scaling:  {img_scale}
-    #     ''')
-
-    print("Starting training:")
-    print('Epochs: ', epochs)
-    print('Batch size: ', batch_size)
-    print('Learning rate: ', lr)
-    print('Training size: ', n_train)
-    print('Validation size: ', n_val)
-    print('Checkpoints: ', save_cp)
-    print('Validation size: ', n_val)
-    print('Device: ', device.type)
-    print('Images scaling: ', img_scale)
-    print('Crop size: ', crop_size)
+    logging.info('Starting training:\n'
+        '\t Epochs:          %s\n'        
+        '\tBatch size:       %s\n'     
+        '\tLearning rate:    %s\n' 
+        '\tTraining size:    %s\n'  
+        '\tValidation size:  %s\n'
+        '\tCheckpoints:      %s\n' 
+        '\tDevice:           %s\n'         
+        '\tImages scaling:   %s\n'  
+        '\tCrop Size:        %s\n'
+        , epochs, batch_size, lr, n_train, n_val, save_cp, device.type, img_scale, crop_size
+        )
 
     #optimizer = optim.RMSprop(net.parameters(), lr=lr, weight_decay=1e-8, momentum=0.9)
     optimizer = optim.Adam(net.parameters(), lr=lr, eps = 1e-8)
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=2)
 
-    pixel_criterion = nn.L1Loss()       ##### QM: only L1 loss problem: image and feature not match
+    pixel_criterion = nn.L1Loss()       
     percepton_criterion = VGGPerception()
     percepton_criterion.to(device=device)
     l2_loss = nn.MSELoss()
@@ -99,14 +91,10 @@ def train_net(net,
         net.train()
 
         epoch_loss = 0
-        #with tqdm(total=n_train, desc=f'Epoch {epoch + 1}/{epochs}', unit='img') as pbar:
         for batch in train_loader:
             input_features = batch['feature']
             true_imgs = batch['image']
-            assert input_features.shape[1] == net.n_channels, 'Channel problem'
-            #    f'Network has been defined with {net.n_channels} input channels, ' \
-            #    f'but loaded images have {input_features.shape[1]} channels. Please check that ' \
-            #    'the images are loaded correctly.'
+            assert input_features.shape[1] == net.n_channels, 'Channel match problem'
 
             input_features = input_features.to(device=device, dtype=torch.float32)
             mask_type = torch.float32 if net.n_classes == 1 else torch.long
@@ -166,12 +154,12 @@ def train_net(net,
         if save_cp:
             try:
                 os.mkdir(dir_checkpoint)
-                #logging.info('Created checkpoint directory')
+                logging.info('Created checkpoint directory')
             except OSError:
                 pass
             torch.save(net.state_dict(),
                        dir_checkpoint + str(epoch+1) + '.pth')
-            #logging.info(f'Checkpoint {epoch + 1} saved !')
+            logging.info(f'Checkpoint {epoch + 1} saved !')
 
     #writer.close()
 
@@ -213,16 +201,10 @@ def get_args():
 ########### QM:many parameters need to be used
 
 if __name__ == '__main__':
-    #logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
+    logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
     args = get_args()
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    #device = torch.device('cpu')
-    #logging.info(f'Using device {device}')
-
-    # Create exp dir if does not exist
-    #exp_dir = 'wts/{}/coarsenet'.format(prm.input_attr)
-    #os.system('mkdir -p {}'.format(exp_dir))
-
+    logging.info('Using device: %s' , device)
 
     # Change here to adapt to your data
     # n_channels=3 for RGB images
@@ -231,9 +213,10 @@ if __name__ == '__main__':
     #   - For 2 classes, use n_classes=1
     #   - For N > 2 classes, use n_classes=N
     net = InvNet(n_channels=257, n_classes=1)   # input should be 256, resize to 32 so ram enough
-    #logging.info(f'Network:\n'
-    #             f'\t{net.n_channels} input channels\n'
-    #             f'\t{net.n_classes} output channels (grey brightness)')
+    logging.info('Network:\n'
+            '\t %s channels input channels\n' 
+            '\t %s output channels (grey brightness)', net.n_channels,  net.n_classes)
+
 
     if args.load:
         net.load_state_dict(
