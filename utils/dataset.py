@@ -256,7 +256,7 @@ class InferDataset(Dataset):
     def __len__(self):
         return len(self.ids)
 
-        @classmethod
+    @classmethod
     def preprocess(cls, feature):
         # feature: HWC, img in np shape: HWC. img in size WHC
         h, w, c = np.shape(feature) 
