@@ -318,7 +318,7 @@ class InferDataset(Dataset):
         
         #feature_nd = np.array(feature)
         #feature_trans = feature_nd.transpose((2, 0, 1))
-        feature = preprocess(feature)
+        feature = self.preprocess(feature)
 
         #print(feature.shape)
         #print(img.shape)
