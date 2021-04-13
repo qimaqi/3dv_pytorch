@@ -18,7 +18,7 @@ from unet import InvNet
 
 #from torch.utils.tensorboard import SummaryWriter
 #from utils.dataset import BasicDataset2
-from utils.dataset import BasicDataset3
+from utils.dataset import BasicDatasetR2D2
 from torch.utils.data import DataLoader, random_split
 import torchvision.models as models
 from vgg import VGGPerception
@@ -26,12 +26,14 @@ from vgg import VGGPerception
 
 
 #some default dir need images descripton, pos and depth. Attention this time desc and pos is in json !!!!!!!!!!
-dir_img = '/cluster/scratch/qimaqi/nyu_v1_images/'     ####### QM:change data directory path
+dir_img = '/cluster/scratch/jiaqiu/nyu_images/'     ####### QM:change data directory path
 #dir_features = '../data/nyu_v1_features/'
-dir_desc = '/cluster/scratch/qimaqi/nyu_v1_desc/'
-dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints/'
-dir_depth = '/cluster/scratch/qimaqi/nyu_v1_depth/'
-dir_pos = '/cluster/scratch/qimaqi/nyu_v1_pos/'
+dir_desc = '/cluster/scratch/jiaqiu/nyu_r2d2_desc/'
+dir_checkpoint = '/cluster/scratch/jiaqiu/checkpoints/'
+dir_depth = '/cluster/scratch/jiaqiu/nyu_depth/'
+dir_pos = '/cluster/scratch/jiaqiu/nyu_r2d2_pos/'
+
+
     
 def train_net(net,
               device,
@@ -47,7 +49,7 @@ def train_net(net,
               img_scale=0.7):
 
     #dataset = BasicDataset2(dir_img, dir_depth, dir_features, img_scale)  #without dataaugumentation and load direct feature npz
-    dataset = BasicDataset3(dir_img, dir_depth, dir_pos, dir_desc, img_scale, pct_3D_points, crop_size)
+    dataset = BasicDatasetR2D2(dir_img, dir_depth, dir_pos, dir_desc, img_scale, pct_3D_points, crop_size)
     n_val = int(len(dataset) * val_percent)
     n_train = len(dataset) - n_val
     train, val = random_split(dataset, [n_train, n_val])
@@ -230,7 +232,7 @@ if __name__ == '__main__':
     #   - For 1 class and background, use n_classes=1
     #   - For 2 classes, use n_classes=1
     #   - For N > 2 classes, use n_classes=N
-    net = InvNet(n_channels=257, n_classes=1)   # input should be 256, resize to 32 so ram enough
+    net = InvNet(n_channels=129, n_classes=1)   # input should be 256, resize to 32 so ram enough
     #logging.info(f'Network:\n'
     #             f'\t{net.n_channels} input channels\n'
     #             f'\t{net.n_classes} output channels (grey brightness)')

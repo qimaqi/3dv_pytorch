@@ -45,7 +45,7 @@ def load_json(path):
     #with open(path,'r', encoding='utf-8') as f:
     content = f.read()
     a = json.loads(content)
-    return a.popitem()[1]
+    return a
 
 def load_img(path,mode=0):
     # mode 1 color,0 grey scale, -1 unchange
