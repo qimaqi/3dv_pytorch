@@ -2,12 +2,13 @@ import torch
 import torch.nn.functional as F
 import torch.nn as nn
 
-from dice_loss import dice_coeff
 from vgg import VGGPerception
 from utils.dataset import InferDataset
+from torch.utils.data import DataLoader
 
 from torchvision.utils import save_image
 from unet import InvNet
+from PIL import Image
 
 infer_output_dir = '/cluster/scratch/qimaqi/infer_output/'
 dir_desc = '/cluster/scratch/qimaqi/nyu_v1_desc/'
