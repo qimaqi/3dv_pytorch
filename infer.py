@@ -7,11 +7,11 @@ from vgg import VGGPerception
 from utils.dataset import InferDataset
 
 from torchvision.utils import save_image
-
+from unet import InvNet
 
 infer_output_dir = '/cluster/scratch/qimaqi/infer_output/'
 dir_desc = '/cluster/scratch/qimaqi/nyu_v1_desc/'
-dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints/'
+dir_checkpoint = '/cluster/scratch/qimaqi/checkpoint_b6_12_4s/7.pth'
 dir_depth = '/cluster/scratch/qimaqi/nyu_v1_depth/'
 dir_pos = '/cluster/scratch/qimaqi/nyu_v1_pos/'
 dir_img = '/cluster/scratch/qimaqi/nyu_v1_images/' 
@@ -23,6 +23,11 @@ if __name__ == '__main__':
     crop_size = 0
     pct_3D_points = 0
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+    net = InvNet(n_channels=257, n_classes=1)   # input should be 256, resize to 32 so ram enough
+    net.load_state_dict(
+        torch.load(dir_checkpoint)
+        )
 
     dataset = InferDataset(dir_img, dir_depth, dir_pos, dir_desc, pct_3D_points)
     infer_loader = DataLoader(val, batch_size=batch_size, shuffle=False, num_workers=1, pin_memory=True, drop_last=True)
