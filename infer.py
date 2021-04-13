@@ -31,7 +31,7 @@ if __name__ == '__main__':
         )
 
     dataset = InferDataset(dir_img, dir_depth, dir_pos, dir_desc, pct_3D_points)
-    infer_loader = DataLoader(val, batch_size=batch_size, shuffle=False, num_workers=1, pin_memory=True, drop_last=True)
+    infer_loader = DataLoader(dataset, batch_size=batch_size, shuffle=False, num_workers=1, pin_memory=True, drop_last=True)
     n_infer = int(len(dataset))
 
     logging.info('Starting infering:\n'        
