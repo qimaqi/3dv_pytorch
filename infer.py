@@ -19,6 +19,18 @@ dir_pos = '/cluster/scratch/qimaqi/nyu_v1_pos/'
 dir_img = '/cluster/scratch/qimaqi/nyu_v1_images/' 
 
 
+
+
+
+
+def save_image_tensor(input_tensor, filename):
+    assert (len(input_tensor.shape) == 4 and input_tensor.shape[0] == 1)
+    input_tensor = input_tensor.clone().detach()
+    # to cpu
+    input_tensor = input_tensor.to(torch.device('cpu'))
+    save_image(input_tensor, filename)
+
+
 if __name__ == '__main__':
     batch_size = 1
     img_scale = 1
@@ -53,13 +65,3 @@ if __name__ == '__main__':
         ouput_path = infer_output_dir + str(index) + '.png'
         save_image_tensor(cpred,ouput_path)
         
-
-
-
-
-def save_image_tensor(input_tensor, filename):
-    assert (len(input_tensor.shape) == 4 and input_tensor.shape[0] == 1)
-    input_tensor = input_tensor.clone().detach()
-    # to cpu
-    input_tensor = input_tensor.to(torch.device('cpu'))
-    save_image(input_tensor, filename)
