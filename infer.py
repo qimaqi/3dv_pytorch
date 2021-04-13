@@ -1,6 +1,7 @@
 import torch
 import torch.nn.functional as F
 import torch.nn as nn
+import logging
 
 from vgg import VGGPerception
 from utils.dataset import InferDataset
@@ -42,7 +43,7 @@ if __name__ == '__main__':
     , batch_size, n_val, dir_checkpoint, device.type
     )
 
-    for batch in train_loader:
+    for batch in infer_loader:
         input_features = batch['feature']
         index = batch['index']
         input_features = input_features.to(device=device, dtype=torch.float32)
