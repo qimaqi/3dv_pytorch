@@ -77,6 +77,7 @@ def train_net(net,
     #optimizer = optim.RMSprop(net.parameters(), lr=lr, weight_decay=1e-8, momentum=0.9)
     optimizer = optim.Adam(net.parameters(), lr=lr, eps = 1e-8)
     #scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=2)
+    scheduler = optim.lr_scheduler.MultiStepLR(optimizer, milestones=[6,8,9], gamma=0.1)
 
     pixel_criterion = nn.L1Loss()       
     percepton_criterion = VGGPerception()
@@ -135,7 +136,7 @@ def train_net(net,
                     #writer.add_histogram('weights/' + tag, value.data.cpu().numpy(), global_step)
                     #writer.add_histogram('grads/' + tag, value.grad.data.cpu().numpy(), global_step)
                 val_score = eval_net(net, val_loader, device)
-                #scheduler.step(val_score)
+                scheduler.step()
                 print('Coarsenet score: ',(val_score), 'in epoch', epoch )
                 #writer.add_scalar('learning_rate', optimizer.param_groups[0]['lr'], global_step)
 
