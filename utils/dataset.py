@@ -309,10 +309,10 @@ class InferDataset(Dataset):
 
 
         #feature = np.zeros([width,height,desc_length])   # build a 640 x 480 x 256 array
-        feature = np.zeros([height,width,desc_length+1 ])    # build a 480 x 640 x 257 array   HWC
+        feature = np.zeros([height,width,desc_length+1 ])    # build a 480 x 640 x 129 array   HWC
         for j in range(pos_num):
             x = int(pos[j][0]) #640
-            y = int(pos[j][0]) #480
+            y = int(pos[j][1]) #480
             feature[y,x,1:] = desc[j,:]   # to compensate with zero
             feature[y,x,1] = (np.array(img)[y,x]/127.5-1)
         
