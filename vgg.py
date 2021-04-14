@@ -47,7 +47,7 @@ class VGGPerception(nn.Module):
         #x_trans = x_rgb.transpose((2, 0, 1))  # CHW
         #tx = torch.from_numpy(x_trans).type(torch.FloatTensor)
 
-        tx = (tx-self.mean) / self.std
+        tx = tx-self.mean
 
         px = self.to_relu_1_2(tx)
         p_relu_1_2 = px
