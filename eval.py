@@ -17,8 +17,11 @@ def eval_net(net, loader, device):
     percepton_criterion = VGGPerception()
     percepton_criterion.to(device=device)
     l2_loss = nn.MSELoss()
-    pix_loss_wt = 0.5
-    per_loss_wt = 0.5
+    pix_loss_wt = 1
+    per_loss_wt = 1
+    sum_pix_loss = 0
+    sum_per_loss = 0
+
 
     #with tqdm(total=n_val, desc='Validation round', unit='batch', leave=False) as pbar:
     for batch in loader:
@@ -36,8 +39,11 @@ def eval_net(net, loader, device):
 
         perception_loss = ( l2_loss(P_pred[0],P_img[0]) + l2_loss(P_pred[1],P_img[1]) + l2_loss(P_pred[2],P_img[2])) / 3
         pixel_loss = pixel_criterion(cpred,true_imgs)
+        sum_pix_loss += pixel_loss
+        sum_per_loss += perception_loss
         tot += pixel_loss*pix_loss_wt + perception_loss*per_loss_wt
 
 
     net.train()
+    print('Coarsenet pixel_loss: ',(sum_pix_loss/n_val), 'Coarsenet perception_loss:', sum_per_loss/n_val )
     return tot / n_val
