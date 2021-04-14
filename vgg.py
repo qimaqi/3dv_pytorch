@@ -15,7 +15,7 @@ class VGGPerception(nn.Module):
         self.to_relu_2_2 = nn.Sequential() 
         self.to_relu_3_3 = nn.Sequential()
         self.mean = torch.nn.Parameter(torch.tensor([0.485*255, 0.456*255, 0.406*255], device = device, requires_grad = False).view(1,3,1,1))
-        self.std = torch.nn.Parameter(torch.tensor([0.229*255, 0.224*255, 0.225*255], device = device, requires_grad = False).view(1,3,1,1))
+        #self.std = torch.nn.Parameter(torch.tensor([0.229*255, 0.224*255, 0.225*255], device = device, requires_grad = False).view(1,3,1,1))
         #self.register_buffer('mean', torch.tensor([0.485, 0.456, 0.406]).view(1,3,1,1)).to(device=device, dtype=torch.float32)
         #self.register_buffer('std', torch.tensor([0.229, 0.224, 0.225]).view(1,3,1,1)).to(device=device, dtype=torch.float32)
 
@@ -47,7 +47,7 @@ class VGGPerception(nn.Module):
         #x_trans = x_rgb.transpose((2, 0, 1))  # CHW
         #tx = torch.from_numpy(x_trans).type(torch.FloatTensor)
 
-        tx = (tx-self.mean) / self.std
+        tx = (tx-self.mean)    #/ self.std
 
         px = self.to_relu_1_2(tx)
         p_relu_1_2 = px
