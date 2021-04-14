@@ -75,6 +75,7 @@ def train_net(net,
     #optimizer = optim.RMSprop(net.parameters(), lr=lr, weight_decay=1e-8, momentum=0.9)
     optimizer = optim.Adam(net.parameters(), lr=lr, eps = 1e-8)
     #scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=2)
+    scheduler = optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=5, T_mult=1)
 
     pixel_criterion = nn.L1Loss()       
     percepton_criterion = VGGPerception()
