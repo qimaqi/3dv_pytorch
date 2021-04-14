@@ -2,8 +2,6 @@ import torch
 import torch.nn.functional as F
 #from tqdm import tqdm
 import torch.nn as nn
-
-from dice_loss import dice_coeff
 from vgg import VGGPerception
 
 
@@ -40,15 +38,6 @@ def eval_net(net, loader, device):
         pixel_loss = pixel_criterion(cpred,true_imgs)
         tot += pixel_loss*pix_loss_wt + perception_loss*per_loss_wt
 
-            #if net.n_classes > 1:
-            #    tot += F.cross_entropy(mask_pred, true_masks).item()
-            
-            
-            #else:
-            #    pred = torch.sigmoid(mask_pred)
-            #    pred = (pred > 0.5).float()
-            #    tot += dice_coeff(pred, true_masks).item()
-            #pbar.update()
 
     net.train()
     return tot / n_val
