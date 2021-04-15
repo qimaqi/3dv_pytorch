@@ -27,21 +27,38 @@ import logging
 from PIL import Image
 import json
 
-imgs_dir = '../data/nyu_v1_images/'
-dir_features = '../data/nyu_v1_features/'
-ids = [splitext(file)[0] for file in listdir(imgs_dir) if not file.startswith('.')]
-img_file = glob(imgs_dir + ids[0] + '.*')
-feature_file = glob(dir_features + ids[0] + '.*')
-#print(feature_file)
-f1 = np.arange(100)
-print(f1)
-print(f1.shape)
-f1.resize(5,20)
-print(f1)
-f1.resize(20,5)
-print(f1)
+# imgs_dir = '../data/nyu_v1_images/'
+# dir_features = '../data/nyu_v1_features/'
+# ids = [splitext(file)[0] for file in listdir(imgs_dir) if not file.startswith('.')]
+# img_file = glob(imgs_dir + ids[0] + '.*')
+# feature_file = glob(dir_features + ids[0] + '.*')
+# #print(feature_file)
+# f1 = np.arange(100)
+# print(f1)
+# print(f1.shape)
+# f1.resize(5,20)
+# print(f1)
+# f1.resize(20,5)
+# print(f1)
+logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
+n_channels = 257
+n_classes = 1
+logging.info('Network:\n'
+            '\t %s channels input channels\n' 
+            '\t %s output channels (grey brightness)', n_channels, n_classes)
 
-
+epochs, batch_size, lr, n_train, n_val, save_cp, device, img_scale = 1,1,1,1,1,1,1,1
+logging.info('Starting training:\n'
+    '\t Epochs:          %s\n'        
+    '\tBatch size:       %s\n'     
+    '\tLearning rate:    %s\n' 
+    '\tTraining size:    %s\n'  
+    '\tValidation size:  %s\n'
+    '\tCheckpoints:      %s\n' 
+    '\tDevice:           %s\n'         
+    '\tImages scaling:   %s\n'  
+    , epochs, batch_size, lr, n_train, n_val, save_cp, device, img_scale
+    )
 #img = Image.open(img_file[0]).convert('L')
 #img = cv2.imread(img_file[0],0)
 #img2 = cv2.imread(img_file[0],0)
