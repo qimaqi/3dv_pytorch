@@ -21,17 +21,15 @@ import torchvision.models as models
 from vgg import VGGPerception
 
 
-# To do
-# delete useless code and make it clear
-# to use logging and attribute feature 
-# infer to test the result
+# To do not clip the gradient
+#
 
 
 #some default dir need images descripton, pos and depth. Attention this time desc and pos is in json !!!!!!!!!!
 dir_img = '/cluster/scratch/qimaqi/nyu_v1_images/'     ####### QM:change data directory path
 #dir_features = '../data/nyu_v1_features/'  # databasic2 can directly process feature
 dir_desc = '/cluster/scratch/qimaqi/nyu_v1_desc/'
-dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_norm_std_lre-3/'
+dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_b6_lre-4_s8/'
 dir_depth = '/cluster/scratch/qimaqi/nyu_v1_depth/'
 dir_pos = '/cluster/scratch/qimaqi/nyu_v1_pos/'
 #log_dir = '/cluster/scratch/qimaqi/log/'    
@@ -52,7 +50,7 @@ def train_net(net,
               pix_loss_wt,
               epochs=10,
               batch_size=8,
-              lr=0.001,
+              lr=0.0001,
               val_percent=0.1,
               save_cp=True,
               img_scale = 1):
@@ -109,8 +107,8 @@ def train_net(net,
             #mask_type = torch.float32
             true_imgs = true_imgs.to(device=device, dtype=torch.float32)
 
-            pred = net(input_features)  # ##### check the max and min
-            cpred = (pred+1.)*127.5     # 
+            pred = net(input_features)  # #### check the max and min
+            cpred = (pred+1.)*127.5     
             
             P_pred = percepton_criterion(cpred)
             P_img = percepton_criterion(true_imgs)   ### check perceptional repeat
@@ -131,21 +129,21 @@ def train_net(net,
             #total_loss = pix_loss_wt * pix_loss + per_loss_wt * per_loss
 
             loss.backward()
-            nn.utils.clip_grad_value_(net.parameters(), 0.1)
+            #nn.utils.clip_grad_value_(net.parameters(), 0.1)
             optimizer.step()
 
 
             global_step += 1
             # debug part
-            if global_step % (n_train // (10 * batch_size)) == 0:
-                tmp_output_dir = '/cluster/scratch/qimaqi/debug_output/' +str(global_step) + '.png'
-                tmp_img_dir = '/cluster/scratch/qimaqi/debug_images/'+ str(global_step) + '.png'
-                save_image_tensor(cpred,tmp_output_dir)
-                save_image_tensor(true_imgs,tmp_img_dir)
-                print('cpred maximum', torch.max(cpred))
-                print('cpred minimum', torch.min(cpred))
-                print('true_images maximum', torch.max(true_imgs))
-                print('true_images minimum', torch.min(true_imgs))
+            #if global_step % (n_train // (10 * batch_size)) == 0:
+            #    tmp_output_dir = '/cluster/scratch/qimaqi/debug_output/' +str(global_step) + '.png'
+            #    tmp_img_dir = '/cluster/scratch/qimaqi/debug_images/'+ str(global_step) + '.png'
+            #    save_image_tensor(cpred,tmp_output_dir)
+            #    save_image_tensor(true_imgs,tmp_img_dir)
+            #    print('cpred maximum', torch.max(cpred))
+            #    print('cpred minimum', torch.min(cpred))
+            #    print('true_images maximum', torch.max(true_imgs))
+            #    print('true_images minimum', torch.min(true_imgs))
 
             if global_step % (n_train // (10 * batch_size)) == 0:
                 for tag, value in net.named_parameters():
@@ -173,11 +171,11 @@ def train_net(net,
 def get_args():
     parser = argparse.ArgumentParser(description='Train the CoarseNet on images and correspond superpoint descripton',
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('-e', '--epochs', metavar='E', type=int, default=2,
+    parser.add_argument('-e', '--epochs', metavar='E', type=int, default=24,
                         help='Number of epochs', dest='epochs')
-    parser.add_argument('-b', '--batch-size', metavar='B', type=int, nargs='?', default=1,
+    parser.add_argument('-b', '--batch-size', metavar='B', type=int, nargs='?', default=6,
                         help='Batch size', dest='batchsize')
-    parser.add_argument('-l', '--learning-rate', metavar='LR', type=float, nargs='?', default=1e-3,
+    parser.add_argument('-l', '--learning-rate', metavar='LR', type=float, nargs='?', default=1e-4,
                         help='Learning rate', dest='lr')
     parser.add_argument('-f', '--load', dest='load', type=str, default=False,
                         help='Load model from a pretrain .pth file')

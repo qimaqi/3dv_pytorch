@@ -28,7 +28,7 @@ def save_image_tensor(input_tensor, filename):
     input_tensor = input_tensor.clone().detach()
     # to cpu
     input_tensor = input_tensor.to(torch.device('cpu'))
-    save_image(input_tensor, filename)
+    save_image(input_tensor, filename, normalize=True)
 
 
 if __name__ == '__main__':
