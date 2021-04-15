@@ -27,19 +27,19 @@ import logging
 from PIL import Image
 import json
 
-imgs_dir = '../data/nyu_v1_images/'
-dir_features = '../data/nyu_v1_features/'
-ids = [splitext(file)[0] for file in listdir(imgs_dir) if not file.startswith('.')]
-img_file = glob(imgs_dir + ids[0] + '.*')
-feature_file = glob(dir_features + ids[0] + '.*')
-#print(feature_file)
-f1 = np.arange(100)
-print(f1)
-print(f1.shape)
-f1.resize(5,20)
-print(f1)
-f1.resize(20,5)
-print(f1)
+# imgs_dir = '../data/nyu_v1_images/'
+# dir_features = '../data/nyu_v1_features/'
+# ids = [splitext(file)[0] for file in listdir(imgs_dir) if not file.startswith('.')]
+# img_file = glob(imgs_dir + ids[0] + '.*')
+# feature_file = glob(dir_features + ids[0] + '.*')
+# #print(feature_file)
+# f1 = np.arange(100)
+# print(f1)
+# print(f1.shape)
+# f1.resize(5,20)
+# print(f1)
+# f1.resize(20,5)
+# print(f1)
 
 
 #img = Image.open(img_file[0]).convert('L')
