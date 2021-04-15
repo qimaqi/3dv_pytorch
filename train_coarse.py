@@ -57,6 +57,7 @@ def train_net(net,
               save_cp=True,
               img_scale = 1):
 
+    save_cp = False
     #dataset = BasicDataset2(dir_img, dir_depth, dir_features, img_scale)  #without dataaugumentation and load direct feature npz
     dataset = BasicDataset3(dir_img, dir_depth, dir_pos, dir_desc, img_scale, pct_3D_points, crop_size)
     n_val = int(len(dataset) * val_percent)
@@ -105,8 +106,8 @@ def train_net(net,
             assert input_features.shape[1] == net.n_channels, 'Channel match problem'
 
             input_features = input_features.to(device=device, dtype=torch.float32)
-            mask_type = torch.float32 if net.n_classes == 1 else torch.long
-            true_imgs = true_imgs.to(device=device, dtype=mask_type)
+            #mask_type = torch.float32
+            true_imgs = true_imgs.to(device=device, dtype=torch.float32)
 
             pred = net(input_features)  # ##### check the max and min
             cpred = (pred+1.)*127.5     # 
@@ -143,8 +144,8 @@ def train_net(net,
                 save_image_tensor(true_imgs,tmp_img_dir)
                 print('cpred maximum', torch.max(cpred))
                 print('cpred minimum', torch.min(cpred))
-                print('true_images maximum'), torch.max(true_imgs)
-                print('true_images minimum'), torch.min(true_imgs)
+                print('true_images maximum', torch.max(true_imgs))
+                print('true_images minimum', torch.min(true_imgs))
 
             if global_step % (n_train // (10 * batch_size)) == 0:
                 for tag, value in net.named_parameters():
