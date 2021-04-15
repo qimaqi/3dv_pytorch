@@ -21,15 +21,17 @@ import torchvision.models as models
 from vgg import VGGPerception
 
 
-# To do not clip the gradient
-#
+# To do
+# delete useless code and make it clear
+# to use logging and attribute feature 
+# infer to test the result
 
 
 #some default dir need images descripton, pos and depth. Attention this time desc and pos is in json !!!!!!!!!!
 dir_img = '/cluster/scratch/qimaqi/nyu_v1_images/'     ####### QM:change data directory path
 #dir_features = '../data/nyu_v1_features/'  # databasic2 can directly process feature
 dir_desc = '/cluster/scratch/qimaqi/nyu_v1_desc/'
-dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_b6_lre-4_s8/'
+dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_b6_lre-3_/'
 dir_depth = '/cluster/scratch/qimaqi/nyu_v1_depth/'
 dir_pos = '/cluster/scratch/qimaqi/nyu_v1_pos/'
 #log_dir = '/cluster/scratch/qimaqi/log/'    
@@ -39,7 +41,7 @@ def save_image_tensor(input_tensor, filename):
     input_tensor = input_tensor.clone().detach()
     # to cpu
     input_tensor = input_tensor.to(torch.device('cpu'))
-    save_image(input_tensor, filename, normalize=True)
+    save_image(input_tensor, filename,normalize=True)
 
 
 def train_net(net,
@@ -50,19 +52,20 @@ def train_net(net,
               pix_loss_wt,
               epochs=10,
               batch_size=8,
-              lr=0.0001,
+              lr=0.001,
               val_percent=0.1,
               save_cp=True,
               img_scale = 1):
 
-    save_cp = False
+    #save_cp = False
     #dataset = BasicDataset2(dir_img, dir_depth, dir_features, img_scale)  #without dataaugumentation and load direct feature npz
     dataset = BasicDataset3(dir_img, dir_depth, dir_pos, dir_desc, img_scale, pct_3D_points, crop_size)
     n_val = int(len(dataset) * val_percent)
     n_train = len(dataset) - n_val
     train, val = random_split(dataset, [n_train, n_val])
-    train_loader = DataLoader(train, batch_size=batch_size, shuffle=True, num_workers=1, pin_memory=True)
-    val_loader = DataLoader(val, batch_size=batch_size, shuffle=False, num_workers=1, pin_memory=True, drop_last=True)
+    train_loader = DataLoader(train, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=True)
+    val_batch_size = 1
+    val_loader = DataLoader(val, batch_size=val_batch_size, shuffle=False, num_workers=4, pin_memory=True, drop_last=True)
 
     global_step = 0
 
@@ -107,8 +110,8 @@ def train_net(net,
             #mask_type = torch.float32
             true_imgs = true_imgs.to(device=device, dtype=torch.float32)
 
-            pred = net(input_features)  # #### check the max and min
-            cpred = (pred+1.)*127.5     
+            pred = net(input_features)  # ##### check the max and min
+            cpred = (pred+1.)*127.5     # 
             
             P_pred = percepton_criterion(cpred)
             P_img = percepton_criterion(true_imgs)   ### check perceptional repeat
@@ -135,15 +138,15 @@ def train_net(net,
 
             global_step += 1
             # debug part
-            if global_step % (n_train // (10 * batch_size)) == 0:
-                tmp_output_dir = '/cluster/scratch/qimaqi/debug_output/' +str(global_step) + '.png'
-                tmp_img_dir = '/cluster/scratch/qimaqi/debug_images/'+ str(global_step) + '.png'
-                save_image_tensor(cpred,tmp_output_dir)
-                save_image_tensor(true_imgs,tmp_img_dir)
-                print('cpred maximum', torch.max(cpred))
-                print('cpred minimum', torch.min(cpred))
-                print('true_images maximum', torch.max(true_imgs))
-                print('true_images minimum', torch.min(true_imgs))
+            #if global_step % (n_train // (10 * batch_size)) == 0:
+            #    tmp_output_dir = '/cluster/scratch/qimaqi/debug_output/' +str(global_step) + '.png'
+            #    tmp_img_dir = '/cluster/scratch/qimaqi/debug_images/'+ str(global_step) + '.png'
+            #    save_image_tensor(cpred,tmp_output_dir)
+            #    save_image_tensor(true_imgs,tmp_img_dir)
+            #    print('cpred maximum', torch.max(cpred))
+            #    print('cpred minimum', torch.min(cpred))
+            #    print('true_images maximum', torch.max(true_imgs))
+            #    print('true_images minimum', torch.min(true_imgs))
 
             if global_step % (n_train // (10 * batch_size)) == 0:
                 for tag, value in net.named_parameters():
@@ -173,9 +176,9 @@ def get_args():
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('-e', '--epochs', metavar='E', type=int, default=24,
                         help='Number of epochs', dest='epochs')
-    parser.add_argument('-b', '--batch-size', metavar='B', type=int, nargs='?', default=1,
+    parser.add_argument('-b', '--batch-size', metavar='B', type=int, nargs='?', default=6,
                         help='Batch size', dest='batchsize')
-    parser.add_argument('-l', '--learning-rate', metavar='LR', type=float, nargs='?', default=1e-4,
+    parser.add_argument('-l', '--learning-rate', metavar='LR', type=float, nargs='?', default=1e-3,
                         help='Learning rate', dest='lr')
     parser.add_argument('-f', '--load', dest='load', type=str, default=False,
                         help='Load model from a pretrain .pth file')
