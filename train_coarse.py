@@ -87,8 +87,6 @@ def train_net(net,
     #    criterion = nn.CrossEntropyLoss()
     #else:
     #    criterion = nn.BCEWithLogitsLoss()
-
-
     for epoch in range(epochs):
         net.train()
 
@@ -127,6 +125,7 @@ def train_net(net,
             nn.utils.clip_grad_value_(net.parameters(), 0.1)
             optimizer.step()
 
+
             #pbar.update(input_features.shape[0])
             global_step += 1
             if global_step % (n_train // (10 * batch_size)) == 0:
@@ -155,7 +154,7 @@ def train_net(net,
 def get_args():
     parser = argparse.ArgumentParser(description='Train the CoarseNet on images and correspond superpoint descripton',
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('-e', '--epochs', metavar='E', type=int, default=32,
+    parser.add_argument('-e', '--epochs', metavar='E', type=int, default=2,
                         help='Number of epochs', dest='epochs')
     parser.add_argument('-b', '--batch-size', metavar='B', type=int, nargs='?', default=6,
                         help='Batch size', dest='batchsize')
