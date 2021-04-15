@@ -1,3 +1,6 @@
+# Edited by Qi Ma
+# qimaqi@student.ethz.ch
+
 from os.path import splitext
 from os import listdir
 import numpy as np
@@ -11,16 +14,7 @@ from PIL import Image
 from utils import data_load
 
 
-# #import cv2 
-# def load_json(path):
-#     f = open(path,'r')
-#     content = f.read()
-#     a = json.loads(content)
-#     return a.popitem()[1]
-
-###### QM:very important to change
-# problem1: the load npz is 640x480x256, np.shape is always 640x480 when image size is 480 x 640
-# problem2:
+#BasicDataset2 only for load feature which already 640x480 with 0
 class BasicDataset2(Dataset):
     def __init__(self, imgs_dir, depth_dir, feature_dir, scale=1):
         self.imgs_dir = imgs_dir
@@ -38,17 +32,9 @@ class BasicDataset2(Dataset):
 
     @classmethod
     def preprocess(cls, pil_feature, scale=1):
-        #h, w = np.shape(pil_img)[:2] # 480 x 640  ( the size of image is 640x480 when feature of np.array is 640x480, np.array of image is 480x640)
-        # h is 480 when w is 640
-        #newW, newH = int(scale * w), int(scale * h)
-        #assert newW > 0 and newH > 0, 'Scale is too small'
-        #pil_img = pil_img.resize((newW, newH))
+
         feature_nd = np.array(pil_feature)
         feature_nd = np.resize(feature_nd,(224,168,32))  #### QM: resize so ram enough
-
-
-        #if len(img_nd.shape) == 2:
-        #    img_nd = np.expand_dims(img_nd, axis=2)
 
         # HWC to CHW ... in our feature which is 640x480 WHC -> CHW
         feature_trans = feature_nd.transpose((2, 1, 0)) # channel x 480 x 640
@@ -63,32 +49,18 @@ class BasicDataset2(Dataset):
         depth_file = glob(self.depth_dir + idx + '.*')
         feature_file = glob(self.feature_dir + idx + '.*')
         img_file = glob(self.imgs_dir + idx + '.*')
-        #cv2.imread(path,0)
-
-        #assert len(depth_file) == 1, \
-        #    f'Either no mask or multiple masks found for the ID {idx}: {depth_file}'
-        #assert len(feature_file) == 1, \
-        #    f'Either no mask or multiple masks found for the ID {idx}: {feature_file}'
-        #assert len(img_file) == 1, \
-        #    f'Either no image or multiple images found for the ID {idx}: {img_file}'
         
         feature = np.load(feature_file[0])['feature']
         depth = np.load(depth_file[0])['depth']
         img = Image.open(img_file[0]).convert('L')
 
-        #assert img.size == feature.shape[:2], \
-        #    f'Image and feature {idx} should be the same size, but are {img.size} and {feature.shape[:2]}'
-
-        #img = self.preprocess(img, self.scale)
         feature = self.preprocess(feature, self.scale)   ### QM: the process only transpose channel, need more data augumentation
         img = np.array(img)
-        #print(np.shape(img))   # return 480 x 640 height x width, but np.shape return 640x480
         img = np.resize(img,(168,224))
         if len(img.shape) == 2:
             img = np.expand_dims(img, axis=2)
         
         img_trans = img.transpose((2, 0, 1))  # CHWape(img_trans))
-        #feature = feature.copy()
         
         return {
             'feature': torch.from_numpy(feature.copy()).type(torch.FloatTensor),
@@ -99,7 +71,7 @@ class BasicDataset2(Dataset):
 
 
 
-
+# Data basic3 load pos_dir and des_dir to construct a feature 480x640x257 with other point zero
 class BasicDataset3(Dataset):
     def __init__(self, imgs_dir, depth_dir, pos_dir, desc_dir, scale, pct_3D_points, crop_size):
         self.imgs_dir = imgs_dir
@@ -113,7 +85,7 @@ class BasicDataset3(Dataset):
 
         self.ids = [splitext(file)[0] for file in listdir(imgs_dir)
                     if not file.startswith('.')]
-        #logging.info(f'Creating dataset with {len(self.ids)} examples')
+        logging.info('Creating dataset with %s examples', len(self.ids))
 
     def __len__(self):
         return len(self.ids)
@@ -136,24 +108,26 @@ class BasicDataset3(Dataset):
         #print(feature_nd.shape)
 
         if scale != 1:
-            step = (1.0 /scale)  # Attention here, in the outside of images may have lost problem
-            w_num = 0
-            h_num = 0
-            newW, newH = int(scale * w), int(scale * h)
-            assert newW > 0 and newH > 0, 'Scale is too small'
-            new_img = np.zeros([newH,newW,c2])   
-            new_feature = np.zeros([newH,newW,c])
-            for i in range(h):
-                for j in range(w):
-                    if (i == int(h_num * step) and (j == int(w_num * step))):
-                        new_img[h_num,w_num] = img_nd[i,j,:]
-                        new_feature[h_num,w_num] = feature_nd[i,j,:]
-                        w_num += 1
-                        h_num += 1
+            scale_rand_seed_w = torch.rand(1)
+            if scale_rand_seed_w <= 0.5:
+                step = (1.0 /scale)  # Attention here, in the outside of images may have lost problem
+                w_num = 0
+                h_num = 0
+                newW, newH = int(scale * w), int(scale * h)
+                assert newW > 0 and newH > 0, 'Scale is too small'
+                new_img = np.zeros([newH,newW,c2])   
+                new_feature = np.zeros([newH,newW,c])
+                for i in range(h):
+                    for j in range(w):
+                        if (i == int(h_num * step) and (j == int(w_num * step))):
+                            new_img[h_num,w_num] = img_nd[i,j,:]
+                            new_feature[h_num,w_num] = feature_nd[i,j,:]
+                            w_num += 1
+                            h_num += 1
     
-            w, h = newW, newH
-            feature_nd = new_feature
-            img_nd = new_img
+                w, h = newW, newH
+                feature_nd = new_feature
+                img_nd = new_img
 
         # if crop size is 0 then no crop
         assert crop_size >= 0, 'Crop Size must be positive'
@@ -173,12 +147,7 @@ class BasicDataset3(Dataset):
 
         # HWC to CHW 
         feature_trans = feature_nd.transpose((2, 0, 1)) # channel x 480 x 640
-        #feature_trans = (feature_trans/127.5)-1   # normalization 127.5 is for RGB, do we need this number here?
         img_trans = img_nd.transpose(( 2, 0, 1))    # batch
-        #if img_trans.max() > 1:
-        #    img_trans = img_trans / 255
-        #feature_trans = np.resize(feature_trans,(32 ,168, 224))  #### QM: resize so ram enough
-        #img_trans = np.resize(img_trans,(1,168,224))
 
         return feature_trans, img_trans
 
@@ -188,17 +157,6 @@ class BasicDataset3(Dataset):
         pos_file = glob(self.pos_dir + idx + '.*')      # one pos json !!! not npz here 
         desc_file = glob(self.desc_dir + idx + '.*')    # one desc json !!! not npz here
         img_file = glob(self.imgs_dir + idx + '.*')     # one image jpg
-        #cv2.imread(path,0)
-        #print('start get item',idx)
-
-        #assert len(depth_file) == 1, \
-        #    f'Either no mask or multiple masks found for the ID {idx}: {depth_file}'
-        #assert len(pos_file) == 1, \
-        #    f'Either no mask or multiple masks found for the ID {idx}: {feature_file}'
-        #assert len(desc_file) == 1, \
-        #    f'Either no image or multiple images found for the ID {idx}: {img_file}'
-        #assert len(img_file) == 1, \
-        #    f'Either no image or multiple images found for the ID {idx}: {img_file}'
 
         #img = data_load.load_img(img_list[i])
         depth = np.load(depth_file[0])['depth']
@@ -222,15 +180,10 @@ class BasicDataset3(Dataset):
             x = int(pos[0][j]) #640
             y = int(pos[1][j]) #480
             feature[y,x,1:] = desc[:,j]   # to compensate with zero
-            feature[y,x,1] = (np.array(img)[y,x]/127.5-1)
+            feature[y,x,1] = (np.array(img)[y,x]/127.5-1)  # only normalize the grey image
         
-        #assert np.shape(img) == feature.shape[:2], \
-        #    f'Image and feature {idx} should be the same size, but are {img.size} and {feature.shape[:2]}'
-
+        # after preprocess, the feature and image will be well transposed and augumented
         feature, img = self.preprocess(feature, img, self.scale, self.crop_size)   ### QM: the process only transpose channel, need more data augumentation
-
-        #print(feature.shape)
-        #print(img.shape)
 
         return {
             'feature': torch.from_numpy(feature.copy()).type(torch.FloatTensor),
@@ -240,7 +193,7 @@ class BasicDataset3(Dataset):
 
 
 
-# use for infer
+# use for infer, 
 class InferDataset(Dataset):
     def __init__(self, imgs_dir, depth_dir, pos_dir, desc_dir, pct_3D_points):
         self.imgs_dir = imgs_dir
@@ -263,10 +216,8 @@ class InferDataset(Dataset):
         #print(h,w,c) # 480, 640, 256
   
         feature_nd = np.array(feature)
-
-        #print(feature_nd.shape)
-        # if crop size is 0 then no crop
         crop_size = 256
+
         assert crop_size >= 0, 'Crop Size must be positive'
         if crop_size != 0:
             crop_rand_seed_w = torch.rand(1)
@@ -277,9 +228,6 @@ class InferDataset(Dataset):
 
         # HWC to CHW 
         feature_trans = feature_nd.transpose((2, 0, 1)) # channel x 480 x 640
-        #feature_trans = (feature_trans/127.5)-1   # normalization 127.5 is for RGB, do we need this number here?
-        #feature_trans = np.resize(feature_trans,(32 ,168, 224))  #### QM: resize so ram enough
-        #img_trans = np.resize(img_trans,(1,168,224))
         return feature_trans
 
     def __getitem__(self, i):
@@ -288,15 +236,9 @@ class InferDataset(Dataset):
         pos_file = glob(self.pos_dir + idx + '.*')      # one pos json !!! not npz here 
         desc_file = glob(self.desc_dir + idx + '.*')    # one desc json !!! not npz here
         img_file = glob(self.imgs_dir + idx + '.*')     # one image jpg
-        #cv2.imread(path,0)
-        #print('start get item',idx)
 
-
-        #img = data_load.load_img(img_list[i])
         depth = np.load(depth_file[0])['depth']
         img = Image.open(img_file[0]).convert('L')
-
-        #print(pos_file)
 
         pos = np.array(data_load.load_json(pos_file[0]))   # 3 x points_num  list, the third is confidence
         desc = np.array(data_load.load_json(desc_file[0]))  # 256 x points_num  list, 256 features
@@ -315,13 +257,9 @@ class InferDataset(Dataset):
             y = int(pos[1][j]) #480
             feature[y,x,1:] = desc[:,j]   # to compensate with zero
             feature[y,x,1] = (np.array(img)[y,x]/127.5-1)
-        
-        #feature_nd = np.array(feature)
-        #feature_trans = feature_nd.transpose((2, 0, 1))
+
         feature = self.preprocess(feature)
 
-        #print(feature.shape)
-        #print(img.shape)
 
         return {
             'feature': torch.from_numpy(feature.copy()).type(torch.FloatTensor),

@@ -6,6 +6,7 @@ import logging
 import os
 import sys
 
+from torchvision.utils import save_image
 import numpy as np
 import torch
 import torch.nn as nn
@@ -30,10 +31,17 @@ from vgg import VGGPerception
 dir_img = '/cluster/scratch/qimaqi/nyu_v1_images/'     ####### QM:change data directory path
 #dir_features = '../data/nyu_v1_features/'  # databasic2 can directly process feature
 dir_desc = '/cluster/scratch/qimaqi/nyu_v1_desc/'
-dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints/'
+dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_norm_std_lre-3/'
 dir_depth = '/cluster/scratch/qimaqi/nyu_v1_depth/'
 dir_pos = '/cluster/scratch/qimaqi/nyu_v1_pos/'
 #log_dir = '/cluster/scratch/qimaqi/log/'    
+
+def save_image_tensor(input_tensor, filename):
+    assert (len(input_tensor.shape) == 4 and input_tensor.shape[0] == 1)
+    input_tensor = input_tensor.clone().detach()
+    # to cpu
+    input_tensor = input_tensor.to(torch.device('cpu'))
+    save_image(input_tensor, filename)
 
 
 def train_net(net,
@@ -47,8 +55,9 @@ def train_net(net,
               lr=0.001,
               val_percent=0.1,
               save_cp=True,
-              img_scale=0.7):
+              img_scale = 1):
 
+    save_cp = False
     #dataset = BasicDataset2(dir_img, dir_depth, dir_features, img_scale)  #without dataaugumentation and load direct feature npz
     dataset = BasicDataset3(dir_img, dir_depth, dir_pos, dir_desc, img_scale, pct_3D_points, crop_size)
     n_val = int(len(dataset) * val_percent)
@@ -75,6 +84,8 @@ def train_net(net,
     #optimizer = optim.RMSprop(net.parameters(), lr=lr, weight_decay=1e-8, momentum=0.9)
     optimizer = optim.Adam(net.parameters(), lr=lr, eps = 1e-8)
     #scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=2)
+    #scheduler = optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=5, T_mult=1) pytorch 1.01
+    scheduler = optim.lr_scheduler.MultiStepLR(optimizer, milestones=[5,12,16], gamma=0.1)
 
     pixel_criterion = nn.L1Loss()       
     percepton_criterion = VGGPerception()
@@ -85,8 +96,6 @@ def train_net(net,
     #    criterion = nn.CrossEntropyLoss()
     #else:
     #    criterion = nn.BCEWithLogitsLoss()
-
-
     for epoch in range(epochs):
         net.train()
 
@@ -97,14 +106,14 @@ def train_net(net,
             assert input_features.shape[1] == net.n_channels, 'Channel match problem'
 
             input_features = input_features.to(device=device, dtype=torch.float32)
-            mask_type = torch.float32 if net.n_classes == 1 else torch.long
-            true_imgs = true_imgs.to(device=device, dtype=mask_type)
+            #mask_type = torch.float32
+            true_imgs = true_imgs.to(device=device, dtype=torch.float32)
 
-            pred = net(input_features)
-            cpred = (pred+1.)*127.5
+            pred = net(input_features)  # ##### check the max and min
+            cpred = (pred+1.)*127.5     # 
             
             P_pred = percepton_criterion(cpred)
-            P_img = percepton_criterion(true_imgs)
+            P_img = percepton_criterion(true_imgs)   ### check perceptional repeat
             perception_loss = ( l2_loss(P_pred[0],P_img[0]) + l2_loss(P_pred[1],P_img[1]) + l2_loss(P_pred[2],P_img[2])) / 3
             #print(cpred.size())#([1, 1, 168, 224])
             # print(true_imgs.size()) #([1, 1, 168, 224])
@@ -125,31 +134,28 @@ def train_net(net,
             nn.utils.clip_grad_value_(net.parameters(), 0.1)
             optimizer.step()
 
-            #pbar.update(input_features.shape[0])
+
             global_step += 1
+            # debug part
+            if global_step % (n_train // (10 * batch_size)) == 0:
+                tmp_output_dir = '/cluster/scratch/qimaqi/debug_output/' +str(global_step) + '.png'
+                tmp_img_dir = '/cluster/scratch/qimaqi/debug_images/'+ str(global_step) + '.png'
+                save_image_tensor(cpred,tmp_output_dir)
+                save_image_tensor(true_imgs,tmp_img_dir)
+                print('cpred maximum', torch.max(cpred))
+                print('cpred minimum', torch.min(cpred))
+                print('true_images maximum', torch.max(true_imgs))
+                print('true_images minimum', torch.min(true_imgs))
+
             if global_step % (n_train // (10 * batch_size)) == 0:
                 for tag, value in net.named_parameters():
                     tag = tag.replace('.', '/')
                     #writer.add_histogram('weights/' + tag, value.data.cpu().numpy(), global_step)
                     #writer.add_histogram('grads/' + tag, value.grad.data.cpu().numpy(), global_step)
                 val_score = eval_net(net, val_loader, device)
-                #scheduler.step(val_score)
+                scheduler.step()
                 print('Coarsenet score: ',(val_score), 'in epoch', epoch )
                 #writer.add_scalar('learning_rate', optimizer.param_groups[0]['lr'], global_step)
-
-                #if net.n_classes > 1:
-                    #logging.info('Validation cross entropy: {}'.format(val_score))
-                    #print('Validation loss: ',(val_score))
-                    #writer.add_scalar('Loss/test', val_score, global_step)
-                #else:
-                    #logging.info('Validation Dice Coeff: {}'.format(val_score))
-                    #print('Validation Dice Coeff: ',(val_score))
-                    #writer.add_scalar('Dice/test', val_score, global_step)
-
-                #writer.add_images('images', imgs, global_step)
-                #if net.n_classes == 1:
-                    #writer.add_images('masks/true', true_masks, global_step)
-                    #writer.add_images('masks/pred', torch.sigmoid(masks_pred) > 0.5, global_step)
 
         if save_cp:
             try:
@@ -167,11 +173,11 @@ def train_net(net,
 def get_args():
     parser = argparse.ArgumentParser(description='Train the CoarseNet on images and correspond superpoint descripton',
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('-e', '--epochs', metavar='E', type=int, default=10,
+    parser.add_argument('-e', '--epochs', metavar='E', type=int, default=2,
                         help='Number of epochs', dest='epochs')
-    parser.add_argument('-b', '--batch-size', metavar='B', type=int, nargs='?', default=4,
+    parser.add_argument('-b', '--batch-size', metavar='B', type=int, nargs='?', default=1,
                         help='Batch size', dest='batchsize')
-    parser.add_argument('-l', '--learning-rate', metavar='LR', type=float, nargs='?', default=1e-4,
+    parser.add_argument('-l', '--learning-rate', metavar='LR', type=float, nargs='?', default=1e-3,
                         help='Learning rate', dest='lr')
     parser.add_argument('-f', '--load', dest='load', type=str, default=False,
                         help='Load model from a pretrain .pth file')

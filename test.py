@@ -40,25 +40,8 @@ import json
 # print(f1)
 # f1.resize(20,5)
 # print(f1)
-logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
-n_channels = 257
-n_classes = 1
-logging.info('Network:\n'
-            '\t %s channels input channels\n' 
-            '\t %s output channels (grey brightness)', n_channels, n_classes)
 
-epochs, batch_size, lr, n_train, n_val, save_cp, device, img_scale = 1,1,1,1,1,1,1,1
-logging.info('Starting training:\n'
-    '\t Epochs:          %s\n'        
-    '\tBatch size:       %s\n'     
-    '\tLearning rate:    %s\n' 
-    '\tTraining size:    %s\n'  
-    '\tValidation size:  %s\n'
-    '\tCheckpoints:      %s\n' 
-    '\tDevice:           %s\n'         
-    '\tImages scaling:   %s\n'  
-    , epochs, batch_size, lr, n_train, n_val, save_cp, device, img_scale
-    )
+
 #img = Image.open(img_file[0]).convert('L')
 #img = cv2.imread(img_file[0],0)
 #img2 = cv2.imread(img_file[0],0)
