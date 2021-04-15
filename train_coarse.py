@@ -39,7 +39,7 @@ def save_image_tensor(input_tensor, filename):
     input_tensor = input_tensor.clone().detach()
     # to cpu
     input_tensor = input_tensor.to(torch.device('cpu'))
-    save_image(input_tensor, filename)
+    save_image(input_tensor, filename, normalize=True)
 
 
 def train_net(net,
@@ -135,15 +135,15 @@ def train_net(net,
 
             global_step += 1
             # debug part
-            #if global_step % (n_train // (10 * batch_size)) == 0:
-            #    tmp_output_dir = '/cluster/scratch/qimaqi/debug_output/' +str(global_step) + '.png'
-            #    tmp_img_dir = '/cluster/scratch/qimaqi/debug_images/'+ str(global_step) + '.png'
-            #    save_image_tensor(cpred,tmp_output_dir)
-            #    save_image_tensor(true_imgs,tmp_img_dir)
-            #    print('cpred maximum', torch.max(cpred))
-            #    print('cpred minimum', torch.min(cpred))
-            #    print('true_images maximum', torch.max(true_imgs))
-            #    print('true_images minimum', torch.min(true_imgs))
+            if global_step % (n_train // (10 * batch_size)) == 0:
+                tmp_output_dir = '/cluster/scratch/qimaqi/debug_output/' +str(global_step) + '.png'
+                tmp_img_dir = '/cluster/scratch/qimaqi/debug_images/'+ str(global_step) + '.png'
+                save_image_tensor(cpred,tmp_output_dir)
+                save_image_tensor(true_imgs,tmp_img_dir)
+                print('cpred maximum', torch.max(cpred))
+                print('cpred minimum', torch.min(cpred))
+                print('true_images maximum', torch.max(true_imgs))
+                print('true_images minimum', torch.min(true_imgs))
 
             if global_step % (n_train // (10 * batch_size)) == 0:
                 for tag, value in net.named_parameters():
