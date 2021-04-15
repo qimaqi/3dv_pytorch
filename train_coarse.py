@@ -6,6 +6,7 @@ import logging
 import os
 import sys
 
+from torchvision.utils import save_image
 import numpy as np
 import torch
 import torch.nn as nn
@@ -34,6 +35,13 @@ dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_norm_std_lre-3/'
 dir_depth = '/cluster/scratch/qimaqi/nyu_v1_depth/'
 dir_pos = '/cluster/scratch/qimaqi/nyu_v1_pos/'
 #log_dir = '/cluster/scratch/qimaqi/log/'    
+
+def save_image_tensor(input_tensor, filename):
+    assert (len(input_tensor.shape) == 4 and input_tensor.shape[0] == 1)
+    input_tensor = input_tensor.clone().detach()
+    # to cpu
+    input_tensor = input_tensor.to(torch.device('cpu'))
+    save_image(input_tensor, filename)
 
 
 def train_net(net,
@@ -100,11 +108,11 @@ def train_net(net,
             mask_type = torch.float32 if net.n_classes == 1 else torch.long
             true_imgs = true_imgs.to(device=device, dtype=mask_type)
 
-            pred = net(input_features)
-            cpred = (pred+1.)*127.5
+            pred = net(input_features)  # ##### check the max and min
+            cpred = (pred+1.)*127.5     # 
             
             P_pred = percepton_criterion(cpred)
-            P_img = percepton_criterion(true_imgs)
+            P_img = percepton_criterion(true_imgs)   ### check perceptional repeat
             perception_loss = ( l2_loss(P_pred[0],P_img[0]) + l2_loss(P_pred[1],P_img[1]) + l2_loss(P_pred[2],P_img[2])) / 3
             #print(cpred.size())#([1, 1, 168, 224])
             # print(true_imgs.size()) #([1, 1, 168, 224])
@@ -126,8 +134,18 @@ def train_net(net,
             optimizer.step()
 
 
-            #pbar.update(input_features.shape[0])
             global_step += 1
+            # debug part
+            if global_step % (n_train // (10 * batch_size)) == 0:
+                tmp_output_dir = '/cluster/scratch/qimaqi/debug_output/' +str(global_step) + '.png'
+                tmp_img_dir = '/cluster/scratch/qimaqi/debug_images/'+ str(global_step) + '.png'
+                save_image_tensor(cpred,tmp_output_dir)
+                save_image_tensor(true_imgs,tmp_img_dir)
+                print('cpred maximum', torch.max(cpred))
+                print('cpred minimum', torch.min(cpred))
+                print('true_images maximum'), torch.max(true_imgs)
+                print('true_images minimum'), torch.min(true_imgs)
+
             if global_step % (n_train // (10 * batch_size)) == 0:
                 for tag, value in net.named_parameters():
                     tag = tag.replace('.', '/')
@@ -156,7 +174,7 @@ def get_args():
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('-e', '--epochs', metavar='E', type=int, default=2,
                         help='Number of epochs', dest='epochs')
-    parser.add_argument('-b', '--batch-size', metavar='B', type=int, nargs='?', default=6,
+    parser.add_argument('-b', '--batch-size', metavar='B', type=int, nargs='?', default=1,
                         help='Batch size', dest='batchsize')
     parser.add_argument('-l', '--learning-rate', metavar='LR', type=float, nargs='?', default=1e-3,
                         help='Learning rate', dest='lr')

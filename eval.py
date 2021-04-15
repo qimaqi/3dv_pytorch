@@ -53,12 +53,12 @@ def eval_net(net, loader, device):
         tot += pixel_loss*pix_loss_wt + perception_loss*per_loss_wt
 
         # debug part
-        tmp_output_dir = '/cluster/scratch/qimaqi/debug_output/' +str(global_step) + '.png'
-        tmp_img_dir = '/cluster/scratch/qimaqi/debug_images/'+ str(global_step) + '.png'
-        save_image_tensor(cpred,tmp_output_dir)
-        save_image_tensor(true_imgs,tmp_img_dir)
+        #tmp_output_dir = '/cluster/scratch/qimaqi/debug_output/' +str(global_step) + '.png'
+        #tmp_img_dir = '/cluster/scratch/qimaqi/debug_images/'+ str(global_step) + '.png'
+        #save_image_tensor(cpred,tmp_output_dir)
+        #save_image_tensor(true_imgs,tmp_img_dir)
 
-        global_step += 1
+        #global_step += 1
 
     net.train()
     print('Coarsenet pixel_loss: ',(sum_pix_loss/n_val), 'Coarsenet perception_loss:', sum_per_loss/n_val )
