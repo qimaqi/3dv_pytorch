@@ -246,11 +246,11 @@ if __name__ == '__main__':
                   lr=args.lr,
                   device=device,
                   pct_3D_points = args.pct_3D_points,
-                  img_scale=args.scale,
+                  img_scale=0.8,
                   crop_size = args.crop_size,
                   per_loss_wt = args.per_loss_wt,
                   pix_loss_wt = args.pix_loss_wt,
-                  val_percent=args.val / 100)
+                  val_percent= args.val / 100)
     except KeyboardInterrupt:
         torch.save(net.state_dict(), 'INTERRUPTED.pth')
         #logging.info('Saved interrupt')
