@@ -13,8 +13,8 @@ import torch.nn as nn
 from torch import optim
 
 from eval import eval_net
-#from unet import InvNet
-from unet import UNet
+from unet import InvNet
+#from unet import UNet
 
 from utils.dataset import BasicDataset3
 from torch.utils.data import DataLoader, random_split
@@ -32,7 +32,7 @@ from vgg import VGGPerception
 dir_img = '/cluster/scratch/qimaqi/nyu_v1_images/'     ####### QM:change data directory path
 #dir_features = '../data/nyu_v1_features/'  # databasic2 can directly process feature
 dir_desc = '/cluster/scratch/qimaqi/nyu_v1_desc/'
-dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_b6_lre-3_16_4/'
+dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_b6_lre-3_16_4_inv/'
 dir_depth = '/cluster/scratch/qimaqi/nyu_v1_depth/'
 dir_pos = '/cluster/scratch/qimaqi/nyu_v1_pos/'
 #log_dir = '/cluster/scratch/qimaqi/log/'    
@@ -220,8 +220,8 @@ if __name__ == '__main__':
     #   - For 1 class and background, use n_classes=1
     #   - For 2 classes, use n_classes=1
     #   - For N > 2 classes, use n_classes=N
-    #net = InvNet(n_channels=257, n_classes=1)   # input should be 256, resize to 32 so ram enough
-    net = UNet(n_channels=257, n_classes=1, bilinear=True)
+    net = InvNet(n_channels=257, n_classes=1)   # input should be 256, resize to 32 so ram enough
+    #net = UNet(n_channels=257, n_classes=1, bilinear=True)
     logging.info('Network:\n'
             '\t %s channels input channels\n' 
             '\t %s output channels (grey brightness)', net.n_channels,  net.n_classes)
