@@ -131,12 +131,12 @@ class BasicDataset3(Dataset):
         _,_,c2 = np.shape(img_nd) 
 
 
-        print(feature_nd.shape)
-        print(img_nd.shape)
+        #print(feature_nd.shape)
+        #print(img_nd.shape)
 
         #print(img_nd.shape)
         #print(feature_nd.shape)
-        scale = 0.5
+        #scale = 0.5
 
         if scale != 1:
             step = (1.0 /scale)  # Attention here, in the outside of images may have lost problem
@@ -147,13 +147,15 @@ class BasicDataset3(Dataset):
             new_img = np.zeros([newH,newW,c2])   
             new_feature = np.zeros([newH,newW,c])
             for i in range(h):
-                for j in range(w):
-                    if (i == int(h_num * step) and (j == int(w_num * step))):
-                        new_img[h_num,w_num] = img_nd[i,j,:]
-                        new_feature[h_num,w_num] = feature_nd[i,j,:]
-                        w_num += 1
-                        h_num += 1
-            print('new size',w_num,h_num)
+                w_num = 0
+                if i == int(h_num * step):
+                    for j in range(w):
+                        if  j == int(w_num * step):
+                            new_img[h_num,w_num] = img_nd[i,j,:]
+                            new_feature[h_num,w_num] = feature_nd[i,j,:]
+                            w_num += 1
+                    h_num += 1
+            #print('new size',w_num,h_num)
             w, h = newW, newH
             feature_nd = new_feature
             img_nd = new_img
