@@ -311,24 +311,30 @@ class BasicDatasetR2D2(Dataset):
         #print(feature_nd.shape)
 
         if scale != 1:
-            step = (1.0 /scale)  # Attention here, in the outside of images may have lost problem
-            w_num = 0
-            h_num = 0
-            newW, newH = int(scale * w), int(scale * h)
-            assert newW > 0 and newH > 0, 'Scale is too small'
-            new_img = np.zeros([newH,newW,c2])   
-            new_feature = np.zeros([newH,newW,c])
-            for i in range(h):
-                for j in range(w):
-                    if (i == int(h_num * step) and (j == int(w_num * step))):
-                        new_img[h_num,w_num] = img_nd[i,j,:]
-                        new_feature[h_num,w_num] = feature_nd[i,j,:]
-                        w_num += 1
+            scale_rand_seed_w = torch.rand(1)
+            if scale_rand_seed_w <= 0.5:
+                step = (1.0 /scale)  # Attention here, in the outside of images may have lost problem         
+                newW, newH = int(scale * w), int(scale * h)
+                #print(step) 
+                # print(newW,newH) 512 384
+                assert newW > 0 and newH > 0, 'Scale is too small'
+                new_img = np.zeros([newH,newW,c2])   
+                new_feature = np.zeros([newH,newW,c])
+                h_num = 0
+                for i in range(h):        
+                    w_num = 0
+                    if i == int(h_num * step):
+                        for j in range(w):
+                            if j == int(w_num * step):
+                                #print(i,j,'i and j')
+                                #print(h_num,w_num,'new h and new w')
+                                new_img[h_num,w_num] = img_nd[i,j,:]
+                                new_feature[h_num,w_num] = feature_nd[i,j,:]
+                                w_num += 1
                         h_num += 1
-            #print('new size',w_num,h_num)
-            w, h = newW, newH
-            feature_nd = new_feature
-            img_nd = new_img
+                w, h = newW, newH
+                feature_nd = new_feature
+                img_nd = new_img
 
         crop_rand_seed_w = torch.rand(1)
         crop_rand_seed_h = torch.rand(1)

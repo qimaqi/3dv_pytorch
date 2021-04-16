@@ -31,22 +31,12 @@ from vgg import VGGPerception
 
 
 #some default dir need images descripton, pos and depth. Attention this time desc and pos is in json !!!!!!!!!!
-<<<<<<< HEAD
 dir_img = '/cluster/scratch/jiaqiu/nyu_images/'     ####### QM:change data directory path
 #dir_features = '../data/nyu_v1_features/'
 dir_desc = '/cluster/scratch/jiaqiu/nyu_r2d2_desc/'
-dir_checkpoint = '/cluster/scratch/jiaqiu/checkpoints/'
+dir_checkpoint = '/cluster/scratch/jiaqiu/checkpoints_/'
 dir_depth = '/cluster/scratch/jiaqiu/nyu_depth/'
 dir_pos = '/cluster/scratch/jiaqiu/nyu_r2d2_pos/'
-=======
-dir_img = '/cluster/scratch/qimaqi/nyu_v1_images/'     ####### QM:change data directory path
-#dir_features = '../data/nyu_v1_features/'  # databasic2 can directly process feature
-dir_desc = '/cluster/scratch/qimaqi/nyu_v1_desc/'
-dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_b6_lre-3_16_4/'
-dir_depth = '/cluster/scratch/qimaqi/nyu_v1_depth/'
-dir_pos = '/cluster/scratch/qimaqi/nyu_v1_pos/'
-#log_dir = '/cluster/scratch/qimaqi/log/'    
->>>>>>> origin/invnet_
 
 def save_image_tensor(input_tensor, filename):
     assert (len(input_tensor.shape) == 4 and input_tensor.shape[0] == 1)
@@ -187,11 +177,7 @@ def train_net(net,
 def get_args():
     parser = argparse.ArgumentParser(description='Train the CoarseNet on images and correspond superpoint descripton',
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-<<<<<<< HEAD
-    parser.add_argument('-e', '--epochs', metavar='E', type=int, default=20,
-=======
     parser.add_argument('-e', '--epochs', metavar='E', type=int, default=24,
->>>>>>> origin/invnet_
                         help='Number of epochs', dest='epochs')
     parser.add_argument('-b', '--batch-size', metavar='B', type=int, nargs='?', default=6,
                         help='Batch size', dest='batchsize')
@@ -236,19 +222,12 @@ if __name__ == '__main__':
     #   - For 1 class and background, use n_classes=1
     #   - For 2 classes, use n_classes=1
     #   - For N > 2 classes, use n_classes=N
-<<<<<<< HEAD
-    net = InvNet(n_channels=129, n_classes=1)   # input should be 256, resize to 32 so ram enough
-    #logging.info(f'Network:\n'
-    #             f'\t{net.n_channels} input channels\n'
-    #             f'\t{net.n_classes} output channels (grey brightness)')
-=======
     #net = InvNet(n_channels=257, n_classes=1)   # input should be 256, resize to 32 so ram enough
-    net = UNet(n_channels=257, n_classes=1, bilinear=True)
+    net = UNet(n_channels=129, n_classes=1, bilinear=True)
     logging.info('Network:\n'
             '\t %s channels input channels\n' 
             '\t %s output channels (grey brightness)', net.n_channels,  net.n_classes)
 
->>>>>>> origin/invnet_
 
     if args.load:
         net.load_state_dict(
