@@ -58,7 +58,7 @@ def train_net(net,
               save_cp=True,
               img_scale = 1):
 
-    #save_cp = False
+    save_cp = False
     #dataset = BasicDataset2(dir_img, dir_depth, dir_features, img_scale)  #without dataaugumentation and load direct feature npz
     dataset = BasicDataset3(dir_img, dir_depth, dir_pos, dir_desc, img_scale, pct_3D_points, crop_size)
     n_val = int(len(dataset) * val_percent)
