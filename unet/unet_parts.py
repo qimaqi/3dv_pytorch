@@ -47,10 +47,10 @@ class Up(nn.Module):
 
         # if bilinear, use the normal convolutions to reduce the number of channels
         if bilinear:
-            self.up = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True),
+            self.up = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True)
             self.conv = DoubleConv(in_channels, out_channels, in_channels // 2)
         else:
-            self.up = nn.ConvTranspose2d(in_channels , in_channels // 2, kernel_size=2, stride=2),
+            self.up = nn.ConvTranspose2d(in_channels , in_channels // 2, kernel_size=2, stride=2)
             self.conv = DoubleConv(in_channels, out_channels)
 
 
@@ -67,6 +67,15 @@ class Up(nn.Module):
         # https://github.com/xiaopeng-liao/Pytorch-UNet/commit/8ebac70e633bac59fc22bb5195e513d5832fb3bd
         x = torch.cat([x2, x1], dim=1)
         return self.conv(x)
+
+
+#class OutConv(nn.Module):
+#    def __init__(self, in_channels, out_channels):
+#        super(OutConv, self).__init__()
+#        self.conv = nn.Conv2d(in_channels, out_channels, kernel_size=1)
+#
+#    def forward(self, x):
+#        return self.conv(x)
 
 
 class OutConv(nn.Module):
