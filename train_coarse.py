@@ -13,7 +13,8 @@ import torch.nn as nn
 from torch import optim
 
 from eval import eval_net
-from unet import InvNet
+#from unet import InvNet
+from unet import UNet
 
 from utils.dataset import BasicDataset3
 from torch.utils.data import DataLoader, random_split
@@ -219,7 +220,8 @@ if __name__ == '__main__':
     #   - For 1 class and background, use n_classes=1
     #   - For 2 classes, use n_classes=1
     #   - For N > 2 classes, use n_classes=N
-    net = InvNet(n_channels=257, n_classes=1)   # input should be 256, resize to 32 so ram enough
+    #net = InvNet(n_channels=257, n_classes=1)   # input should be 256, resize to 32 so ram enough
+    net = UNet(n_channels=257, n_classes=1)
     logging.info('Network:\n'
             '\t %s channels input channels\n' 
             '\t %s output channels (grey brightness)', net.n_channels,  net.n_classes)
