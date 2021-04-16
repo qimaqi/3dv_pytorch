@@ -27,7 +27,7 @@ class InvNet(nn.Module):
         self.up4 = Up(768, 256)
         self.up5 = Up(512, 256)
         self.up6 = Up(512, 256)
-        self.conv1 = TripleConv(385, 128, 64, 32)  # 257 + 256 is related to image size, 288 for local test
+        self.conv1 = TripleConv(n_channels+256, 128, 64, 32)  # 257 + 256 is related to image size, 288 for local test
         self.outc = OutConv(32, n_classes)
 
     def forward(self, x):
