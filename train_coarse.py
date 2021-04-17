@@ -33,7 +33,7 @@ from vgg import VGGPerception
 dir_img = '/cluster/scratch/qimaqi/nyu_v1_images/'     ####### QM:change data directory path
 #dir_features = '../data/nyu_v1_features/'  # databasic2 can directly process feature
 dir_desc = '/cluster/scratch/qimaqi/nyu_v1_desc/'
-dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_b6_lre-3_17_4_inv/'
+dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_b6_lre-3_min_17_4_inv/'
 dir_depth = '/cluster/scratch/qimaqi/nyu_v1_depth/'
 dir_pos = '/cluster/scratch/qimaqi/nyu_v1_pos/'
 #log_dir = '/cluster/scratch/qimaqi/log/'    
@@ -88,9 +88,9 @@ def train_net(net,
 
     #optimizer = optim.RMSprop(net.parameters(), lr=lr, weight_decay=1e-8, momentum=0.9)
     optimizer = optim.Adam(net.parameters(), lr=lr, eps = 1e-8)
-    #scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=2)
+    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=2)
     #scheduler = optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=5, T_mult=1) pytorch 1.01
-    scheduler = optim.lr_scheduler.MultiStepLR(optimizer, milestones=[5,12,16], gamma=0.1)
+    #scheduler = optim.lr_scheduler.MultiStepLR(optimizer, milestones=[5,12,16], gamma=0.1)
 
     pixel_criterion = nn.L1Loss()       
     percepton_criterion = VGGPerception()
@@ -136,7 +136,7 @@ def train_net(net,
             #total_loss = pix_loss_wt * pix_loss + per_loss_wt * per_loss
 
             loss.backward()
-            #nn.utils.clip_grad_value_(net.parameters(), 0.1)
+            nn.utils.clip_grad_value_(net.parameters(), 10)
             optimizer.step()
 
 
@@ -158,7 +158,7 @@ def train_net(net,
                     writer.add_histogram('weights/' + tag, value.data.cpu().numpy(), global_step)
                     writer.add_histogram('grads/' + tag, value.grad.data.cpu().numpy(), global_step)
                 val_score = eval_net(net, val_loader, device)
-                scheduler.step()
+                scheduler.step(val_score)
                 print('Coarsenet score: ',(val_score), 'in epoch', epoch )
                 writer.add_scalar('learning_rate', optimizer.param_groups[0]['lr'], global_step)
                 writer.add_scalar('Total_error/test', val_score, global_step)
