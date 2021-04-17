@@ -20,7 +20,7 @@ from utils.dataset import BasicDataset3
 from torch.utils.data import DataLoader, random_split
 import torchvision.models as models
 from vgg import VGGPerception
-
+from torch.utils.tensorboard import SummaryWriter
 
 # To do
 # delete useless code and make it clear
@@ -67,7 +67,7 @@ def train_net(net,
     train_loader = DataLoader(train, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=True)
     val_batch_size = 1
     val_loader = DataLoader(val, batch_size=val_batch_size, shuffle=False, num_workers=4, pin_memory=True, drop_last=True)
-
+    writer = SummaryWriter()
     global_step = 0
 
     logging.info('Starting training:\n'
@@ -123,14 +123,11 @@ def train_net(net,
             loss = pixel_loss*pix_loss_wt + perception_loss*per_loss_wt
 
             epoch_loss += loss.item()
-            #writer.add_scalar('Loss/train', loss.item(), global_step)
+            writer.add_scalar('Loss/train', loss.item(), global_step)
 
-            #pbar.set_postfix(**{'loss (batch)': loss.item()})
 
             optimizer.zero_grad()
 
-            # total loss = L1 pixel loss + L2 perceptual loss
-            #total_loss = pix_loss_wt * pix_loss + per_loss_wt * per_loss
 
             loss.backward()
             nn.utils.clip_grad_value_(net.parameters(), 0.1)
@@ -152,12 +149,15 @@ def train_net(net,
             if global_step % (n_train // (10 * batch_size)) == 0:
                 for tag, value in net.named_parameters():
                     tag = tag.replace('.', '/')
-                    #writer.add_histogram('weights/' + tag, value.data.cpu().numpy(), global_step)
-                    #writer.add_histogram('grads/' + tag, value.grad.data.cpu().numpy(), global_step)
+                    writer.add_histogram('weights/' + tag, value.data.cpu().numpy(), global_step)
+                    writer.add_histogram('grads/' + tag, value.grad.data.cpu().numpy(), global_step)
                 val_score = eval_net(net, val_loader, device)
                 scheduler.step(val_score)
                 print('Coarsenet score: ',(val_score), 'in epoch', epoch )
-                #writer.add_scalar('learning_rate', optimizer.param_groups[0]['lr'], global_step)
+                writer.add_scalar('learning_rate', optimizer.param_groups[0]['lr'], global_step)
+                writer.add_scalar('total_loss', val_score, global_step)
+                writer.add_images('output', cpred, global_step)
+                writer.add_images('true images', true_imgs, global_step)
 
         if save_cp:
             try:
