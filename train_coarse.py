@@ -15,6 +15,7 @@ from torch import optim
 from eval import eval_net
 from unet import InvNet
 #from unet import UNet
+from torch.utils.tensorboard import SummaryWriter
 
 from utils.dataset import BasicDataset3
 from torch.utils.data import DataLoader, random_split
@@ -32,7 +33,7 @@ from vgg import VGGPerception
 dir_img = '/cluster/scratch/qimaqi/nyu_v1_images/'     ####### QM:change data directory path
 #dir_features = '../data/nyu_v1_features/'  # databasic2 can directly process feature
 dir_desc = '/cluster/scratch/qimaqi/nyu_v1_desc/'
-dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_b6_lre-3_16_4_inv/'
+dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_b6_lre-3_17_4_inv/'
 dir_depth = '/cluster/scratch/qimaqi/nyu_v1_depth/'
 dir_pos = '/cluster/scratch/qimaqi/nyu_v1_pos/'
 #log_dir = '/cluster/scratch/qimaqi/log/'    
@@ -67,6 +68,8 @@ def train_net(net,
     train_loader = DataLoader(train, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=True)
     val_batch_size = 1
     val_loader = DataLoader(val, batch_size=val_batch_size, shuffle=False, num_workers=4, pin_memory=True, drop_last=True)
+    #writer = SummaryWriter(comment='LR_%s_BS_%s_SCALE_%s',lr, batch_size, img_scale)
+    writer = SummaryWriter(comment=' LR ' + str(lr) +' BS ' + str(batch_size) + ' SCALE ' + str(img_scale))
 
     global_step = 0
 
@@ -123,7 +126,7 @@ def train_net(net,
             loss = pixel_loss*pix_loss_wt + perception_loss*per_loss_wt
 
             epoch_loss += loss.item()
-            #writer.add_scalar('Loss/train', loss.item(), global_step)
+            writer.add_scalar('Loss/train', loss.item(), global_step)
 
             #pbar.set_postfix(**{'loss (batch)': loss.item()})
 
@@ -152,12 +155,16 @@ def train_net(net,
             if global_step % (n_train // (10 * batch_size)) == 0:
                 for tag, value in net.named_parameters():
                     tag = tag.replace('.', '/')
-                    #writer.add_histogram('weights/' + tag, value.data.cpu().numpy(), global_step)
-                    #writer.add_histogram('grads/' + tag, value.grad.data.cpu().numpy(), global_step)
+                    writer.add_histogram('weights/' + tag, value.data.cpu().numpy(), global_step)
+                    writer.add_histogram('grads/' + tag, value.grad.data.cpu().numpy(), global_step)
                 val_score = eval_net(net, val_loader, device)
                 scheduler.step()
                 print('Coarsenet score: ',(val_score), 'in epoch', epoch )
-                #writer.add_scalar('learning_rate', optimizer.param_groups[0]['lr'], global_step)
+                writer.add_scalar('learning_rate', optimizer.param_groups[0]['lr'], global_step)
+                writer.add_scalar('Total_error/test', val_score, global_step)
+                true_imgs
+                writer.add_images('True images', true_imgs, global_step)
+                writer.add_images('Output', cpred, global_step)
 
         if save_cp:
             try:
@@ -169,7 +176,7 @@ def train_net(net,
                        dir_checkpoint + str(epoch+1) + '.pth')
             logging.info('Checkpoint %s saved! ',epoch+1)
 
-    #writer.close()
+    writer.close()
 
 
 def get_args():
