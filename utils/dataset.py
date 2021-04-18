@@ -171,7 +171,7 @@ class BasicDataset3(Dataset):
 
         return {
             'feature': feature,
-            'image': img)  # ground truth need to be considered
+            'image': img  # ground truth need to be considered
         }
 
 
