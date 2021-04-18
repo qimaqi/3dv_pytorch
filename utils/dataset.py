@@ -120,8 +120,8 @@ class BasicDataset3(Dataset):
             transforms.Resize([new_h,new_w]) #  InterpolationMode.NEAREST, InterpolationMode.BILINEAR and InterpolationMode.BICUBIC
         ])
 
-        img_1 = train_transforms(img_nd)
-        feature_1 = train_transforms(feature_nd)
+        img_1 = train_transforms(img_nd.copy())
+        feature_1 = train_transforms(feature_nd.copy())
 
         # if crop size is 0 then no crop
         assert crop_size >= 0, 'Crop Size must be positive'
