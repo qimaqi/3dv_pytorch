@@ -130,8 +130,8 @@ class BasicDataset3(Dataset):
             crop_rand_seed_h = torch.rand(1)
             crop_w = int(torch.floor((new_w - crop_size) * crop_rand_seed_w))   # 640 - 480 
             crop_h = int(torch.floor((new_h - crop_size) * crop_rand_seed_h))
-            feature_trans = feature_nd[:, crop_h:crop_h+crop_size, crop_w:crop_w+crop_size]
-            img_trans = img_nd[:, crop_h:crop_h+crop_size, crop_w:crop_w+crop_size]
+            feature_trans = feature_1[:, crop_h:crop_h+crop_size, crop_w:crop_w+crop_size]
+            img_trans = img_1[:, crop_h:crop_h+crop_size, crop_w:crop_w+crop_size]
 
         return feature_trans, img_trans
 
