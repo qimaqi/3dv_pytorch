@@ -33,7 +33,7 @@ from vgg import VGGPerception
 dir_img = '/cluster/scratch/qimaqi/nyu_v1_images/'     ####### QM:change data directory path
 #dir_features = '../data/nyu_v1_features/'  # databasic2 can directly process feature
 dir_desc = '/cluster/scratch/qimaqi/nyu_v1_desc/'
-dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_b6_lre-3_min_18_4_inv/'
+dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_b6_lre-3_min_18_4_inv_/'
 dir_depth = '/cluster/scratch/qimaqi/nyu_v1_depth/'
 dir_pos = '/cluster/scratch/qimaqi/nyu_v1_pos/'
 #log_dir = '/cluster/scratch/qimaqi/log/'    
@@ -178,7 +178,7 @@ def train_net(net,
 
     writer.close()
 
-
+# '/cluster/scratch/qimaqi/checkpoints_b6_lre-3_16_4_inv/19.pth'
 def get_args():
     parser = argparse.ArgumentParser(description='Train the CoarseNet on images and correspond superpoint descripton',
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -188,7 +188,7 @@ def get_args():
                         help='Batch size', dest='batchsize')
     parser.add_argument('-l', '--learning-rate', metavar='LR', type=float, nargs='?', default=1e-4,
                         help='Learning rate', dest='lr')
-    parser.add_argument('-f', '--load', dest='load', type=str, default='/cluster/scratch/qimaqi/checkpoints_b6_lre-3_16_4_inv/19.pth',
+    parser.add_argument('-f', '--load', dest='load', type=str, default=None,
                         help='Load model from a pretrain .pth file')
     parser.add_argument('-s', '--scale', dest='scale', type=float, default=0.6,
                         help='Downscaling factor of the images')
