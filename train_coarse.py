@@ -188,7 +188,7 @@ def get_args():
                         help='Batch size', dest='batchsize')
     parser.add_argument('-l', '--learning-rate', metavar='LR', type=float, nargs='?', default=1e-4,
                         help='Learning rate', dest='lr')
-    parser.add_argument('-f', '--load', dest='load', type=str, default=checkpoints_b6_lre-'/cluster/scratch/qimaqi/checkpoints_b6_lre-3_16_4_inv/3_16_4_inv/19.pth',
+    parser.add_argument('-f', '--load', dest='load', type=str, default=checkpoints_b6_lre-'/cluster/scratch/qimaqi/checkpoints_b6_lre-3_16_4_inv/19.pth',
                         help='Load model from a pretrain .pth file')
     parser.add_argument('-s', '--scale', dest='scale', type=float, default=0.6,
                         help='Downscaling factor of the images')
