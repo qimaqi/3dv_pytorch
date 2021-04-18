@@ -7,7 +7,7 @@ import numpy as np
 #import mat73
 from PIL import Image
 import json
-#import cv2
+import cv2
 import os
 
 #img_path = '/cluster/scratch /nyu_depth_data_labeled.mat'
@@ -50,7 +50,7 @@ def load_json(path):
 def load_img(path,mode=0):
     # mode 1 color,0 grey scale, -1 unchange
     img = cv2.imread(path,mode)
-    return imag
+    return img
 
 # def descripton_loader(index):
 #     return images[index]
