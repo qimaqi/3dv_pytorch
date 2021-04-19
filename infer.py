@@ -13,7 +13,7 @@ from PIL import Image
 
 infer_output_dir = '/cluster/scratch/qimaqi/infer_output/'
 dir_desc = '/cluster/scratch/qimaqi/infer_desc/'
-dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_11_4/5.pth'
+dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_b6_lre-4_min_19_4_inv_trans/1.pth'
 dir_depth = '/cluster/scratch/qimaqi/infer_depth/'
 dir_pos = '/cluster/scratch/qimaqi/infer_pos/'
 dir_img = '/cluster/scratch/qimaqi/infer_images/' 
@@ -38,7 +38,7 @@ if __name__ == '__main__':
     pct_3D_points = 0
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-    net = InvNet(n_channels=257, n_classes=1)   # input should be 256, resize to 32 so ram enough
+    net = InvNet(n_channels=257, n_classes=1)  
     net.load_state_dict(
         torch.load(dir_checkpoint)
         )
