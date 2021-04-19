@@ -25,6 +25,7 @@ import torch
 from torch.utils.data import Dataset
 import logging
 from PIL import Image
+import PIL
 import json
 from torchvision.utils import save_image
 
@@ -36,9 +37,9 @@ dir_depth = 'F:/invsfm/src/data/infer_depth/'
 dir_pos = 'F:/invsfm/src/data/infer_pos/'
 dir_img = 'F:/invsfm/src/data/infer_imgs/' 
 
-img_scale = 1
+img_scale = 0.5
 pct_3D_points = 0
-crop_size = 0
+crop_size = 256
 batch_size = 1
 dataset = BasicDataset3(dir_img, dir_depth, dir_pos, dir_desc, img_scale, pct_3D_points, crop_size)
 train_loader = DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=0, pin_memory=True)
@@ -55,57 +56,67 @@ def save_image_tensor(input_tensor, filename):
     save_image(input_tensor, filename, normalize=True)
 
 
-tensor = torch.rand(1,4,2,4)
-print(tensor)
+
+
 from torchvision import transforms
+import torchvision
 # to do, for image:PIL and Feature tensor get same transform
 #step1 : change the image to numpy so we get 480 x 640  ToTensor
 #step2 : interpolate to new size according to scale:
 #crop to some size
 #random flip
-#random
-h = 2
-w =4
-scale = 1
-rescale_rand_seed = torch.rand(1)
-random_scale = scale + (1-scale)*rescale_rand_seed 
-new_h = 2
-new_w =4
-train_transforms = transforms.Compose([
-    #transforms.ToTensor(),
-    transforms.Resize([new_h,new_w]) #  InterpolationMode.NEAREST, InterpolationMode.BILINEAR and InterpolationMode.BICUBIC
-])
+# #random
+# h = 2
+# w =4
+# scale = 0.5
 
-img_trans = train_transforms(tensor)
-print(img_trans)
+#import random
+#random_scale = scale * random()
+#random_seed = torch.rand(1)*scale
+# torch.manual_seed(scale)
+# tensor = torch.rand(1,4,2,4)
+# print(sum(tensor))
+# rescale_rand_seed = torch.rand(1)
+# print(rescale_rand_seed)
+# random_scale = scale + (1-scale)*rescale_rand_seed 
+# new_h = 1
+# new_w =2
+# train_transforms = transforms.Compose([
+#     #transforms.ToTensor(),
+#     transforms.Resize([new_h,new_w]), #  InterpolationMode.NEAREST, InterpolationMode.BILINEAR and InterpolationMode.BICUBIC
+#     transforms.RandomResizedCrop([new_h,new_w], scale=(0.08, 1.0), ratio=(0.75, 1.3333333333333333), interpolation=2)
+# ])
 
-# global_step = 0
-# for batch in train_loader:
-#     input_features = batch['feature']
-#     true_imgs = batch['image']
-#     #assert input_features.shape[1] == net.n_channels, 'Channel match problem'
+# img_trans = train_transforms(tensor)
+# print(img_trans)
 
-#     input_features = input_features.to(device=device, dtype=torch.float32)
-#     #mask_type = torch.float32
-#     true_imgs = true_imgs.to(device=device, dtype=torch.float32)
-#     #input_tensor = input_tensor.clone().detach()
-#     #input_tensor = input_tensor.to(torch.device('cpu'))
-#     print(input_features.size())
-#     print(true_imgs.size())
+global_step = 0
+for batch in train_loader:
+    input_features = batch['feature']
+    true_imgs = batch['image']
+    #assert input_features.shape[1] == net.n_channels, 'Channel match problem'
 
-#     global_step += 1
-#     # debug part
-#     cpred = (250+torch.rand(1,1,480,640)).to(device=device, dtype=torch.float32)
-#     pixel_loss = pixel_criterion(cpred,true_imgs)
-#     print(pixel_loss)
-#     tmp_output_dir = 'F:/invsfm/src/data/debug_output2/' +str(global_step) + '.png'
-#     tmp_img_dir = 'F:/invsfm/src/data/debug_images2/'+ str(global_step) + '.png'
-#     #save_image_tensor(cpred,tmp_output_dir)
-#     #save_image_tensor(true_imgs,tmp_img_dir)
-#     #print('cpred maximum', torch.max(cpred))
-#     #print('cpred minimum', torch.min(cpred))
-#     print('true_images maximum', torch.max(true_imgs))
-#     print('true_images minimum', torch.min(true_imgs))
+    input_features = input_features.to(device=device, dtype=torch.float32)
+    #mask_type = torch.float32
+    true_imgs = true_imgs.to(device=device, dtype=torch.float32)
+    #input_tensor = input_tensor.clone().detach()
+    #input_tensor = input_tensor.to(torch.device('cpu'))
+    #print(input_features.size())
+    #print(true_imgs.size())
+
+    global_step += 1
+    # debug part
+    #cpred = (250+torch.rand(1,1,480,640)).to(device=device, dtype=torch.float32)
+    #pixel_loss = pixel_criterion(cpred,true_imgs)
+    #print(pixel_loss)
+    tmp_output_dir = 'F:/invsfm/src/data/debug_output2/' +str(global_step) + '.png'
+    tmp_img_dir = 'F:/invsfm/src/data/debug_images2/'+ str(global_step) + '.png'
+    #save_image_tensor(cpred,tmp_output_dir)
+    save_image_tensor(true_imgs,tmp_img_dir)
+    #print('cpred maximum', torch.max(cpred))
+    #print('cpred minimum', torch.min(cpred))
+    #print('true_images maximum', torch.max(true_imgs))
+    #print('true_images minimum', torch.min(true_imgs))
 
 # imgs_dir = '../data/nyu_v1_images/'
 # dir_features = '../data/nyu_v1_features/'
