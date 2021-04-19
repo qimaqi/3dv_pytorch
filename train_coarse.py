@@ -21,7 +21,7 @@ from utils.dataset import BasicDataset3
 from torch.utils.data import DataLoader, random_split
 import torchvision.models as models
 from vgg import VGGPerception
-
+import time
 
 # To do
 # delete useless code and make it clear
@@ -106,6 +106,8 @@ def train_net(net,
 
         epoch_loss = 0
         for batch in train_loader:
+            start_time = time.time()
+            print(start_time)
             input_features = batch['feature']
             true_imgs = batch['image']
             assert input_features.shape[1] == net.n_channels, 'Channel match problem'
@@ -124,7 +126,7 @@ def train_net(net,
             P_pred = percepton_criterion(cpred)
             P_img = percepton_criterion(true_imgs)   ### check perceptional repeat
             perception_loss = ( l2_loss(P_pred[0],P_img[0]) + l2_loss(P_pred[1],P_img[1]) + l2_loss(P_pred[2],P_img[2])) / 3
-            _,_,h_t,w_t = (cpred.size())
+            #_,_,h_t,w_t = (cpred.size())
             # print(true_imgs.size()) #([1, 1, 168, 224])
             pixel_loss = pixel_criterion(cpred,true_imgs)
             loss = (pixel_loss*pix_loss_wt + perception_loss*per_loss_wt)*255
@@ -155,7 +157,7 @@ def train_net(net,
             #    print('cpred minimum', torch.min(cpred))
             #    print('true_images maximum', torch.max(true_imgs))
             #    print('true_images minimum', torch.min(true_imgs))
-
+            print(time.time()-start_time)
             if global_step % (n_train // (10 * batch_size)) == 0:
                 for tag, value in net.named_parameters():
                     tag = tag.replace('.', '/')

@@ -4,7 +4,7 @@ import torch.nn.functional as F
 import torch.nn as nn
 from vgg import VGGPerception
 from torchvision.utils import save_image
-
+import time
 
 def save_image_tensor(input_tensor, filename):
     assert (len(input_tensor.shape) == 4 and input_tensor.shape[0] == 1)
@@ -20,7 +20,8 @@ def eval_net(net, loader, device):
     net.eval()
     mask_type = torch.float32 if net.n_classes == 1 else torch.long
     n_val = len(loader)  # the number of batch
-    print(n_val)
+    start_time = time.time()
+    print(start_time)
     tot = 0
 
     pixel_criterion = nn.L1Loss()     
@@ -62,7 +63,7 @@ def eval_net(net, loader, device):
         #save_image_tensor(true_imgs,tmp_img_dir)
 
         global_step += 1
-
+        print(time.time()-start_time)
     net.train()
     print('Coarsenet pixel_loss: ',(sum_pix_loss/n_val), 'Coarsenet perception_loss:', sum_per_loss/n_val )
     return (tot / n_val)
