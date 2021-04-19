@@ -127,7 +127,7 @@ def train_net(net,
             _,_,h_t,w_t = (cpred.size())
             # print(true_imgs.size()) #([1, 1, 168, 224])
             pixel_loss = pixel_criterion(cpred,true_imgs)
-            loss = (pixel_loss*pix_loss_wt + perception_loss*per_loss_wt)
+            loss = (pixel_loss*pix_loss_wt + perception_loss*per_loss_wt)*255
 
             epoch_loss += loss.item()
             writer.add_scalar('Loss/train', loss.item(), global_step)

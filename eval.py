@@ -51,9 +51,9 @@ def eval_net(net, loader, device):
 
         perception_loss = ( l2_loss(P_pred[0],P_img[0]) + l2_loss(P_pred[1],P_img[1]) + l2_loss(P_pred[2],P_img[2])) / 3
         pixel_loss = pixel_criterion(cpred,true_imgs)
-        sum_pix_loss += pixel_loss
-        sum_per_loss += perception_loss
-        tot += (pixel_loss*pix_loss_wt + perception_loss*per_loss_wt)
+        sum_pix_loss += pixel_loss*255
+        sum_per_loss += perception_loss*255
+        tot += (pixel_loss*pix_loss_wt + perception_loss*per_loss_wt)*255
 
         # debug part
         #tmp_output_dir = '/cluster/scratch/qimaqi/debug_output_eval_invnet_18_4_trans_p/' +str(global_step) + '.png'
