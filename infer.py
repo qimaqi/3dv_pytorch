@@ -16,7 +16,7 @@ dir_desc = '/cluster/scratch/qimaqi/infer_desc/'
 dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_b6_lre-4_min_19_4_inv_trans/1.pth'
 dir_depth = '/cluster/scratch/qimaqi/infer_depth/'
 dir_pos = '/cluster/scratch/qimaqi/infer_pos/'
-dir_img = '/cluster/scratch/qimaqi/infer_images/' 
+dir_img = '/cluster/scratch/qimaqi/infer_imgs/' 
 
 
 
