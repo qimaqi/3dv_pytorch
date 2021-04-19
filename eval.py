@@ -51,8 +51,8 @@ def eval_net(net, loader, device):
 
         perception_loss = ( l2_loss(P_pred[0],P_img[0]) + l2_loss(P_pred[1],P_img[1]) + l2_loss(P_pred[2],P_img[2])) / 3
         pixel_loss = pixel_criterion(cpred,true_imgs)
-        sum_pix_loss += pixel_loss*h_t*w_t
-        sum_per_loss += perception_loss*h_t*w_t
+        sum_pix_loss += pixel_loss
+        sum_per_loss += perception_loss
         tot += (pixel_loss*pix_loss_wt + perception_loss*per_loss_wt)
 
         # debug part
