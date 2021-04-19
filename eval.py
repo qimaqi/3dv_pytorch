@@ -20,9 +20,10 @@ def eval_net(net, loader, device):
     net.eval()
     mask_type = torch.float32 if net.n_classes == 1 else torch.long
     n_val = len(loader)  # the number of batch
+    print(n_val)
     tot = 0
 
-    pixel_criterion = nn.L1Loss()       ##### QM: only L1 loss problem: image and feature not match
+    pixel_criterion = nn.L1Loss()     
     percepton_criterion = VGGPerception()
     percepton_criterion.to(device=device)
     l2_loss = nn.MSELoss()
@@ -53,8 +54,8 @@ def eval_net(net, loader, device):
         tot += pixel_loss*pix_loss_wt + perception_loss*per_loss_wt
 
         # debug part
-        tmp_output_dir = '/cluster/scratch/qimaqi/debug_output_eval_invnet_18_4_trans_/' +str(global_step) + '.png'
-        tmp_img_dir = '/cluster/scratch/qimaqi/debug_images_eval_invnet_18_4_trans_/'+ str(global_step) + '.png'
+        tmp_output_dir = '/cluster/scratch/qimaqi/debug_output_eval_invnet_18_4_trans_p/' +str(global_step) + '.png'
+        tmp_img_dir = '/cluster/scratch/qimaqi/debug_images_eval_invnet_18_4_trans_p/'+ str(global_step) + '.png'
         save_image_tensor(cpred,tmp_output_dir)
         save_image_tensor(true_imgs,tmp_img_dir)
 

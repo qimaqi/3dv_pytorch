@@ -120,8 +120,8 @@ class BasicDataset3(Dataset):
             transforms.Resize([new_h,new_w]) #  InterpolationMode.NEAREST, InterpolationMode.BILINEAR and InterpolationMode.BICUBIC
         ])
 
-        img_1 = train_transforms(img_nd.copy())
-        feature_1 = train_transforms(feature_nd.copy())
+        img_trans = train_transforms(img_nd.copy())
+        feature_trans = train_transforms(feature_nd.copy())
 
         # if crop size is 0 then no crop
         assert crop_size >= 0, 'Crop Size must be positive'
@@ -130,9 +130,10 @@ class BasicDataset3(Dataset):
             crop_rand_seed_h = torch.rand(1)
             crop_w = int(torch.floor((new_w - crop_size) * crop_rand_seed_w))   # 640 - 480 
             crop_h = int(torch.floor((new_h - crop_size) * crop_rand_seed_h))
-            feature_trans = feature_1[:, crop_h:crop_h+crop_size, crop_w:crop_w+crop_size]
-            img_trans = img_1[:, crop_h:crop_h+crop_size, crop_w:crop_w+crop_size]
+            feature_trans = feature_trans[:, crop_h:crop_h+crop_size, crop_w:crop_w+crop_size]
+            img_trans = img_trans[:, crop_h:crop_h+crop_size, crop_w:crop_w+crop_size]
 
+        #print()
         return feature_trans, img_trans
 
     def __getitem__(self, i):
