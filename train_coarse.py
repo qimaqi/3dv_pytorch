@@ -33,7 +33,7 @@ import time
 dir_img = '/cluster/scratch/qimaqi/nyu_v1_images/'     ####### QM:change data directory path
 #dir_features = '../data/nyu_v1_features/'  # databasic2 can directly process feature
 dir_desc = '/cluster/scratch/qimaqi/nyu_v1_desc/'
-dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_b6_lre-3_min_18_4_inv_/'
+dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_b6_lre-4_min_19_4_inv_trans/'
 dir_depth = '/cluster/scratch/qimaqi/nyu_v1_depth/'
 dir_pos = '/cluster/scratch/qimaqi/nyu_v1_pos/'
 #log_dir = '/cluster/scratch/qimaqi/log/'    
@@ -59,7 +59,7 @@ def train_net(net,
               save_cp=True,
               img_scale = 1):
 
-    save_cp = False
+    # save_cp = False
     #dataset = BasicDataset2(dir_img, dir_depth, dir_features, img_scale)  #without dataaugumentation and load direct feature npz
     dataset = BasicDataset3(dir_img, dir_depth, dir_pos, dir_desc, img_scale, pct_3D_points, crop_size)
     n_val = int(len(dataset) * val_percent)
@@ -107,7 +107,7 @@ def train_net(net,
         epoch_loss = 0
         for batch in train_loader:
             start_time = time.time()
-            print(start_time)
+            # print(start_time)
             input_features = batch['feature']
             true_imgs = batch['image']
             assert input_features.shape[1] == net.n_channels, 'Channel match problem'
@@ -128,8 +128,8 @@ def train_net(net,
             perception_loss = ( l2_loss(P_pred[0],P_img[0]) + l2_loss(P_pred[1],P_img[1]) + l2_loss(P_pred[2],P_img[2])) / 3
             #_,_,h_t,w_t = (cpred.size())
             # print(true_imgs.size()) #([1, 1, 168, 224])
-            pixel_loss = pixel_criterion(cpred,true_imgs)
-            loss = (pixel_loss*pix_loss_wt + perception_loss*per_loss_wt)*255
+            pixel_loss = pixel_criterion(cpred,true_imgs)*255
+            loss = (pixel_loss*pix_loss_wt + perception_loss*per_loss_wt)
 
             epoch_loss += loss.item()
             writer.add_scalar('Loss/train', loss.item(), global_step)
@@ -157,8 +157,8 @@ def train_net(net,
             #    print('cpred minimum', torch.min(cpred))
             #    print('true_images maximum', torch.max(true_imgs))
             #    print('true_images minimum', torch.min(true_imgs))
-            print(time.time()-start_time)
-            if global_step % (n_train // (10 * batch_size)) == 0:
+            # print(time.time()-start_time)
+            if global_step % (n_train // (5 * batch_size)) == 0:   # 2208 / 60
                 for tag, value in net.named_parameters():
                     tag = tag.replace('.', '/')
                     writer.add_histogram('weights/' + tag, value.data.cpu().numpy(), global_step)
@@ -194,7 +194,7 @@ def get_args():
                         help='Batch size', dest='batchsize')
     parser.add_argument('-l', '--learning-rate', metavar='LR', type=float, nargs='?', default=1e-4,
                         help='Learning rate', dest='lr')
-    parser.add_argument('-f', '--load', dest='load', type=str, default=None,
+    parser.add_argument('-f', '--load', dest='load', type=str, default='/cluster/scratch/qimaqi/checkpoints_b6_lre-3_16_4_inv/19.pth',
                         help='Load model from a pretrain .pth file')
     parser.add_argument('-s', '--scale', dest='scale', type=float, default=1,
                         help='Downscaling factor of the images')
@@ -207,7 +207,7 @@ def get_args():
     parser.add_argument("--pct_3D_points", type=lambda s: [float(i) for i in s.split(',')][:2], default=[5.,100.],     # to do
                         help="float,float: Min and max percent of 3D points to keep when performing random subsampling for data augmentation "+\
                         "(default: 5.,100.)")
-    parser.add_argument("--per_loss_wt", type=float, default=1.0, help="%(type)s: Perceptual loss weight (default: %(default)s)")   
+    parser.add_argument("--per_loss_wt", type=float, default=5.0, help="%(type)s: Perceptual loss weight (default: %(default)s)")   
     parser.add_argument("--pix_loss_wt", type=float, default=1.0, help="%(type)s: Pixel loss weight (default: %(default)s)")        
     parser.add_argument("--max_iter", type=int, default=1e6, help="%(type)s: Stop training after MAX_ITER iterations (default: %(default)s)")
     parser.add_argument("--chkpt_freq", type=int, default=1e4, help="%(type)s: Save model state every CHKPT_FREQ iterations. Previous model state "+\

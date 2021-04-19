@@ -21,7 +21,7 @@ def eval_net(net, loader, device):
     mask_type = torch.float32 if net.n_classes == 1 else torch.long
     n_val = len(loader)  # the number of batch
     start_time = time.time()
-    print(start_time)
+    #print(start_time)
     tot = 0
 
     pixel_criterion = nn.L1Loss()     
@@ -29,7 +29,7 @@ def eval_net(net, loader, device):
     percepton_criterion.to(device=device)
     l2_loss = nn.MSELoss()
     pix_loss_wt = 1
-    per_loss_wt = 1
+    per_loss_wt = 5
     sum_pix_loss = 0
     sum_per_loss = 0
 
@@ -51,10 +51,10 @@ def eval_net(net, loader, device):
             _,_,h_t,w_t = (cpred.size())
 
         perception_loss = ( l2_loss(P_pred[0],P_img[0]) + l2_loss(P_pred[1],P_img[1]) + l2_loss(P_pred[2],P_img[2])) / 3
-        pixel_loss = pixel_criterion(cpred,true_imgs)
-        sum_pix_loss += pixel_loss*255
-        sum_per_loss += perception_loss*255
-        tot += (pixel_loss*pix_loss_wt + perception_loss*per_loss_wt)*255
+        pixel_loss = pixel_criterion(cpred,true_imgs)*255
+        sum_pix_loss += pixel_loss
+        sum_per_loss += perception_loss
+        tot += (pixel_loss*pix_loss_wt + perception_loss*per_loss_wt)
 
         # debug part
         #tmp_output_dir = '/cluster/scratch/qimaqi/debug_output_eval_invnet_18_4_trans_p/' +str(global_step) + '.png'
@@ -63,7 +63,7 @@ def eval_net(net, loader, device):
         #save_image_tensor(true_imgs,tmp_img_dir)
 
         global_step += 1
-        print(time.time()-start_time)
+        #print(time.time()-start_time)
     net.train()
     print('Coarsenet pixel_loss: ',(sum_pix_loss/n_val), 'Coarsenet perception_loss:', sum_per_loss/n_val )
     return (tot / n_val)
