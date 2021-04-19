@@ -116,10 +116,10 @@ def train_net(net,
 
             cpred = net(input_features)  # ##### check the max and min
             # cpred = (pred+1.)*127.5     # 
-            print(torch.max(cpred),'cpred max')
-            print(torch.min(cpred),'cpred min')
-            print(torch.max(true_imgs),'true max')
-            print(torch.min(true_imgs),'true min')
+            #print(torch.max(cpred),'cpred max')
+            #print(torch.min(cpred),'cpred min')
+            #print(torch.max(true_imgs),'true max')
+            #print(torch.min(true_imgs),'true min')
 
             P_pred = percepton_criterion(cpred)
             P_img = percepton_criterion(true_imgs)   ### check perceptional repeat
