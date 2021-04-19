@@ -1,6 +1,3 @@
-# Edited by Qi Ma
-# qimaqi@student.ethz.ch
-
 from os.path import splitext
 from os import listdir
 import numpy as np
@@ -221,15 +218,15 @@ class InferDataset(Dataset):
         #print(h,w,c) # 480, 640, 256
   
         feature_nd = np.array(feature)
-        crop_size = 256
+        #crop_size = 256
 
-        assert crop_size >= 0, 'Crop Size must be positive'
-        if crop_size != 0:
-            crop_rand_seed_w = torch.rand(1)
-            crop_rand_seed_h = torch.rand(1)
-            crop_w = int(torch.floor((w - crop_size) * crop_rand_seed_w))   # 640 - 480 
-            crop_h = int(torch.floor((h - crop_size) * crop_rand_seed_h))
-            feature_nd = feature_nd[crop_h:crop_h+crop_size, crop_w:crop_w+crop_size, :]
+        # assert crop_size >= 0, 'Crop Size must be positive'
+        # if crop_size != 0:
+        #     crop_rand_seed_w = torch.rand(1)
+        #     crop_rand_seed_h = torch.rand(1)
+        #     crop_w = int(torch.floor((w - crop_size) * crop_rand_seed_w))   # 640 - 480 
+        #     crop_h = int(torch.floor((h - crop_size) * crop_rand_seed_h))
+        #     feature_nd = feature_nd[crop_h:crop_h+crop_size, crop_w:crop_w+crop_size, :]
 
         # HWC to CHW 
         feature_trans = feature_nd.transpose((2, 0, 1)) # channel x 480 x 640

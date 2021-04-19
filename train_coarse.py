@@ -1,6 +1,3 @@
-# Edited By Qi Ma 
-# qimaqi@student.ethz.ch
-
 import argparse
 import logging
 import os
@@ -31,10 +28,11 @@ from vgg import VGGPerception
 
 
 #some default dir need images descripton, pos and depth. Attention this time desc and pos is in json !!!!!!!!!!
-dir_img = '/cluster/scratch/jiaqiu/nyu_images/'     ####### QM:change data directory path
+dir_img = '/cluster/scratch/jiaqiu/nyu_images/'    
 #dir_features = '../data/nyu_v1_features/'
 dir_desc = '/cluster/scratch/jiaqiu/nyu_r2d2_desc/'
-dir_checkpoint = '/cluster/scratch/jiaqiu/checkpoints_/'
+dir_checkpoint = '/cluster/scratch/jiaqiu/checkpoints_19_04/'
+load_dir = '/cluster/scratch/jiaqiu/checkpoints_18_04/9.pth'
 dir_depth = '/cluster/scratch/jiaqiu/nyu_depth/'
 dir_pos = '/cluster/scratch/jiaqiu/nyu_r2d2_pos/'
 
@@ -60,7 +58,6 @@ def train_net(net,
               save_cp=True,
               img_scale = 1):
 
-    save_cp = False
     #dataset = BasicDataset2(dir_img, dir_depth, dir_features, img_scale)  #without dataaugumentation and load direct feature npz
     dataset = BasicDatasetR2D2(dir_img, dir_depth, dir_pos, dir_desc, img_scale, pct_3D_points, crop_size)
     n_val = int(len(dataset) * val_percent)
@@ -87,9 +84,9 @@ def train_net(net,
 
     #optimizer = optim.RMSprop(net.parameters(), lr=lr, weight_decay=1e-8, momentum=0.9)
     optimizer = optim.Adam(net.parameters(), lr=lr, eps = 1e-8)
-    #scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=2)
+    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=2)
     #scheduler = optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=5, T_mult=1) pytorch 1.01
-    scheduler = optim.lr_scheduler.MultiStepLR(optimizer, milestones=[5,12,16], gamma=0.1)
+    #scheduler = optim.lr_scheduler.MultiStepLR(optimizer, milestones=[5,12,16], gamma=0.1)
 
     pixel_criterion = nn.L1Loss()       
     percepton_criterion = VGGPerception()
@@ -157,7 +154,7 @@ def train_net(net,
                     #writer.add_histogram('weights/' + tag, value.data.cpu().numpy(), global_step)
                     #writer.add_histogram('grads/' + tag, value.grad.data.cpu().numpy(), global_step)
                 val_score = eval_net(net, val_loader, device)
-                scheduler.step()
+                scheduler.step(val_score)
                 print('Coarsenet score: ',(val_score), 'in epoch', epoch )
                 #writer.add_scalar('learning_rate', optimizer.param_groups[0]['lr'], global_step)
 
@@ -177,13 +174,13 @@ def train_net(net,
 def get_args():
     parser = argparse.ArgumentParser(description='Train the CoarseNet on images and correspond superpoint descripton',
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('-e', '--epochs', metavar='E', type=int, default=24,
+    parser.add_argument('-e', '--epochs', metavar='E', type=int, default=20,
                         help='Number of epochs', dest='epochs')
     parser.add_argument('-b', '--batch-size', metavar='B', type=int, nargs='?', default=6,
                         help='Batch size', dest='batchsize')
-    parser.add_argument('-l', '--learning-rate', metavar='LR', type=float, nargs='?', default=1e-3,
+    parser.add_argument('-l', '--learning-rate', metavar='LR', type=float, nargs='?', default=1e-4,
                         help='Learning rate', dest='lr')
-    parser.add_argument('-f', '--load', dest='load', type=str, default=False,
+    parser.add_argument('-f', '--load', dest='load', type=str, default=load_dir,
                         help='Load model from a pretrain .pth file')
     parser.add_argument('-s', '--scale', dest='scale', type=float, default=0.8,
                         help='Downscaling factor of the images')
