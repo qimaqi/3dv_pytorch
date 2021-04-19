@@ -63,4 +63,4 @@ def eval_net(net, loader, device):
 
     net.train()
     print('Coarsenet pixel_loss: ',(sum_pix_loss/n_val), 'Coarsenet perception_loss:', sum_per_loss/n_val )
-    return tot / n_val
+    return (tot / n_val)
