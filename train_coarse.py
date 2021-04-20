@@ -159,12 +159,16 @@ def train_net(net,
             #    print('true_images minimum', torch.min(true_imgs))
             # print(time.time()-start_time)
             if global_step % (n_train // (5 * batch_size)) == 0:   # 2208 / 60
+                train_time = time.time()-start_time
+                print(train_time,'train time')
                 for tag, value in net.named_parameters():
                     tag = tag.replace('.', '/')
                     writer.add_histogram('weights/' + tag, value.data.cpu().numpy(), global_step)
                     writer.add_histogram('grads/' + tag, value.grad.data.cpu().numpy(), global_step)
                 val_score = eval_net(net, val_loader, device)
                 scheduler.step(val_score)
+                val_time = time.time() - train_time
+                print(val_time,'val_time')
                 print('Coarsenet score: ',(val_score), 'in epoch', epoch )
                 writer.add_scalar('learning_rate', optimizer.param_groups[0]['lr'], global_step)
                 writer.add_scalar('Total_error/test', val_score, global_step)
