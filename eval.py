@@ -20,8 +20,8 @@ def eval_net(net, loader, device):
     net.eval()
     mask_type = torch.float32 if net.n_classes == 1 else torch.long
     n_val = len(loader)  # the number of batch
-    print(device)
-    print(n_val)
+    #print(device)
+    #print(n_val)
     tot = 0
 
     pixel_criterion = nn.L1Loss()     
@@ -58,10 +58,10 @@ def eval_net(net, loader, device):
         tot += (pixel_loss*pix_loss_wt + perception_loss*per_loss_wt)
 
         # debug part
-        tmp_output_dir = '/cluster/scratch/qimaqi/debug_output_eval_invnet_20_4_trans/' +str(global_step) + '.png'
-        tmp_img_dir = '/cluster/scratch/qimaqi/debug_images_eval_invnet_20_4_trans/'+ str(global_step) + '.png'
-        save_image_tensor(cpred,tmp_output_dir)
-        save_image_tensor(true_imgs,tmp_img_dir)
+        #tmp_output_dir = '/cluster/scratch/qimaqi/debug_output_eval_invnet_20_4_trans/' +str(global_step) + '.png'
+        #tmp_img_dir = '/cluster/scratch/qimaqi/debug_images_eval_invnet_20_4_trans/'+ str(global_step) + '.png'
+        #save_image_tensor(cpred,tmp_output_dir)
+        #save_image_tensor(true_imgs,tmp_img_dir)
 
         global_step += 1
         print(time.time()-start_time,'one batch in eval time')

@@ -66,7 +66,7 @@ def train_net(net,
     n_train = len(dataset) - n_val
     train, val = random_split(dataset, [n_train, n_val])
     train_loader = DataLoader(train, batch_size=batch_size, shuffle=True, num_workers=2, pin_memory=True)
-    val_batch_size = 1
+    val_batch_size = 6
     val_loader = DataLoader(val, batch_size=val_batch_size, shuffle=False, num_workers=2, pin_memory=True, drop_last=True)
     #writer = SummaryWriter(comment='LR_%s_BS_%s_SCALE_%s',lr, batch_size, img_scale)
     writer = SummaryWriter(comment=' LR ' + str(lr) +' BS ' + str(batch_size) + ' SCALE ' + str(img_scale))
@@ -103,10 +103,10 @@ def train_net(net,
     #    criterion = nn.BCEWithLogitsLoss()
     for epoch in range(epochs):
         net.train()
-
+        start_time = time.time()
+        print(time.ctime(start_time),'epoch start time',epoch)
         epoch_loss = 0
         for batch in train_loader:
-            start_time = time.time()
             # print(start_time)
             input_features = batch['feature']
             true_imgs = batch['image']
@@ -159,8 +159,7 @@ def train_net(net,
             #    print('true_images minimum', torch.min(true_imgs))
             # print(time.time()-start_time)
             if global_step % (n_train // (10 * batch_size)) == 0:   # 2208 / 60
-                train_time = time.time()-start_time
-                print(train_time,'train time')
+                print(time.ctime(),'eval start time')
                 print(global_step,'global_step')
                 for tag, value in net.named_parameters():
                     tag = tag.replace('.', '/')
@@ -168,8 +167,7 @@ def train_net(net,
                     writer.add_histogram('grads/' + tag, value.grad.data.cpu().numpy(), global_step)
                 val_score = eval_net(net, val_loader, device)
                 scheduler.step(val_score)
-                val_time = time.time() - train_time
-                print(val_time,'val_time')
+                print(time.ctime(),'eval_end time')
                 print('Coarsenet score: ',(val_score), 'in epoch', epoch )
                 writer.add_scalar('learning_rate', optimizer.param_groups[0]['lr'], global_step)
                 writer.add_scalar('Total_error/test', val_score, global_step)
