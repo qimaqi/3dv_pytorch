@@ -31,7 +31,7 @@ from vgg import VGGPerception
 dir_img = '/cluster/scratch/jiaqiu/nyu_images/'    
 #dir_features = '../data/nyu_v1_features/'
 dir_desc = '/cluster/scratch/jiaqiu/nyu_r2d2_desc/'
-dir_checkpoint = '/cluster/scratch/jiaqiu/checkpoints_19_04/'
+dir_checkpoint = '/cluster/scratch/jiaqiu/checkpoints_19_04_step/'
 load_dir = '/cluster/scratch/jiaqiu/checkpoints_18_04/9.pth'
 dir_depth = '/cluster/scratch/jiaqiu/nyu_depth/'
 dir_pos = '/cluster/scratch/jiaqiu/nyu_r2d2_pos/'
@@ -84,9 +84,9 @@ def train_net(net,
 
     #optimizer = optim.RMSprop(net.parameters(), lr=lr, weight_decay=1e-8, momentum=0.9)
     optimizer = optim.Adam(net.parameters(), lr=lr, eps = 1e-8)
-    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=2)
+    #scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=2)
     #scheduler = optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=5, T_mult=1) pytorch 1.01
-    #scheduler = optim.lr_scheduler.MultiStepLR(optimizer, milestones=[5,12,16], gamma=0.1)
+    scheduler = optim.lr_scheduler.MultiStepLR(optimizer, milestones=[5,12,16], gamma=0.1)
 
     pixel_criterion = nn.L1Loss()       
     percepton_criterion = VGGPerception()
@@ -99,7 +99,6 @@ def train_net(net,
     #    criterion = nn.BCEWithLogitsLoss()
     for epoch in range(epochs):
         net.train()
-
         epoch_loss = 0
         for batch in train_loader:
             input_features = batch['feature']
@@ -115,7 +114,7 @@ def train_net(net,
             
             P_pred = percepton_criterion(cpred)
             P_img = percepton_criterion(true_imgs)   ### check perceptional repeat
-            perception_loss = ( l2_loss(P_pred[0],P_img[0]) + l2_loss(P_pred[1],P_img[1]) + l2_loss(P_pred[2],P_img[2])) / 3
+            perception_loss = (l2_loss(P_pred[0],P_img[0]) + l2_loss(P_pred[1],P_img[1]) + l2_loss(P_pred[2],P_img[2])) / 3
             #print(cpred.size())#([1, 1, 168, 224])
             # print(true_imgs.size()) #([1, 1, 168, 224])
             pixel_loss = pixel_criterion(cpred,true_imgs)
