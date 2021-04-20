@@ -33,7 +33,7 @@ import time
 dir_img = '/cluster/scratch/qimaqi/nyu_v1_images/'     ####### QM:change data directory path
 #dir_features = '../data/nyu_v1_features/'  # databasic2 can directly process feature
 dir_desc = '/cluster/scratch/qimaqi/nyu_v1_desc/'
-dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_b6_lre-4_min_20_4_inv_trans/'
+dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_b6_lre-4_min_20_4_inv_trans_l2/'
 dir_depth = '/cluster/scratch/qimaqi/nyu_v1_depth/'
 dir_pos = '/cluster/scratch/qimaqi/nyu_v1_pos/'
 #log_dir = '/cluster/scratch/qimaqi/log/'    
@@ -158,7 +158,7 @@ def train_net(net,
             #    print('true_images maximum', torch.max(true_imgs))
             #    print('true_images minimum', torch.min(true_imgs))
             # print(time.time()-start_time)
-            if global_step % (n_train // (5 * batch_size)) == 0:   # 2208 / 60
+            if global_step % (n_train // (10 * batch_size)) == 0:   # 2208 / 60
                 train_time = time.time()-start_time
                 print(train_time,'train time')
                 for tag, value in net.named_parameters():
@@ -212,7 +212,7 @@ def get_args():
                         help="float,float: Min and max percent of 3D points to keep when performing random subsampling for data augmentation "+\
                         "(default: 5.,100.)")
     parser.add_argument("--per_loss_wt", type=float, default=5.0, help="%(type)s: Perceptual loss weight (default: %(default)s)")   
-    parser.add_argument("--pix_loss_wt", type=float, default=1.0, help="%(type)s: Pixel loss weight (default: %(default)s)")        
+    parser.add_argument("--pix_loss_wt", type=float, default=0.0, help="%(type)s: Pixel loss weight (default: %(default)s)")        
     parser.add_argument("--max_iter", type=int, default=1e6, help="%(type)s: Stop training after MAX_ITER iterations (default: %(default)s)")
     parser.add_argument("--chkpt_freq", type=int, default=1e4, help="%(type)s: Save model state every CHKPT_FREQ iterations. Previous model state "+\
                         "is deleted after each new save (default: %(default)s)")   
