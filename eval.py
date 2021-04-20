@@ -46,22 +46,22 @@ def eval_net(net, loader, device):
 
         with torch.no_grad():
             cpred = net(input_features)
-            #cpred = (pred+1.)*127.5
-            P_pred = percepton_criterion(cpred)
-            P_img = percepton_criterion(true_imgs)
+            cpred = (pred+1.)*127.5
+            P_pred = percepton_criterion(cpred/255)
+            P_img = percepton_criterion(true_imgs/255)
             _,_,h_t,w_t = (cpred.size())
 
         perception_loss = ( l2_loss(P_pred[0],P_img[0]) + l2_loss(P_pred[1],P_img[1]) + l2_loss(P_pred[2],P_img[2])) / 3
-        pixel_loss = pixel_criterion(cpred,true_imgs)*255
+        pixel_loss = pixel_criterion(cpred,true_imgs)
         sum_pix_loss += pixel_loss
         sum_per_loss += perception_loss
         tot += (pixel_loss*pix_loss_wt + perception_loss*per_loss_wt)
 
         # debug part
-        #tmp_output_dir = '/cluster/scratch/qimaqi/debug_output_eval_invnet_20_4_trans/' +str(global_step) + '.png'
-        #tmp_img_dir = '/cluster/scratch/qimaqi/debug_images_eval_invnet_20_4_trans/'+ str(global_step) + '.png'
-        #save_image_tensor(cpred,tmp_output_dir)
-        #save_image_tensor(true_imgs,tmp_img_dir)
+        tmp_output_dir = '/cluster/scratch/qimaqi/debug_output_eval_invnet_20_4_trans/' +str(global_step) + '.png'
+        tmp_img_dir = '/cluster/scratch/qimaqi/debug_images_eval_invnet_20_4_trans/'+ str(global_step) + '.png'
+        save_image_tensor(cpred,tmp_output_dir)
+        save_image_tensor(true_imgs,tmp_img_dir)
 
         global_step += 1
         #print(time.time()-start_time,'one batch in eval time')
