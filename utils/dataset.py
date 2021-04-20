@@ -170,7 +170,7 @@ class BasicDataset3(Dataset):
         new_w = int(w * random_scale)
         if crop_size >=new_h or crop_size >= new_w: crop_size = min(new_h,new_w)
         random_crop = int(crop_size + (min(new_h,new_w)-crop_size)*rescale_rand_seed)
-        print(random_crop)
+        #print(random_crop)
         from torchvision import transforms
 
         train_transforms = transforms.Compose([
