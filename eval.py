@@ -64,7 +64,7 @@ def eval_net(net, loader, device):
         #save_image_tensor(true_imgs,tmp_img_dir)
 
         global_step += 1
-        print(time.time()-start_time,'one batch in eval time')
+        #print(time.time()-start_time,'one batch in eval time')
     net.train()
     print('Coarsenet pixel_loss: ',(sum_pix_loss/n_val), 'Coarsenet perception_loss:', sum_per_loss/n_val )
     return (tot / n_val)
