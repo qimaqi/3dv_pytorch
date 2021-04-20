@@ -20,7 +20,7 @@ def eval_net(net, loader, device):
     net.eval()
     mask_type = torch.float32 if net.n_classes == 1 else torch.long
     n_val = len(loader)  # the number of batch
-    
+    print(device)
     print(n_val)
     tot = 0
 
