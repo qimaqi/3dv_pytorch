@@ -17,7 +17,7 @@ from unet import InvNet
 #from unet import UNet
 from torch.utils.tensorboard import SummaryWriter
 
-from utils.dataset import BasicDataset3
+from utils.dataset import BasicDataset1
 from torch.utils.data import DataLoader, random_split
 import torchvision.models as models
 from vgg import VGGPerception
@@ -117,18 +117,18 @@ def train_net(net,
             true_imgs = true_imgs.to(device=device, dtype=torch.float32)
 
             cpred = net(input_features)  # ##### check the max and min
-            # cpred = (pred+1.)*127.5     # 
+            cpred = (pred+1.)*127.5     # 
             #print(torch.max(cpred),'cpred max')
             #print(torch.min(cpred),'cpred min')
             #print(torch.max(true_imgs),'true max')
             #print(torch.min(true_imgs),'true min')
 
-            P_pred = percepton_criterion(cpred)
-            P_img = percepton_criterion(true_imgs)   ### check perceptional repeat
+            P_pred = percepton_criterion(cpred/255)
+            P_img = percepton_criterion(true_imgs/255)   ### check perceptional repeat
             perception_loss = ( l2_loss(P_pred[0],P_img[0]) + l2_loss(P_pred[1],P_img[1]) + l2_loss(P_pred[2],P_img[2])) / 3
             #_,_,h_t,w_t = (cpred.size())
             # print(true_imgs.size()) #([1, 1, 168, 224])
-            pixel_loss = pixel_criterion(cpred,true_imgs)*255
+            pixel_loss = pixel_criterion(cpred,true_imgs)
             loss = (pixel_loss*pix_loss_wt + perception_loss*per_loss_wt)
 
             epoch_loss += loss.item()
