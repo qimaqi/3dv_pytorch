@@ -46,7 +46,7 @@ def eval_net(net, loader, device):
 
         with torch.no_grad():
             cpred = net(input_features)
-            cpred = (pred+1.)*127.5
+            cpred = (cpred+1.)*127.5
             P_pred = percepton_criterion(cpred/255)
             P_img = percepton_criterion(true_imgs/255)
             _,_,h_t,w_t = (cpred.size())
