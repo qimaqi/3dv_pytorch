@@ -21,7 +21,7 @@ from torch.utils.data import DataLoader, random_split
 import torchvision.models as models
 from vgg import VGGPerception
 from torch.utils.tensorboard import SummaryWriter
-
+import time
 # To do
 # delete useless code and make it clear
 # to use logging and attribute feature 
@@ -100,6 +100,7 @@ def train_net(net,
     #    criterion = nn.BCEWithLogitsLoss()
     for epoch in range(epochs):
         net.train()
+        print('epoch start time',time.ctime())
 
         epoch_loss = 0
         for batch in train_loader:
@@ -151,7 +152,9 @@ def train_net(net,
                     tag = tag.replace('.', '/')
                     writer.add_histogram('weights/' + tag, value.data.cpu().numpy(), global_step)
                     writer.add_histogram('grads/' + tag, value.grad.data.cpu().numpy(), global_step)
+                print('eval start time',time.ctime())
                 val_score = eval_net(net, val_loader, device)
+                print('epoch end time',time.ctime())
                 scheduler.step(val_score)
                 print('Coarsenet score: ',(val_score), 'in epoch', epoch )
                 writer.add_scalar('learning_rate', optimizer.param_groups[0]['lr'], global_step)
