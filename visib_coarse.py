@@ -30,7 +30,7 @@ import torchvision.models as models
 dir_img = '/cluster/scratch/jiaqiu/nyu_images/'    
 #dir_features = '../data/nyu_v1_features/'
 dir_desc = '/cluster/scratch/jiaqiu/nyu_r2d2_desc/'
-dir_checkpoint = '/cluster/scratch/jiaqiu/checkpoints_19_04_step/'
+dir_checkpoint = '/cluster/scratch/jiaqiu/checkpoints_20_04/'
 load_dir = '/cluster/scratch/jiaqiu/checkpoints_18_04/9.pth'
 dir_depth = '/cluster/scratch/jiaqiu/nyu_depth/'
 dir_pos = '/cluster/scratch/jiaqiu/nyu_r2d2_pos/'
@@ -83,9 +83,9 @@ def train_net(net,
 
     #optimizer = optim.RMSprop(net.parameters(), lr=lr, weight_decay=1e-8, momentum=0.9)
     optimizer = optim.Adam(net.parameters(), lr=lr, eps = 1e-8)
-    #scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=2)
+    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=2)
     #scheduler = optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=5, T_mult=1) pytorch 1.01
-    scheduler = optim.lr_scheduler.MultiStepLR(optimizer, milestones=[5,12,16], gamma=0.1)
+    #scheduler = optim.lr_scheduler.MultiStepLR(optimizer, milestones=[5,12,16], gamma=0.1)
 
     depth_criterion = nn.L1Loss()       
 
@@ -176,7 +176,7 @@ def get_args():
                         help='Batch size', dest='batchsize')
     parser.add_argument('-l', '--learning-rate', metavar='LR', type=float, nargs='?', default=1e-4,
                         help='Learning rate', dest='lr')
-    parser.add_argument('-f', '--load', dest='load', type=str, default=load_dir,
+    parser.add_argument('-f', '--load', dest='load', type=str, default=False,
                         help='Load model from a pretrain .pth file')
     parser.add_argument('-s', '--scale', dest='scale', type=float, default=0.8,
                         help='Downscaling factor of the images')
