@@ -65,9 +65,9 @@ def train_net(net,
     n_val = int(len(dataset) * val_percent)
     n_train = len(dataset) - n_val
     train, val = random_split(dataset, [n_train, n_val])
-    train_loader = DataLoader(train, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=True)
+    train_loader = DataLoader(train, batch_size=batch_size, shuffle=True, num_workers=2, pin_memory=True)
     val_batch_size = 1
-    val_loader = DataLoader(val, batch_size=val_batch_size, shuffle=False, num_workers=4, pin_memory=True, drop_last=True)
+    val_loader = DataLoader(val, batch_size=val_batch_size, shuffle=False, num_workers=2, pin_memory=True, drop_last=True)
     #writer = SummaryWriter(comment='LR_%s_BS_%s_SCALE_%s',lr, batch_size, img_scale)
     writer = SummaryWriter(comment=' LR ' + str(lr) +' BS ' + str(batch_size) + ' SCALE ' + str(img_scale))
 
@@ -190,7 +190,7 @@ def get_args():
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('-e', '--epochs', metavar='E', type=int, default=24,
                         help='Number of epochs', dest='epochs')
-    parser.add_argument('-b', '--batch-size', metavar='B', type=int, nargs='?', default=6,
+    parser.add_argument('-b', '--batch-size', metavar='B', type=int, nargs='?', default=4,
                         help='Batch size', dest='batchsize')
     parser.add_argument('-l', '--learning-rate', metavar='LR', type=float, nargs='?', default=1e-3,
                         help='Learning rate', dest='lr')
