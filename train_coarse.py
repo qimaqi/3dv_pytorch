@@ -117,7 +117,7 @@ def train_net(net,
             true_imgs = true_imgs.to(device=device, dtype=torch.float32)
 
             cpred = net(input_features)  # ##### check the max and min
-            cpred = (pred+1.)*127.5     # 
+            cpred = (cpred+1.)*127.5     # 
             #print(torch.max(cpred),'cpred max')
             #print(torch.min(cpred),'cpred min')
             #print(torch.max(true_imgs),'true max')
