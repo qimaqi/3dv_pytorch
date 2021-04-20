@@ -161,6 +161,7 @@ def train_net(net,
             if global_step % (n_train // (10 * batch_size)) == 0:   # 2208 / 60
                 train_time = time.time()-start_time
                 print(train_time,'train time')
+                print(global_step,'global_step')
                 for tag, value in net.named_parameters():
                     tag = tag.replace('.', '/')
                     writer.add_histogram('weights/' + tag, value.data.cpu().numpy(), global_step)

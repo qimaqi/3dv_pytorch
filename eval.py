@@ -20,8 +20,8 @@ def eval_net(net, loader, device):
     net.eval()
     mask_type = torch.float32 if net.n_classes == 1 else torch.long
     n_val = len(loader)  # the number of batch
-    start_time = time.time()
-    #print(start_time)
+    
+    print(n_val)
     tot = 0
 
     pixel_criterion = nn.L1Loss()     
@@ -37,6 +37,7 @@ def eval_net(net, loader, device):
     #with tqdm(total=n_val, desc='Validation round', unit='batch', leave=False) as pbar:
     for batch in loader:
         #imgs, true_masks = batch['image'], batch['mask']
+        start_time = time.time()
         input_features = batch['feature']
         true_imgs = batch['image']
         input_features = input_features.to(device=device, dtype=torch.float32)
@@ -63,7 +64,7 @@ def eval_net(net, loader, device):
         save_image_tensor(true_imgs,tmp_img_dir)
 
         global_step += 1
-        #print(time.time()-start_time)
+        print(time.time()-start_time,'one batch in eval time')
     net.train()
     print('Coarsenet pixel_loss: ',(sum_pix_loss/n_val), 'Coarsenet perception_loss:', sum_per_loss/n_val )
     return (tot / n_val)
