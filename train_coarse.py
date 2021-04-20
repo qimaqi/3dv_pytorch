@@ -61,13 +61,13 @@ def train_net(net,
 
     # save_cp = False
     #dataset = BasicDataset2(dir_img, dir_depth, dir_features, img_scale)  #without dataaugumentation and load direct feature npz
-    dataset = BasicDataset3(dir_img, dir_depth, dir_pos, dir_desc, img_scale, pct_3D_points, crop_size)
+    dataset = BasicDataset1(dir_img, dir_depth, dir_pos, dir_desc, img_scale, pct_3D_points, crop_size)
     n_val = int(len(dataset) * val_percent)
     n_train = len(dataset) - n_val
     train, val = random_split(dataset, [n_train, n_val])
-    train_loader = DataLoader(train, batch_size=batch_size, shuffle=True, num_workers=6, pin_memory=True)
+    train_loader = DataLoader(train, batch_size=batch_size, shuffle=True, num_workers=2, pin_memory=True)
     val_batch_size = 1
-    val_loader = DataLoader(val, batch_size=val_batch_size, shuffle=False, num_workers=6, pin_memory=True, drop_last=True)
+    val_loader = DataLoader(val, batch_size=val_batch_size, shuffle=False, num_workers=2, pin_memory=True, drop_last=True)
     #writer = SummaryWriter(comment='LR_%s_BS_%s_SCALE_%s',lr, batch_size, img_scale)
     writer = SummaryWriter(comment=' LR ' + str(lr) +' BS ' + str(batch_size) + ' SCALE ' + str(img_scale))
 
