@@ -218,7 +218,8 @@ class BasicDataset3(Dataset):
             feature[y,x,1:] = desc[:,j]   # to compensate with zero
             feature[y,x,0] = (np.array(img)[y,x]/127.5-1)  # only normalize the grey image
         
-        self.random_seed = feature.sum()
+        
+        # self.random_seed = feature.sum()
         # after preprocess, the feature and image will be well transposed and augumented
         feature, img = self.preprocess(feature, img, self.scale, self.crop_size)   ### QM: the process only transpose channel, need more data augumentation
 
