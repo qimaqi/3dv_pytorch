@@ -163,7 +163,7 @@ class BasicDataset3(Dataset):
     def preprocess(self, feature, img, scale, crop_size):
         # feature: HWC, img in np shape: HWC. img in size WHC
         h, w, c = np.shape(feature) 
-        torch.manual_seed(self.random_seed)
+        torch.manual_seed(scale)
         rescale_rand_seed = torch.rand(1)
         random_scale = scale + (1-scale)*rescale_rand_seed 
         new_h = int(h * random_scale)
