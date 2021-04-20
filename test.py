@@ -42,7 +42,7 @@ pct_3D_points = 0
 crop_size = 256
 batch_size = 1
 dataset = BasicDataset3(dir_img, dir_depth, dir_pos, dir_desc, img_scale, pct_3D_points, crop_size)
-train_loader = DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=0, pin_memory=True)
+train_loader = DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=0, pin_memory=False)
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 n_train = len(dataset)
 

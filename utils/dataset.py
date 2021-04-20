@@ -77,6 +77,8 @@ class BasicDataset1(Dataset):
 
         # if crop size is 0 then no crop
         assert crop_size >= 0, 'Crop Size must be positive'
+        if crop_size >=h or crop_size >= w: crop_size = min(h,w)
+        
         if crop_size != 0:
             crop_rand_seed_w = torch.rand(1)
             crop_rand_seed_h = torch.rand(1)
@@ -170,7 +172,6 @@ class BasicDataset3(Dataset):
         new_w = int(w * random_scale)
         if crop_size >=new_h or crop_size >= new_w: crop_size = min(new_h,new_w)
         random_crop = int(crop_size + (min(new_h,new_w)-crop_size)*rescale_rand_seed)
-        #print(random_crop)
         from torchvision import transforms
 
         train_transforms = transforms.Compose([
@@ -218,8 +219,7 @@ class BasicDataset3(Dataset):
             feature[y,x,1:] = desc[:,j]   # to compensate with zero
             feature[y,x,0] = (np.array(img)[y,x]/127.5-1)  # only normalize the grey image
         
-        
-        # self.random_seed = feature.sum()
+        self.random_seed = feature.sum()
         # after preprocess, the feature and image will be well transposed and augumented
         feature, img = self.preprocess(feature, img, self.scale, self.crop_size)   ### QM: the process only transpose channel, need more data augumentation
 
