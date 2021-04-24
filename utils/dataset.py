@@ -276,6 +276,6 @@ class InferDataset(Dataset):
             'index': idx  # feature name
         }
 
-class CarvanaDataset(BasicDataset1):
+class CarvanaDataset(BasicDataset2):
     def __init__(self, imgs_dir, masks_dir, scale=1):
         super().__init__(imgs_dir, masks_dir, scale, mask_suffix='_mask')
