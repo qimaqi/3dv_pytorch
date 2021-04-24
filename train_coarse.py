@@ -131,7 +131,7 @@ def train_net(net,
 
 
             loss.backward()
-            nn.utils.clip_grad_value_(net.parameters(), 0.1)
+            # nn.utils.clip_grad_value_(net.parameters(), 0.1)
             optimizer.step()
 
 
