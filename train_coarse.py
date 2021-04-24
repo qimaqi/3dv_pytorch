@@ -22,6 +22,7 @@ import torchvision.models as models
 from vgg import VGGPerception
 from torch.utils.tensorboard import SummaryWriter
 import time
+
 # To do
 # delete useless code and make it clear
 # to use logging and attribute feature 
@@ -33,7 +34,6 @@ dir_img = '/cluster/scratch/qimaqi/nyu_v1_images/'     ####### QM:change data di
 #dir_features = '../data/nyu_v1_features/'  # databasic2 can directly process feature
 dir_desc = '/cluster/scratch/qimaqi/nyu_v1_desc/'
 dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_b6_min_lre-3_unet/'
-dir_depth = '/cluster/scratch/qimaqi/nyu_v1_depth/'
 dir_pos = '/cluster/scratch/qimaqi/nyu_v1_pos/'
 #log_dir = '/cluster/scratch/qimaqi/log/'    
 
@@ -47,7 +47,10 @@ def save_image_tensor(input_tensor, filename):
 
 def train_net(net,
               device,
-              pct_3D_points,
+              max_points,
+              pct_points,
+              input_channel,
+              output_channel,
               crop_size, 
               per_loss_wt,
               pix_loss_wt,
@@ -55,12 +58,11 @@ def train_net(net,
               batch_size=8,
               lr=0.001,
               val_percent=0.1,
-              save_cp=True,
-              img_scale = 1):
+              save_cp=True
+              ):
 
-    #save_cp = False
-    #dataset = BasicDataset2(dir_img, dir_depth, dir_features, img_scale)  #without dataaugumentation and load direct feature npz
-    dataset = BasicDataset3(dir_img, dir_depth, dir_pos, dir_desc, img_scale, pct_3D_points, crop_size)
+    save_cp = False
+    dataset = BasicDataset3(dir_img, dir_pos, dir_desc, pct_points, max_points, crop_size)
     n_val = int(len(dataset) * val_percent)
     n_train = len(dataset) - n_val
     train, val = random_split(dataset, [n_train, n_val])
@@ -109,18 +111,17 @@ def train_net(net,
             assert input_features.shape[1] == net.n_channels, 'Channel match problem'
 
             input_features = input_features.to(device=device, dtype=torch.float32)
-            #mask_type = torch.float32
             true_imgs = true_imgs.to(device=device, dtype=torch.float32)
 
             pred = net(input_features)  # ##### check the max and min
-            cpred = (pred+1.)*127.5     # 
+            cpred = (pred+1.)*127.5     # 0-255
             
             P_pred = percepton_criterion(cpred)
             P_img = percepton_criterion(true_imgs)   ### check perceptional repeat
             perception_loss = ( l2_loss(P_pred[0],P_img[0]) + l2_loss(P_pred[1],P_img[1]) + l2_loss(P_pred[2],P_img[2])) / 3
             #print(cpred.size())#([1, 1, 168, 224])
             # print(true_imgs.size()) #([1, 1, 168, 224])
-            pixel_loss = pixel_criterion(cpred,true_imgs)
+            pixel_loss = pixel_criterion(cpred/255,true_imgs/255) 
             loss = pixel_loss*pix_loss_wt + perception_loss*per_loss_wt
 
             epoch_loss += loss.item()
@@ -180,36 +181,27 @@ def get_args():
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('-e', '--epochs', metavar='E', type=int, default=18,
                         help='Number of epochs', dest='epochs')
-    parser.add_argument('-b', '--batch-size', metavar='B', type=int, nargs='?', default=6,
+    parser.add_argument('-b', '--batch-size', metavar='B', type=int, nargs='?', default=4,
                         help='Batch size', dest='batchsize')
-    parser.add_argument('-l', '--learning-rate', metavar='LR', type=float, nargs='?', default=1e-4,
+    parser.add_argument('-l', '--learning-rate', metavar='LR', type=float, nargs='?', default=1e-3,
                         help='Learning rate', dest='lr')
     parser.add_argument('-f', '--load', dest='load', type=str, default=False,
                         help='Load model from a pretrain .pth file')
-    parser.add_argument('-s', '--scale', dest='scale', type=float, default=0.8,
-                        help='Downscaling factor of the images')
     parser.add_argument('-v', '--validation', dest='val', type=float, default=10.0,
-                        help='Percent of the data that is used as validation (0-100)')
-    #parser.add_argument("--input_attr", metavar='Att' type=str, default='super', choices=['depth','depth_sift','depth_rgb','depth_sift_rgb'],
-    #                help="%(type)s: Per-point attributes to inlcude in input tensor (default: %(default)s)")            
+                        help='Percent of the data that is used as validation (0-100)')            
     parser.add_argument("--crop_size", type=int, default=256,     # to do
                         help="%(type)s: Size to crop images to (default: %(default)s)")
-    parser.add_argument("--pct_3D_points", type=lambda s: [float(i) for i in s.split(',')][:2], default=[5.,100.],     # to do
-                        help="float,float: Min and max percent of 3D points to keep when performing random subsampling for data augmentation "+\
-                        "(default: 5.,100.)")
+    parser.add_argument("--pct_points", type=float, default=1.0,
+                        help="choose disparse point for reconstruction")
+    parser.add_argument("--max_points", type=int, default=4000,
+                        help="maximum feature used for reconstruction")
     parser.add_argument("--per_loss_wt", type=float, default=5.0, help="%(type)s: Perceptual loss weight (default: %(default)s)")   
-    parser.add_argument("--pix_loss_wt", type=float, default=1.0, help="%(type)s: Pixel loss weight (default: %(default)s)")        
-    parser.add_argument("--max_iter", type=int, default=1e6, help="%(type)s: Stop training after MAX_ITER iterations (default: %(default)s)")
-    parser.add_argument("--chkpt_freq", type=int, default=1e4, help="%(type)s: Save model state every CHKPT_FREQ iterations. Previous model state "+\
-                        "is deleted after each new save (default: %(default)s)")   
-    parser.add_argument("--save_freq", type=int, default=5e4, 
-                        help="%(type)s: Permanently save model state every SAVE_FREQ iterations "+"(default: %(default)s)")
-    parser.add_argument("--val_freq", type=int, default=5e2, help="%(type)s: Run validation loop every VAL_FREQ iterations (default: %(default)s)")
-    parser.add_argument("--val_iter", type=int, default=128, help="%(type)s: Number of validation samples per validation loop (default: %(default)s)")
+    parser.add_argument("--pix_loss_wt", type=float, default=1.0, help="%(type)s: Pixel loss weight (default: %(default)s)")           
+    parser.add_argument("--feature", type=str, default='Superpoint', help="%(type)s: R2D2 or Superpoint (default: %(default)s)")           
+    parser.add_argument("--output", type=int, default=1, help="%(type)s: output 1 is greyscale and output 3 is RGB (default: %(default)s)")           
 
     
     return parser.parse_args()
-########### QM:many parameters need to be used
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
@@ -217,14 +209,21 @@ if __name__ == '__main__':
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     logging.info('Using device: %s' , device)
 
-    # Change here to adapt to your data
-    # n_channels=3 for RGB images
-    # n_classes is the number of probabilities you want to get per pixel
-    #   - For 1 class and background, use n_classes=1
-    #   - For 2 classes, use n_classes=1
-    #   - For N > 2 classes, use n_classes=N
-    #net = InvNet(n_channels=257, n_classes=1)   # input should be 256, resize to 32 so ram enough
-    net = UNet(n_channels=257, n_classes=1, bilinear=True)
+    # no greyscale or depth here
+    if args.feature == 'Superpoint':
+        input_channel = 256
+    elif args.feature == 'R2D2':
+        input_channel = 128
+    else:
+        logging.info('Feature mode: %s is not Superpoint or R2D2' , args.feature)
+        sys.exit(0)
+
+    output_channel = args.output
+    assert output_channel == 1 or output_channel == 3, 'output channel is not grey or RGB'
+
+    #net = InvNet(n_channels=257, n_classes=1)   
+    # bilinear good or not???
+    net = UNet(n_channels=input_channel, n_classes=output_channel, bilinear=True)
     logging.info('Network:\n'
             '\t %s channels input channels\n' 
             '\t %s output channels (grey brightness)', net.n_channels,  net.n_classes)
@@ -234,7 +233,7 @@ if __name__ == '__main__':
         net.load_state_dict(
             torch.load(args.load, map_location=device)
         )
-        #logging.info(f'Model loaded from {args.load}')
+        logging.info('Model loaded from %s', args.load)
 
     net.to(device=device)
     # faster convolutions, but more memory
@@ -246,11 +245,13 @@ if __name__ == '__main__':
                   batch_size=args.batchsize,
                   lr=args.lr,
                   device=device,
-                  pct_3D_points = args.pct_3D_points,
-                  img_scale=args.scale,
+                  pct_points = args.pct_points,
+                  max_points = args.max_points,
                   crop_size = args.crop_size,
                   per_loss_wt = args.per_loss_wt,
                   pix_loss_wt = args.pix_loss_wt,
+                  input_channel = input_channel,
+                  output_channel = output_channel,
                   val_percent=args.val / 100)
     except KeyboardInterrupt:
         torch.save(net.state_dict(), 'INTERRUPTED.pth')

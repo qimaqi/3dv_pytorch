@@ -27,7 +27,7 @@ def eval_net(net, loader, device):
     percepton_criterion.to(device=device)
     l2_loss = nn.MSELoss()
     pix_loss_wt = 1
-    per_loss_wt = 1
+    per_loss_wt = 5
     sum_pix_loss = 0
     sum_per_loss = 0
 
@@ -47,14 +47,14 @@ def eval_net(net, loader, device):
             P_img = percepton_criterion(true_imgs)
 
         perception_loss = ( l2_loss(P_pred[0],P_img[0]) + l2_loss(P_pred[1],P_img[1]) + l2_loss(P_pred[2],P_img[2])) / 3
-        pixel_loss = pixel_criterion(cpred,true_imgs)
+        pixel_loss = pixel_criterion(cpred/255,true_imgs/255)
         sum_pix_loss += pixel_loss
         sum_per_loss += perception_loss
         tot += pixel_loss*pix_loss_wt + perception_loss*per_loss_wt
 
         # debug part
-        tmp_output_dir = '/cluster/scratch/qimaqi/debug_output_eval_unet_17_4/' +str(global_step) + '.png'
-        tmp_img_dir = '/cluster/scratch/qimaqi/debug_images_eval_unet_17_4/'+ str(global_step) + '.png'
+        tmp_output_dir = '/cluster/scratch/qimaqi/debug_output_eval_unet_24_4/' +str(global_step) + '.png'
+        tmp_img_dir = '/cluster/scratch/qimaqi/debug_images_eval_unet_24_4/'+ str(global_step) + '.png'
         save_image_tensor(cpred,tmp_output_dir)
         save_image_tensor(true_imgs,tmp_img_dir)
 
