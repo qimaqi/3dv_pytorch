@@ -33,7 +33,7 @@ import time
 dir_img = '/cluster/scratch/qimaqi/nyu_v1_images/'     ####### QM:change data directory path
 #dir_features = '../data/nyu_v1_features/'  # databasic2 can directly process feature
 dir_desc = '/cluster/scratch/qimaqi/nyu_v1_desc/'
-dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_24_4_invnet/'
+dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_24_4_invnet_/'
 dir_pos = '/cluster/scratch/qimaqi/nyu_v1_pos/'
 #log_dir = '/cluster/scratch/qimaqi/log/'    
 
@@ -67,7 +67,7 @@ def train_net(net,
     n_train = len(dataset) - n_val
     train, val = random_split(dataset, [n_train, n_val])
     train_loader = DataLoader(train, batch_size=batch_size, shuffle=True, num_workers=2, pin_memory=True)
-    val_batch_size = 1
+    val_batch_size = 4
     val_loader = DataLoader(val, batch_size=val_batch_size, shuffle=False, num_workers=2, pin_memory=True, drop_last=True)
     writer = SummaryWriter()
     global_step = 0
@@ -131,7 +131,7 @@ def train_net(net,
 
 
             loss.backward()
-            # nn.utils.clip_grad_value_(net.parameters(), 0.1)
+            nn.utils.clip_grad_value_(net.parameters(), 0.1)
             optimizer.step()
 
 
