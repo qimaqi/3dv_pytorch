@@ -81,12 +81,31 @@ class Up(nn.Module):
 class OutConv(nn.Module):
     def __init__(self, in_channels, out_channels):
         super(OutConv, self).__init__()
-        self.outconv = nn.Sequential(
-            nn.Conv2d(in_channels, 32, kernel_size=3, padding=1),
-            nn.BatchNorm2d(32),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(32, out_channels, kernel_size=3, padding=1),
-            nn.Tanh(),
-            )
+        if in_channels == 256:
+            self.outconv = nn.Sequential(
+                nn.Conv2d(in_channels, 128, kernel_size=3, padding=1),
+                nn.BatchNorm2d(128),
+                nn.ReLU(inplace=True),
+                nn.Conv2d(128, 64, kernel_size=3, padding=1),
+                nn.BatchNorm2d(64),
+                nn.ReLU(inplace=True),
+                nn.Conv2d(64, 32, kernel_size=3, padding=1),
+                nn.BatchNorm2d(32),
+                nn.ReLU(inplace=True),
+                nn.Conv2d(32, out_channels, kernel_size=3, padding=1),
+                nn.Tanh()
+                )
+        elif in_channels == 128:
+            self.outconv = nn.Sequential(
+                nn.Conv2d(in_channels, 64, kernel_size=3, padding=1),
+                nn.BatchNorm2d(64),
+                nn.ReLU(inplace=True),
+                nn.Conv2d(64, 32, kernel_size=3, padding=1),
+                nn.BatchNorm2d(32),
+                nn.ReLU(inplace=True),
+                nn.Conv2d(32, out_channels, kernel_size=3, padding=1),
+                nn.Tanh()
+                )            
+    
     def forward(self, x):
         return self.outconv(x)

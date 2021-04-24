@@ -11,7 +11,6 @@ class InvNet(nn.Module):
         super(InvNet, self).__init__()
         self.n_channels = n_channels
         self.n_classes = n_classes
-        #self.bilinear = bilinear
 
         #self.inc = DoubleConv(n_channels, 64)
         self.down1 = Down(n_channels, 256)
