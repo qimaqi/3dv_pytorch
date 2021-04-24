@@ -66,7 +66,7 @@ def train_net(net,
     n_val = int(len(dataset) * val_percent)
     n_train = len(dataset) - n_val
     train, val = random_split(dataset, [n_train, n_val])
-    train_loader = DataLoader(train, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=True)
+    train_loader = DataLoader(train, batch_size=batch_size, shuffle=True, num_workers=2, pin_memory=True)
     val_batch_size = 1
     val_loader = DataLoader(val, batch_size=val_batch_size, shuffle=False, num_workers=4, pin_memory=True, drop_last=True)
     writer = SummaryWriter()
@@ -79,10 +79,9 @@ def train_net(net,
         '\tTraining size:    %s\n'  
         '\tValidation size:  %s\n'
         '\tCheckpoints:      %s\n' 
-        '\tDevice:           %s\n'         
-        '\tImages scaling:   %s\n'  
+        '\tDevice:           %s\n' 
         '\tCrop Size:        %s\n'
-        , epochs, batch_size, lr, n_train, n_val, save_cp, device.type, img_scale, crop_size
+        , epochs, batch_size, lr, n_train, n_val, save_cp, device.type, crop_size
         )
 
     #optimizer = optim.RMSprop(net.parameters(), lr=lr, weight_decay=1e-8, momentum=0.9)
