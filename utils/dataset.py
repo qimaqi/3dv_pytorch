@@ -196,8 +196,14 @@ class BasicDataset3(Dataset):
 
         # choose same max points and use disparse percentage
         if pos_num >= self.max_points:
-            new_num = int(self.max_points*self.pct_points)
+            new_num = int(self.max_points)
             feature_cut = desc[:,:new_num]
+            pos_num = new_num
+        
+        # pct_points choose
+        new_num = int(pos_num * self.pct_points)
+        feature_cut = feature_cut[:,:new_num]
+        pos_num = new_num
 
         height, width = np.shape(img)  # (480,640) with scale
         desc_length = np.shape(desc)[0]  # 256 R2D2 is 128
