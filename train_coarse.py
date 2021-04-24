@@ -33,7 +33,7 @@ import time
 dir_img = '/cluster/scratch/qimaqi/nyu_v1_images/'     ####### QM:change data directory path
 #dir_features = '../data/nyu_v1_features/'  # databasic2 can directly process feature
 dir_desc = '/cluster/scratch/qimaqi/nyu_v1_desc/'
-dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_b6_min_lre-3_unet/'
+dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_24_4_invnet/'
 dir_pos = '/cluster/scratch/qimaqi/nyu_v1_pos/'
 #log_dir = '/cluster/scratch/qimaqi/log/'    
 
@@ -61,7 +61,7 @@ def train_net(net,
               save_cp=True
               ):
 
-    save_cp = False
+    #save_cp = False
     dataset = BasicDataset2(dir_img, dir_pos, dir_desc, pct_points, max_points, crop_size)
     n_val = int(len(dataset) * val_percent)
     n_train = len(dataset) - n_val
