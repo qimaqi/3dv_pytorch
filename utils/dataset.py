@@ -35,7 +35,9 @@ class BasicDataset2(Dataset):
         # feature: HWC, img in np shape: HWC. img in size WHC
         h, w, c = np.shape(feature) 
         #print(h,w,c) # 480, 640, 256
-  
+
+        # img = img.resize((w, h), Image.ANTIALIAS)
+
         feature_nd = np.array(feature)
         img_nd = np.array(img)
 
