@@ -56,7 +56,7 @@ def train_net(net,
               pix_loss_wt,
               epochs=10,
               batch_size=8,
-              lr=0.001,
+              lr=0.0001,
               val_percent=0.1,
               save_cp=True
               ):
