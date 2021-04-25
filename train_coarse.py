@@ -33,7 +33,7 @@ import time
 dir_img = '/cluster/scratch/qimaqi/nyu_v1_images/'     ####### QM:change data directory path
 #dir_features = '../data/nyu_v1_features/'  # databasic2 can directly process feature
 dir_desc = '/cluster/scratch/qimaqi/nyu_v1_desc/'
-dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_24_4_unet/'
+dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_25_4_unet/'
 dir_pos = '/cluster/scratch/qimaqi/nyu_v1_pos/'
 #log_dir = '/cluster/scratch/qimaqi/log/'    
 
@@ -67,8 +67,8 @@ def train_net(net,
     n_train = len(dataset) - n_val
     train, val = random_split(dataset, [n_train, n_val])
     train_loader = DataLoader(train, batch_size=batch_size, shuffle=True, num_workers=2, pin_memory=True)
-    val_batch_size = 1
-    val_loader = DataLoader(val, batch_size=val_batch_size, shuffle=False, num_workers=4, pin_memory=True, drop_last=True)
+    val_batch_size = 4
+    val_loader = DataLoader(val, batch_size=val_batch_size, shuffle=False, num_workers=2, pin_memory=True, drop_last=True)
     writer = SummaryWriter()
     global_step = 0
 
@@ -195,7 +195,7 @@ def get_args():
     parser.add_argument("--max_points", type=int, default=4000,
                         help="maximum feature used for reconstruction")
     parser.add_argument("--per_loss_wt", type=float, default=5.0, help="%(type)s: Perceptual loss weight (default: %(default)s)")   
-    parser.add_argument("--pix_loss_wt", type=float, default=1.0, help="%(type)s: Pixel loss weight (default: %(default)s)")           
+    parser.add_argument("--pix_loss_wt", type=float, default=5.0, help="%(type)s: Pixel loss weight (default: %(default)s)")           
     parser.add_argument("--feature", type=str, default='Superpoint', help="%(type)s: R2D2 or Superpoint (default: %(default)s)")           
     parser.add_argument("--output", type=int, default=1, help="%(type)s: output 1 is greyscale and output 3 is RGB (default: %(default)s)")           
 
