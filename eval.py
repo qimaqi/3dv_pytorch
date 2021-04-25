@@ -26,7 +26,7 @@ def eval_net(net, loader, device):
     percepton_criterion = VGGPerception()
     percepton_criterion.to(device=device)
     l2_loss = nn.MSELoss()
-    pix_loss_wt = 1
+    pix_loss_wt = 5
     per_loss_wt = 5
     sum_pix_loss = 0
     sum_per_loss = 0
