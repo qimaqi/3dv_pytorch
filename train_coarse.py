@@ -33,7 +33,7 @@ import time
 dir_img = '/cluster/scratch/qimaqi/nyu_v1_images/'     ####### QM:change data directory path
 #dir_features = '../data/nyu_v1_features/'  # databasic2 can directly process feature
 dir_desc = '/cluster/scratch/qimaqi/nyu_v1_desc/'
-dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_26_4_unet/'
+dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_27_4_unet/'
 dir_pos = '/cluster/scratch/qimaqi/nyu_v1_pos/'
 #log_dir = '/cluster/scratch/qimaqi/log/'    
 
@@ -131,7 +131,7 @@ def train_net(net,
 
 
             loss.backward()
-            nn.utils.clip_grad_value_(net.parameters(), 0.1)
+            nn.utils.clip_grad_value_(net.parameters(), 0.5)
             optimizer.step()
 
 
@@ -178,11 +178,11 @@ def train_net(net,
 def get_args():
     parser = argparse.ArgumentParser(description='Train the CoarseNet on images and correspond superpoint descripton',
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('-e', '--epochs', metavar='E', type=int, default=18,
+    parser.add_argument('-e', '--epochs', metavar='E', type=int, default=24,
                         help='Number of epochs', dest='epochs')
     parser.add_argument('-b', '--batch-size', metavar='B', type=int, nargs='?', default=6,
                         help='Batch size', dest='batchsize')
-    parser.add_argument('-l', '--learning-rate', metavar='LR', type=float, nargs='?', default=1e-3,
+    parser.add_argument('-l', '--learning-rate', metavar='LR', type=float, nargs='?', default=5e-4,
                         help='Learning rate', dest='lr')
     parser.add_argument('-f', '--load', dest='load', type=str, default=False,
                         help='Load model from a pretrain .pth file')
@@ -194,8 +194,8 @@ def get_args():
                         help="choose disparse point for reconstruction")
     parser.add_argument("--max_points", type=int, default=4000,
                         help="maximum feature used for reconstruction")
-    parser.add_argument("--per_loss_wt", type=float, default=10.0, help="%(type)s: Perceptual loss weight (default: %(default)s)")   
-    parser.add_argument("--pix_loss_wt", type=float, default=1.0, help="%(type)s: Pixel loss weight (default: %(default)s)")           
+    parser.add_argument("--per_loss_wt", type=float, default=5.0, help="%(type)s: Perceptual loss weight (default: %(default)s)")   
+    parser.add_argument("--pix_loss_wt", type=float, default=2.0, help="%(type)s: Pixel loss weight (default: %(default)s)")           
     parser.add_argument("--feature", type=str, default='Superpoint', help="%(type)s: R2D2 or Superpoint (default: %(default)s)")           
     parser.add_argument("--output", type=int, default=1, help="%(type)s: output 1 is greyscale and output 3 is RGB (default: %(default)s)")           
 
