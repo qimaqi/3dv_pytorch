@@ -56,7 +56,7 @@ def eval_net(net, loader, device):
         sum_per_loss += perception_loss
 
         ssim_out = -ssim_loss(cpred, true_imgs)
-        ssim_value = - ssim_out.data[0]
+        ssim_value = - ssim_out.item()
         tot += ssim_value    #pixel_loss*pix_loss_wt + perception_loss*per_loss_wt
         sum_ssim_loss += ssim_value
         # debug part
