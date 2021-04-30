@@ -6,7 +6,7 @@ from math import exp
 import math
 
 def psnr(img1, img2):
-    assert np.shape(img1) == np.shape(img2): 'image dimension did not match'
+    assert np.shape(img1) == np.shape(img2), 'image dimension did not match'
     mse = np.mean( (img1 - img2) ** 2 )
     if mse == 0:
         return 100

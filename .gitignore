@@ -6,3 +6,9 @@ checkpoints/
 *.jpg
 SUBMISSION*
 venv/
+Pytorch-Unet.zip
+train.py
+.gitignore
+unet/bak/unet.zip
+utils/bak/dataset.py
+.gitignore
