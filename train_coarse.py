@@ -124,7 +124,7 @@ def train_net(net,
             
             # ssim_value = pytorch_ssim.ssim(cpred, true_imgs).data[0]
             ssim_out = -ssim_loss(cpred, true_imgs)
-            ssim_value = - ssim_out.data[0]
+            ssim_value = - ssim_out.item()
 
             loss = ssim_out #pixel_loss*pix_loss_wt + perception_loss*per_loss_wt
 
