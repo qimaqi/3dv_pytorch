@@ -78,8 +78,8 @@ def train_net(net,
         '\tCheckpoints:      %s\n' 
         '\tDevice:           %s\n' 
         '\tCrop Size:        %s\n'
-        '\tPercentage of points' '%s\n'
-        '\tFeature used'    '%s\n'
+        '\tPercentage of points     %s\n'
+        '\tFeature used     %s\n'
         , epochs, batch_size, lr, n_train, n_val, save_cp, device.type, crop_size,pct_points,feature
         )
 
