@@ -22,11 +22,7 @@ import torchvision.models as models
 from vgg import VGGPerception
 from torch.utils.tensorboard import SummaryWriter
 import time
-
-# To do
-# delete useless code and make it clear
-# to use logging and attribute feature 
-# infer to test the result
+import pytorch_ssim
 
 
 #some default dir need images descripton, pos and depth. Attention this time desc and pos is in json !!!!!!!!!!
@@ -51,6 +47,7 @@ def train_net(net,
               pct_points,
               input_channel,
               output_channel,
+              feature,
               crop_size, 
               per_loss_wt,
               pix_loss_wt,
@@ -61,7 +58,7 @@ def train_net(net,
               save_cp=True
               ):
 
-    #save_cp = False
+    save_cp = False
     dataset = BasicDataset3(dir_img, dir_pos, dir_desc, pct_points, max_points, crop_size)
     n_val = int(len(dataset) * val_percent)
     n_train = len(dataset) - n_val
@@ -81,7 +78,9 @@ def train_net(net,
         '\tCheckpoints:      %s\n' 
         '\tDevice:           %s\n' 
         '\tCrop Size:        %s\n'
-        , epochs, batch_size, lr, n_train, n_val, save_cp, device.type, crop_size
+        '\tPercentage of points' '%s\n'
+        '\tFeature used'    '%s\n'
+        , epochs, batch_size, lr, n_train, n_val, save_cp, device.type, crop_size,pct_points,feature
         )
 
     #optimizer = optim.RMSprop(net.parameters(), lr=lr, weight_decay=1e-8, momentum=0.9)
@@ -94,6 +93,7 @@ def train_net(net,
     percepton_criterion = VGGPerception()
     percepton_criterion.to(device=device)
     l2_loss = nn.MSELoss()
+    ssim_loss = pytorch_ssim.SSIM()
 
     #if net.n_classes > 1:    # RGB need to reform
     #    criterion = nn.CrossEntropyLoss()
@@ -121,19 +121,21 @@ def train_net(net,
             #print(cpred.size())#([1, 1, 168, 224])
             # print(true_imgs.size()) #([1, 1, 168, 224])
             pixel_loss = pixel_criterion(cpred/255,true_imgs/255) 
-            loss = pixel_loss*pix_loss_wt + perception_loss*per_loss_wt
+            
+            # ssim_value = pytorch_ssim.ssim(cpred, true_imgs).data[0]
+            ssim_out = -ssim_loss(cpred, true_imgs)
+            ssim_value = - ssim_out.data[0]
+
+            loss = ssim_out #pixel_loss*pix_loss_wt + perception_loss*per_loss_wt
 
             epoch_loss += loss.item()
             writer.add_scalar('Loss/train', loss.item(), global_step)
-
-
             optimizer.zero_grad()
 
 
             loss.backward()
             nn.utils.clip_grad_value_(net.parameters(), 0.5)
             optimizer.step()
-
 
             global_step += 1
             # debug part
@@ -223,7 +225,7 @@ if __name__ == '__main__':
     #net = InvNet(n_channels=257, n_classes=1)   
     # bilinear good or not???
     net = UNet(n_channels=input_channel, n_classes=output_channel, bilinear=True)
-    logging.info('Network:\n'
+    logging.info('Network: Unet\n'
             '\t %s channels input channels\n' 
             '\t %s output channels (grey brightness)', net.n_channels,  net.n_classes)
 
@@ -249,6 +251,7 @@ if __name__ == '__main__':
                   crop_size = args.crop_size,
                   per_loss_wt = args.per_loss_wt,
                   pix_loss_wt = args.pix_loss_wt,
+                  feature = args.feature,
                   input_channel = input_channel,
                   output_channel = output_channel,
                   val_percent=args.val / 100)
