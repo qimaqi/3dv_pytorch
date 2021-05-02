@@ -52,12 +52,6 @@ def eval_net(net, loader, device):
         sum_per_loss += perception_loss
         tot += pixel_loss*pix_loss_wt + perception_loss*per_loss_wt
 
-        # debug part
-        tmp_output_dir = '/cluster/scratch/qimaqi/debug_output_eval_unet_24_4/' +str(global_step) + '.png'
-        tmp_img_dir = '/cluster/scratch/qimaqi/debug_images_eval_unet_24_4/'+ str(global_step) + '.png'
-        save_image_tensor(cpred,tmp_output_dir)
-        save_image_tensor(true_imgs,tmp_img_dir)
-
         global_step += 1
 
     net.train()

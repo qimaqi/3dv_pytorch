@@ -19,6 +19,7 @@ from utils.dataset import BasicDatasetR2D2
 from torch.utils.data import DataLoader, random_split
 import torchvision.models as models
 from vgg import VGGPerception
+import random
 from torch.utils.tensorboard import SummaryWriter
 import time
 
@@ -28,14 +29,37 @@ import time
 # infer to test the result
 
 
+def load_annotations(fname):
+    with open(fname,'r') as f:
+        data = [line.strip().split(' ') for line in f]
+    return np.array(data)
+
 #some default dir need images descripton, pos and depth. Attention this time desc and pos is in json !!!!!!!!!!
-dir_img = '/cluster/scratch/jiaqiu/nyu_images/'    
-#dir_features = '../data/nyu_v1_features/'
-dir_desc = '/cluster/scratch/jiaqiu/nyu_r2d2_desc/'
-dir_checkpoint = '/cluster/scratch/jiaqiu/checkpoints_20_04/'
-load_dir = '/cluster/scratch/jiaqiu/checkpoints_18_04/9.pth'
-dir_depth = '/cluster/scratch/jiaqiu/nyu_depth/'
-dir_pos = '/cluster/scratch/jiaqiu/nyu_r2d2_pos/'
+base_image_dir='/cluster/scratch/jiaqiu/npz_torch_data/'
+rescale = [0.6, 0.8, 1]
+dir_checkpoint = '/cluster/scratch/jiaqiu/checkpoints_25_04/'
+train_5k=load_annotations(os.path.join(base_image_dir,'anns/demo_5k/train.txt'))
+train_5k_image_rgb=list(train_5k[:,4])
+train_5k_image_depth=list(train_5k[:,5])
+image_list=[]
+depth_list=[]
+feature_list=[]
+rescale_list = []
+for i in range(len(train_5k_image_rgb)):
+    temp_image_name=train_5k_image_rgb[i]
+    temp_path=os.path.join(base_image_dir,temp_image_name)
+    image_list.append(temp_path)
+    r2d2_feature_name=temp_image_name.replace('/','^_^')+'.npz'
+    select_rescale = random.choice(rescale)
+    base_dir = '/cluster/scratch/jiaqiu/resize_data_r2d2_' + str(select_rescale) + '/'
+    feature_list.append(os.path.join(base_dir,r2d2_feature_name))
+    rescale_list.append(select_rescale)
+    temp_depth=train_5k_image_depth[i]
+    temp_depth_path=os.path.join(base_image_dir,train_5k_image_depth[i])
+    if not os.path.exists(temp_depth_path):
+        temp_depth_path=temp_depth_path[:-8]+'.npz'      
+    depth_list.append(temp_depth_path)
+
 
 def save_image_tensor(input_tensor, filename):
     assert (len(input_tensor.shape) == 4 and input_tensor.shape[0] == 1)
@@ -63,7 +87,7 @@ def train_net(net,
               ):
 
     #dataset = BasicDataset2(dir_img, dir_depth, dir_features, img_scale)  #without dataaugumentation and load direct feature npz
-    dataset = BasicDatasetR2D2(dir_img, dir_depth, dir_pos, dir_desc, img_scale, pct_3D_points, crop_size)
+    dataset = BasicDatasetR2D2(image_list, depth_list, feature_list, pct_points, max_points, crop_size, rescale_list)
     n_val = int(len(dataset) * val_percent)
     n_train = len(dataset) - n_val
     train, val = random_split(dataset, [n_train, n_val])
@@ -178,7 +202,7 @@ def get_args():
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('-e', '--epochs', metavar='E', type=int, default=18,
                         help='Number of epochs', dest='epochs')
-    parser.add_argument('-b', '--batch-size', metavar='B', type=int, nargs='?', default=4,
+    parser.add_argument('-b', '--batch-size', metavar='B', type=int, nargs='?', default=8,
                         help='Batch size', dest='batchsize')
     parser.add_argument('-l', '--learning-rate', metavar='LR', type=float, nargs='?', default=1e-4,
                         help='Learning rate', dest='lr')
@@ -194,7 +218,7 @@ def get_args():
                         help="maximum feature used for reconstruction")
     parser.add_argument("--per_loss_wt", type=float, default=5.0, help="%(type)s: Perceptual loss weight (default: %(default)s)")   
     parser.add_argument("--pix_loss_wt", type=float, default=1.0, help="%(type)s: Pixel loss weight (default: %(default)s)")           
-    parser.add_argument("--feature", type=str, default='Superpoint', help="%(type)s: R2D2 or Superpoint (default: %(default)s)")           
+    parser.add_argument("--feature", type=str, default='R2D2', help="%(type)s: R2D2 or Superpoint (default: %(default)s)")           
     parser.add_argument("--output", type=int, default=1, help="%(type)s: output 1 is greyscale and output 3 is RGB (default: %(default)s)")           
 
     
