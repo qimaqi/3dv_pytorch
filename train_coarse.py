@@ -22,11 +22,7 @@ from vgg import VGGPerception
 import random
 from torch.utils.tensorboard import SummaryWriter
 import time
-
-# To do
-# delete useless code and make it clear
-# to use logging and attribute feature 
-# infer to test the result
+import pytorch_ssim
 
 
 def load_annotations(fname):
@@ -76,12 +72,13 @@ def train_net(net,
               pct_points,
               input_channel,
               output_channel,
+              feature,
               crop_size, 
               per_loss_wt,
               pix_loss_wt,
               epochs=10,
               batch_size=8,
-              lr=0.001,
+              lr=0.0001,
               val_percent=0.1,
               save_cp=True
               ):
@@ -93,7 +90,7 @@ def train_net(net,
     train, val = random_split(dataset, [n_train, n_val])
     train_loader = DataLoader(train, batch_size=batch_size, shuffle=True, num_workers=2, pin_memory=True)
     val_batch_size = 1
-    val_loader = DataLoader(val, batch_size=val_batch_size, shuffle=False, num_workers=4, pin_memory=True, drop_last=True)
+    val_loader = DataLoader(val, batch_size=val_batch_size, shuffle=False, num_workers=2, pin_memory=True, drop_last=True)
     writer = SummaryWriter()
     global_step = 0
 
@@ -106,7 +103,9 @@ def train_net(net,
         '\tCheckpoints:      %s\n' 
         '\tDevice:           %s\n' 
         '\tCrop Size:        %s\n'
-        , epochs, batch_size, lr, n_train, n_val, save_cp, device.type, crop_size
+        '\tPercentage of points     %s\n'
+        '\tFeature used     %s\n'
+        , epochs, batch_size, lr, n_train, n_val, save_cp, device.type, crop_size,pct_points,feature
         )
 
     #optimizer = optim.RMSprop(net.parameters(), lr=lr, weight_decay=1e-8, momentum=0.9)
@@ -119,6 +118,7 @@ def train_net(net,
     percepton_criterion = VGGPerception()
     percepton_criterion.to(device=device)
     l2_loss = nn.MSELoss()
+    ssim_loss = pytorch_ssim.SSIM()
 
     #if net.n_classes > 1:    # RGB need to reform
     #    criterion = nn.CrossEntropyLoss()
@@ -144,19 +144,21 @@ def train_net(net,
             #print(cpred.size())#([1, 1, 168, 224])
             # print(true_imgs.size()) #([1, 1, 168, 224])
             pixel_loss = pixel_criterion(cpred/255,true_imgs/255) 
-            loss = pixel_loss*pix_loss_wt + perception_loss*per_loss_wt
+            
+            # ssim_value = pytorch_ssim.ssim(cpred, true_imgs).data[0]
+            ssim_out = -ssim_loss(cpred, true_imgs)
+            ssim_value = - ssim_out.item()
+
+            loss = ssim_out #pixel_loss*pix_loss_wt + perception_loss*per_loss_wt
 
             epoch_loss += loss.item()
             writer.add_scalar('Loss/train', loss.item(), global_step)
-
-
             optimizer.zero_grad()
 
 
             loss.backward()
-            nn.utils.clip_grad_value_(net.parameters(), 0.1)
+            nn.utils.clip_grad_value_(net.parameters(), 0.5)
             optimizer.step()
-
 
             global_step += 1
             # debug part
@@ -181,8 +183,8 @@ def train_net(net,
                 print('Coarsenet score: ',(val_score), 'in epoch', epoch )
                 writer.add_scalar('learning_rate', optimizer.param_groups[0]['lr'], global_step)
                 writer.add_scalar('total_loss', val_score, global_step)
-                writer.add_images('output', cpred, global_step)
-                writer.add_images('true images', true_imgs, global_step)
+                writer.add_images('output', cpred/255, global_step)
+                writer.add_images('true images', true_imgs/255, global_step)
 
         if save_cp:
             try:
@@ -200,7 +202,7 @@ def train_net(net,
 def get_args():
     parser = argparse.ArgumentParser(description='Train the CoarseNet on images and correspond superpoint descripton',
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('-e', '--epochs', metavar='E', type=int, default=18,
+    parser.add_argument('-e', '--epochs', metavar='E', type=int, default=24,
                         help='Number of epochs', dest='epochs')
     parser.add_argument('-b', '--batch-size', metavar='B', type=int, nargs='?', default=8,
                         help='Batch size', dest='batchsize')
@@ -210,7 +212,7 @@ def get_args():
                         help='Load model from a pretrain .pth file')
     parser.add_argument('-v', '--validation', dest='val', type=float, default=10.0,
                         help='Percent of the data that is used as validation (0-100)')            
-    parser.add_argument("--crop_size", type=int, default=256,     # to do
+    parser.add_argument("--crop_size", type=int, default=320,     # to do
                         help="%(type)s: Size to crop images to (default: %(default)s)")
     parser.add_argument("--pct_points", type=float, default=1.0,
                         help="choose disparse point for reconstruction")
@@ -245,7 +247,7 @@ if __name__ == '__main__':
     #net = InvNet(n_channels=257, n_classes=1)   
     # bilinear good or not???
     net = UNet(n_channels=input_channel, n_classes=output_channel, bilinear=True)
-    logging.info('Network:\n'
+    logging.info('Network: Unet\n'
             '\t %s channels input channels\n' 
             '\t %s output channels (grey brightness)', net.n_channels,  net.n_classes)
 
@@ -271,6 +273,7 @@ if __name__ == '__main__':
                   crop_size = args.crop_size,
                   per_loss_wt = args.per_loss_wt,
                   pix_loss_wt = args.pix_loss_wt,
+                  feature = args.feature,
                   input_channel = input_channel,
                   output_channel = output_channel,
                   val_percent=args.val / 100)

@@ -4,6 +4,7 @@ import torch.nn.functional as F
 import torch.nn as nn
 from vgg import VGGPerception
 from torchvision.utils import save_image
+import pytorch_ssim
 
 
 def save_image_tensor(input_tensor, filename):
@@ -25,11 +26,14 @@ def eval_net(net, loader, device):
     pixel_criterion = nn.L1Loss()       ##### QM: only L1 loss problem: image and feature not match
     percepton_criterion = VGGPerception()
     percepton_criterion.to(device=device)
+    ssim_loss = pytorch_ssim.SSIM()
     l2_loss = nn.MSELoss()
-    pix_loss_wt = 1
+    pix_loss_wt = 5
     per_loss_wt = 5
     sum_pix_loss = 0
     sum_per_loss = 0
+    sum_ssim_loss = 0
+    
 
     global_step = 0 
     #with tqdm(total=n_val, desc='Validation round', unit='batch', leave=False) as pbar:
@@ -50,10 +54,15 @@ def eval_net(net, loader, device):
         pixel_loss = pixel_criterion(cpred/255,true_imgs/255)
         sum_pix_loss += pixel_loss
         sum_per_loss += perception_loss
-        tot += pixel_loss*pix_loss_wt + perception_loss*per_loss_wt
+
+        ssim_out = -ssim_loss(cpred, true_imgs)
+        ssim_value = - ssim_out.item()
+        tot += ssim_value    #pixel_loss*pix_loss_wt + perception_loss*per_loss_wt
+        sum_ssim_loss += ssim_value
 
         global_step += 1
 
     net.train()
     print('Coarsenet pixel_loss: ',(sum_pix_loss/n_val), 'Coarsenet perception_loss:', sum_per_loss/n_val )
+    print('SSIM LOSS: ',(sum_ssim_loss/n_val))
     return tot / n_val
