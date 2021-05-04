@@ -10,7 +10,7 @@ import torch.nn as nn
 from torch import optim
 from tqdm import tqdm
 
-from utils.dataset import BasicDataset2
+from utils.dataset import BasicDataset3
 from eval import eval_net
 from unet import InvNet
 #from unet import LossNetwork
@@ -26,20 +26,71 @@ from torch.utils.data import Dataset
 import logging
 from PIL import Image
 import json
+from torchvision.utils import save_image
 
-imgs_dir = '../data/nyu_v1_images/'
-dir_features = '../data/nyu_v1_features/'
-ids = [splitext(file)[0] for file in listdir(imgs_dir) if not file.startswith('.')]
-img_file = glob(imgs_dir + ids[0] + '.*')
-feature_file = glob(dir_features + ids[0] + '.*')
-#print(feature_file)
-f1 = np.arange(100)
-print(f1)
-print(f1.shape)
-f1.resize(5,20)
-print(f1)
-f1.resize(20,5)
-print(f1)
+
+infer_output_dir = 'F:/invsfm/src/data/infer_output/'
+dir_desc = 'F:/invsfm/src/data/infer_desc/'
+dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_11_4/5.pth'
+dir_depth = 'F:/invsfm/src/data/infer_depth/'
+dir_pos = 'F:/invsfm/src/data/infer_pos/'
+dir_img = 'F:/invsfm/src/data/infer_imgs/' 
+
+img_scale = 0.8
+pct_3D_points = 0
+crop_size = 256
+batch_size = 1
+dataset = BasicDataset3(dir_img, dir_depth, dir_pos, dir_desc, img_scale, pct_3D_points, crop_size)
+train_loader = DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=0, pin_memory=True)
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+n_train = len(dataset)
+
+def save_image_tensor(input_tensor, filename):
+    assert (len(input_tensor.shape) == 4 and input_tensor.shape[0] == 1)
+    input_tensor = input_tensor.clone().detach()
+    # to cpu
+    input_tensor = input_tensor.to(torch.device('cpu'))
+    save_image(input_tensor, filename, normalize=True)
+
+global_step = 0
+for batch in train_loader:
+    input_features = batch['feature']
+    true_imgs = batch['image']
+    #assert input_features.shape[1] == net.n_channels, 'Channel match problem'
+
+    input_features = input_features.to(device=device, dtype=torch.float32)
+    #mask_type = torch.float32
+    true_imgs = true_imgs.to(device=device, dtype=torch.float32)
+    #input_tensor = input_tensor.clone().detach()
+    #input_tensor = input_tensor.to(torch.device('cpu'))
+
+
+
+    global_step += 1
+    # debug part
+    if global_step % (n_train // (10 * batch_size)) == 0:
+        tmp_output_dir = 'F:/invsfm/src/data/debug_output/' +str(global_step) + '.png'
+        tmp_img_dir = 'F:/invsfm/src/data/debug_images/'+ str(global_step) + '.png'
+        #save_image_tensor(cpred,tmp_output_dir)
+        save_image_tensor(true_imgs,tmp_img_dir)
+        #print('cpred maximum', torch.max(cpred))
+        #print('cpred minimum', torch.min(cpred))
+        print('true_images maximum', torch.max(true_imgs))
+        print('true_images minimum', torch.min(true_imgs))
+
+# imgs_dir = '../data/nyu_v1_images/'
+# dir_features = '../data/nyu_v1_features/'
+# ids = [splitext(file)[0] for file in listdir(imgs_dir) if not file.startswith('.')]
+# img_file = glob(imgs_dir + ids[0] + '.*')
+# feature_file = glob(dir_features + ids[0] + '.*')
+# #print(feature_file)
+# f1 = np.arange(100)
+# print(f1)
+# print(f1.shape)
+# f1.resize(5,20)
+# print(f1)
+# f1.resize(20,5)
+# print(f1)
 
 
 #img = Image.open(img_file[0]).convert('L')
