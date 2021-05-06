@@ -42,6 +42,8 @@ class VGGPerception(nn.Module):
         if x.shape[1] != 3:  # grey image
             #x = np.expand_dims(x, axis=2)
             tx = x.repeat(1, 3, 1, 1)
+        else:
+            tx = x
         #zero_channel_x = np.zeros(x.shape)
         #x_rgb = np.concatenate((x,zero_channel_x,zero_channel_x),axis=2)
         #x_trans = x_rgb.transpose((2, 0, 1))  # CHW

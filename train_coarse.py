@@ -24,6 +24,10 @@ from torch.utils.tensorboard import SummaryWriter
 import time
 import pytorch_ssim
 
+# To do
+# delete useless code and make it clear
+# to use logging and attribute feature 
+# infer to test the result
 
 def load_annotations(fname):
     with open(fname,'r') as f:
@@ -66,6 +70,16 @@ def save_image_tensor(input_tensor, filename):
 
 
     
+
+
+def save_image_tensor(input_tensor, filename):
+    assert (len(input_tensor.shape) == 4 and input_tensor.shape[0] == 1)
+    input_tensor = input_tensor.clone().detach()
+    # to cpu
+    input_tensor = input_tensor.to(torch.device('cpu'))
+    save_image(input_tensor, filename,normalize=True)
+
+
 def train_net(net,
               device,
               max_points,
@@ -203,11 +217,11 @@ def train_net(net,
 def get_args():
     parser = argparse.ArgumentParser(description='Train the CoarseNet on images and correspond superpoint descripton',
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('-e', '--epochs', metavar='E', type=int, default=24,
+    parser.add_argument('-e', '--epochs', metavar='E', type=int, default=18,
                         help='Number of epochs', dest='epochs')
     parser.add_argument('-b', '--batch-size', metavar='B', type=int, nargs='?', default=8,
                         help='Batch size', dest='batchsize')
-    parser.add_argument('-l', '--learning-rate', metavar='LR', type=float, nargs='?', default=1e-4,
+    parser.add_argument('-l', '--learning-rate', metavar='LR', type=float, nargs='?', default=1e-3,
                         help='Learning rate', dest='lr')
     parser.add_argument('-f', '--load', dest='load', type=str, default=False,
                         help='Load model from a pretrain .pth file')
