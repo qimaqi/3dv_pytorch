@@ -203,6 +203,24 @@ def train_net(net,
 
     #writer.close()
 
+# def parse_args():
+#     parser = argparse.ArgumentParser(description='Train the CoarseNet on images and correspond superpoint descripton',
+#                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+#     parser.add_argument(
+#         '-c',
+#         '--config',
+#         type=str,
+#         default='configs/train_parameter.yaml',
+#         help='config file path')
+#     parser.add_argument(
+#         '-o',
+#         '--override',
+#         action='append',
+#         default=[],
+#         help='config options to be overridden')
+#     args = parser.parse_args()
+#     return args
+
 
 def get_args():
     parser = argparse.ArgumentParser(description='Train the CoarseNet on images and correspond superpoint descripton',
