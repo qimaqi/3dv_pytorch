@@ -33,7 +33,7 @@ def load_annotations(fname):
 #some default dir need images descripton, pos and depth. Attention this time desc and pos is in json !!!!!!!!!!
 base_image_dir='/cluster/scratch/jiaqiu/npz_torch_data/'
 rescale = [0.6, 0.8, 1]
-dir_checkpoint = '/cluster/scratch/jiaqiu/checkpoints_25_04/'
+dir_checkpoint = '/cluster/scratch/jiaqiu/checkpoints_01_05/'
 train_5k=load_annotations(os.path.join(base_image_dir,'anns/demo_5k/train.txt'))
 train_5k_image_rgb=list(train_5k[:,4])
 train_5k_image_depth=list(train_5k[:,5])
@@ -146,10 +146,11 @@ def train_net(net,
             pixel_loss = pixel_criterion(cpred/255,true_imgs/255) 
             
             # ssim_value = pytorch_ssim.ssim(cpred, true_imgs).data[0]
-            ssim_out = -ssim_loss(cpred, true_imgs)
-            ssim_value = - ssim_out.item()
+            # ssim_out = -ssim_loss(cpred, true_imgs)
+            # ssim_value = - ssim_out.item()
 
-            loss = ssim_out #pixel_loss*pix_loss_wt + perception_loss*per_loss_wt
+            # loss = ssim_out 
+            pixel_loss*pix_loss_wt + perception_loss*per_loss_wt
 
             epoch_loss += loss.item()
             writer.add_scalar('Loss/train', loss.item(), global_step)
@@ -212,7 +213,7 @@ def get_args():
                         help='Load model from a pretrain .pth file')
     parser.add_argument('-v', '--validation', dest='val', type=float, default=10.0,
                         help='Percent of the data that is used as validation (0-100)')            
-    parser.add_argument("--crop_size", type=int, default=320,     # to do
+    parser.add_argument("--crop_size", type=int, default=256,     # to do
                         help="%(type)s: Size to crop images to (default: %(default)s)")
     parser.add_argument("--pct_points", type=float, default=1.0,
                         help="choose disparse point for reconstruction")
