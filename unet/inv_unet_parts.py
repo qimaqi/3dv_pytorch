@@ -55,7 +55,7 @@ class Up(nn.Module):
         # if bilinear, use the normal convolutions to reduce the number of channels
         
         self.up = nn.Sequential(
-            nn.Upsample(scale_factor=2, mode='nearest', align_corners=None),  # maybe bilinear and true
+            nn.Upsample(scale_factor=2, mode='nearest', align_corners=None),
             nn.ReflectionPad2d((1, 1, 1, 1)),
             nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=1),
             nn.BatchNorm2d(out_channels),
