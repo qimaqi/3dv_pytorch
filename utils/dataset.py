@@ -603,14 +603,13 @@ class dataset_superpoint_5k(Dataset):
 
 
 class dataset_r2d2_5k(Dataset):
-    def __init__(self, image_list, feature_list, pct_points, max_points, crop_size, scale_size):
+    def __init__(self, image_list, feature_list, max_points, crop_size, scale_size):
         self.image_list = image_list
         self.feature_list = feature_list
-        self.pct_points = pct_points
         self.max_points = max_points
         self.crop_size = crop_size
         self.scale_size = scale_size
-        assert 0 < pct_points <= 1, 'percentage of points must be between 0 and 1'
+        # assert 0 < pct_points <= 1, 'percentage of points must be between 0 and 1'
 
         self.ids = list(range(len(image_list)))
         logging.info('Creating dataset with %s examples', len(self.ids))
@@ -677,18 +676,19 @@ class dataset_r2d2_5k(Dataset):
 
         pos_num = np.shape(pos)[0]
         desc_num = np.shape(desc)[0]
-        assert pos_num == desc_num, 'superpoint number matching problem'
+        assert pos_num == desc_num, 'r2d2 number matching problem'
 
         # choose same max points and use disparse percentage
         if pos_num >= self.max_points:
             new_num = int(self.max_points)
-            desc = desc[:new_num,:]
+            row_sequence= np.random.choice(pos_num, new_num, replace=False, p=None)
+            desc = desc[row_sequence, :]
             pos_num = new_num
         
-        # pct_points choose
-        new_num = int(pos_num * self.pct_points)
-        feature_cut = desc[:new_num,:]
-        pos_num = new_num
+        # # pct_points choose
+        # new_num = int(pos_num * self.pct_points)
+        # feature_cut = desc[:new_num,:]
+        # pos_num = new_num
 
         height, width = np.shape(img)
         height = int(height*self.scale_size)
@@ -698,13 +698,13 @@ class dataset_r2d2_5k(Dataset):
         for j in range(new_num):
             x = int(pos[j][0]) 
             y = int(pos[j][1]) 
-            feature_pad[y,x,:] = feature_cut[j,:]   
+            feature_pad[y,x,:] = desc[j,:]   
         
         # after preprocess, the feature and image will be well transposed and augumented
         feature, img, img_rgb = self.preprocess(feature_pad, img, img_rgb, self.crop_size)   ### QM: the process only transpose channel, need more data augumentation
 
         return {
             'feature': torch.from_numpy(feature.copy()).type(torch.FloatTensor),
-            'image': torch.from_numpy(img.copy()).type(torch.FloatTensor)  # ground truth need to be considered
+            'image': torch.from_numpy(img.copy()).type(torch.FloatTensor),  # ground truth need to be considered
             'img_rgb': torch.from_numpy(img_rgb.copy()).type(torch.FloatTensor)
         }

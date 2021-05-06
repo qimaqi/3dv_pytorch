@@ -43,7 +43,8 @@ def load_annotations(fname):
 # train_5k=load_annotations(os.path.join(base_image_dir,'anns/demo_5k/train.txt'))
 
 base_image_dir='/cluster/scratch/jiaqiu/npz_torch_data/'
-dir_checkpoint = '/cluster/scratch/jiaqiu/checkpoints_06_05_refine/'
+dir_refine_checkpoint = '/cluster/scratch/jiaqiu/checkpoints_06_05_refine/'
+dir_d_checkpoint = '/cluster/scratch/jiaqiu/checkpoints_06_05_d/'
 train_5k=load_annotations(os.path.join(base_image_dir,'anns/demo_5k/train.txt'))
 base_feature_dir = '/cluster/scratch/jiaqiu/resize_data_r2d2_0.8/'
 
@@ -80,9 +81,10 @@ def train_net(refine_net,
 
 
     img_scale = 0.8
+    max_points = 2000
     # pct_3D_points=0
     # dataset = dataset_superpoint_5k(image_list,feature_list,img_scale, pct_3D_points, crop_size)
-    dataset = dataset_
+    dataset = dataset_r2d2_5k(image_list, feature_list, max_points, crop_size, img_scale)
     n_val = int(len(dataset) * val_percent)
     n_train = len(dataset) - n_val
     train, val = random_split(dataset, [n_train, n_val])
