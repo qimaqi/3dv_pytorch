@@ -134,6 +134,7 @@ def train_net(refine_net,
             true_imgs = batch['img_rgb']
             assert coarse_input_features.shape[1] == coarsenet.n_channels, 'Channel match problem'
             coarse_input_features = coarse_input_features.to(device=device, dtype=torch.float32)
+            coarse_net.eval()
             coarse_pred = coarse_net(coarse_input_features)
             refine_input = torch.cat((coarse_pred,coarse_input_features),axis=1)
             refine_input = refine_input.to(device=device, dtype=torch.float32)
@@ -148,10 +149,10 @@ def train_net(refine_net,
             P_pred = percepton_criterion(rpred)
             P_img = percepton_criterion(true_imgs)
             temp_fake = torch.cat((refine_input,rpred,P_pred[0]),axis=1)
-            D_fake_input=[temp_fake,P_pred[1],P_pred[2]]
+            D_fake_input=[temp_fake/255,P_pred[1],P_pred[2]]
 
             temp_real = torch.cat((refine_input,true_imgs,P_img[0]),axis=1)
-            D_real_input=[temp_real,P_img[1],P_img[2]]
+            D_real_input=[temp_real/255,P_img[1],P_img[2]]
             n_cha,_,_,_=refine_input.shape
 
             D_fake = D(D_fake_input)
@@ -199,10 +200,10 @@ def train_net(refine_net,
             P_pred = percepton_criterion(rpred)
             perception_loss = ( l2_loss(P_pred[0],P_img[0]) + l2_loss(P_pred[1],P_img[1]) + l2_loss(P_pred[2],P_img[2])) / 3
             temp_fake = torch.cat((refine_input,rpred,P_pred[0]),axis=1)
-            D_fake_input=[temp_fake,P_pred[1],P_pred[2]]
+            D_fake_input=[temp_fake/255,P_pred[1],P_pred[2]]
             D_fake = D(D_fake_input)
             radvloss = cr_loss(D_fake,dgt1)
-            pixel_loss = pixel_criterion(rpred,true_imgs)
+            pixel_loss = pixel_criterion(rpred/255,true_imgs/255)
             loss = pixel_loss*pix_loss_wt + perception_loss*per_loss_wt + radvloss*adv_loss_wt
             epoch_loss += loss.item()
             writer.add_scalar('Loss/train', epoch_loss, epoch)
@@ -265,7 +266,7 @@ def get_args():
     parser.add_argument("--pct_3D_points", type=lambda s: [float(i) for i in s.split(',')][:2], default=[5.,100.],     # to do
                         help="float,float: Min and max percent of 3D points to keep when performing random subsampling for data augmentation "+ \
                              "(default: 5.,100.)")
-    parser.add_argument("--per_loss_wt", type=float, default=1.0, help="%(type)s: Perceptual loss weight (default: %(default)s)")
+    parser.add_argument("--per_loss_wt", type=float, default=5.0, help="%(type)s: Perceptual loss weight (default: %(default)s)")
     parser.add_argument("--pix_loss_wt", type=float, default=1.0, help="%(type)s: Pixel loss weight (default: %(default)s)")
     parser.add_argument("--adv_loss_wt", type=float, default=1.0, help="%(type)s: Discriminator weight (default: %(default)s)")
     parser.add_argument("--max_iter", type=int, default=1e6, help="%(type)s: Stop training after MAX_ITER iterations (default: %(default)s)")
