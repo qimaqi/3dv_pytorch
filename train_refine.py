@@ -18,7 +18,7 @@ from unet import UNet
 from unet.Discriminator import Discriminator
 # from unet import discriminator_loss
 
-from utils.dataset import dataset_superpoint_5k
+from utils.dataset import dataset_r2d2_5k
 from torch.utils.data import DataLoader, random_split
 import torchvision.models as models
 from vgg import VGGPerception
@@ -35,31 +35,28 @@ def load_annotations(fname):
         data = [line.strip().split(' ') for line in f]
     return np.array(data)
 
-#some default dir need images descripton, pos and depth. Attention this time desc and pos is in json !!!!!!$
-# dir_img = '../data/nyu_v1_images/'     ####### QM:change data directory path
-# #dir_features = '../data/nyu_v1_features/'
-# dir_desc = '../data/nyu_v1_desc/'
-dir_checkpoint = './checkpoints/'
-# dir_depth = '../data/nyu_v1_depth/'
-# dir_pos = '../data/nyu_v1_pos/'
-base_image_dir = '/home/wangr/invsfm/data'
-base_feature_dir = '/home/wangr/superpoint_resize/resize_data_superpoint_1'
+# dir_checkpoint = './checkpoints/'
+# # dir_depth = '../data/nyu_v1_depth/'
+# # dir_pos = '../data/nyu_v1_pos/'
+# base_image_dir = '/home/wangr/invsfm/data'
+# base_feature_dir = '/home/wangr/superpoint_resize/resize_data_superpoint_1'
+# train_5k=load_annotations(os.path.join(base_image_dir,'anns/demo_5k/train.txt'))
+
+base_image_dir='/cluster/scratch/jiaqiu/npz_torch_data/'
+dir_checkpoint = '/cluster/scratch/jiaqiu/checkpoints_06_05_refine/'
 train_5k=load_annotations(os.path.join(base_image_dir,'anns/demo_5k/train.txt'))
-# train_5k_pcl_xyz=train_5k[:,0]
-# train_5k_pcl_rgb=train_5k[:,1]
-# train_5k_pcl_sift=train_5k[:,2]
-# train_5k_camera=train_5k[:,3]
+base_feature_dir = '/cluster/scratch/jiaqiu/resize_data_r2d2_0.8/'
+
 train_5k_image_rgb=list(train_5k[:,4])
-
 image_list=[]
-
 feature_list=[]
+
 for i in range(len(train_5k_image_rgb)):
     temp_image_name=train_5k_image_rgb[i]
     temp_path=os.path.join(base_image_dir,temp_image_name)
     image_list.append(temp_path)
-    superpoint_feature_name=temp_image_name.replace('/','^_^')+'.npz'
-    feature_list.append(os.path.join(base_feature_dir,superpoint_feature_name))
+    r2d2_feature_name=temp_image_name.replace('/','^_^')+'.npz'
+    feature_list.append(os.path.join(base_feature_dir,r2d2_feature_name))
 
 
 
@@ -82,9 +79,10 @@ def train_net(refine_net,
               img_scale = 1):
 
 
-    img_scale = 1
-    pct_3D_points=0
-    dataset = dataset_superpoint_5k(image_list,feature_list,img_scale, pct_3D_points, crop_size)
+    img_scale = 0.8
+    # pct_3D_points=0
+    # dataset = dataset_superpoint_5k(image_list,feature_list,img_scale, pct_3D_points, crop_size)
+    dataset = dataset_
     n_val = int(len(dataset) * val_percent)
     n_train = len(dataset) - n_val
     train, val = random_split(dataset, [n_train, n_val])
@@ -211,10 +209,7 @@ def train_net(refine_net,
         loss.backward()
         optimizer_r.step()
 
-
-
         global_step += 1
-
 
         if global_step % (n_train // (10 * batch_size)) == 0:
             for tag, value in refinenet.named_parameters():
@@ -296,13 +291,13 @@ if __name__ == '__main__':
     #   - For 2 classes, use n_classes=1
     #   - For N > 2 classes, use n_classes=N
     #net = InvNet(n_channels=257, n_classes=1)   # input should be 256, resize to 32 so ram enough
-    coarsenet = UNet(n_channels=256, n_classes=1, bilinear=True)
+    coarsenet = UNet(n_channels=128, n_classes=1, bilinear=True)
 
-    coarsenet.load_state_dict(torch.load('./coarse.pth', map_location=device))
+    coarsenet.load_state_dict(torch.load('/cluster/scratch/jiaqiu/checkpoints_25_04/8.pth', map_location=device))
 
     coarsenet.to(device=device)
 
-    refinenet = UNet(n_channels=257, n_classes=3, bilinear=True)
+    refinenet = UNet(n_channels=129, n_classes=3, bilinear=True)
     logging.info('Network:\n'
                  '\t %s channels input channels\n'
                  '\t %s output channels (grey brightness)', refinenet.n_channels,  refinenet.n_classes)

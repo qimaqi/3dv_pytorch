@@ -37,6 +37,34 @@ class UNet(nn.Module):
             self.up3 = Up(256, 128, bilinear) 
             self.up4 = Up(256, 128, bilinear) 
             self.outc = OutConv(128, n_classes)
+        
+        elif n_channels == 257:    # Superpoint
+            self.inc = DoubleConv(n_channels, 257)   # replace 256 with 128 for R2D2
+            self.down1 = Down(257, 257)
+            self.down2 = Down(257, 257)  # keep 256 for superpoint
+            self.down3 = Down(257, 512)  # do not higher
+            factor = 2 if bilinear else 1
+            self.down4 = Down(512, 512)
+            self.up1 = Up(1024, 256, bilinear) # 256
+            self.up2 = Up(513, 256, bilinear) # 256
+            self.up3 = Up(513, 256, bilinear) # 256
+            self.up4 = Up(513, 256, bilinear) # 256
+            self.outc = OutConv(256, n_classes)
+
+        elif n_channels == 129:  # R2D2
+            self.inc = DoubleConv(n_channels, 129)   # replace 256 with 128 for R2D2
+            self.down1 = Down(129, 129)
+            self.down2 = Down(129, 129)  
+            self.down3 = Down(129, 256)  # do not higher than 512 channel
+            factor = 2 if bilinear else 1
+            self.down4 = Down(256, 256)
+            self.up1 = Up(512, 128, bilinear) 
+            self.up2 = Up(256, 128, bilinear) 
+            self.up3 = Up(256, 128, bilinear) 
+            self.up4 = Up(256, 128, bilinear) 
+            self.outc = OutConv(128, n_classes)
+        
+
 
     def forward(self, x):
         x1 = self.inc(x)
