@@ -22,12 +22,11 @@ import torchvision.models as models
 from vgg import VGGPerception
 from torch.utils.tensorboard import SummaryWriter
 import time
+dir_checkpoint = './checkpoints/5_7/'
 
 def train_net(net,
               device,
               dataset_config,
-              input_channel,
-              output_channel,
               per_loss_wt,
               pix_loss_wt,
               epochs=10,
@@ -58,8 +57,8 @@ def train_net(net,
         '\tValidation size:  %s\n'
         '\tCheckpoints:      %s\n' 
         '\tDevice:           %s\n' 
-        '\tCrop Size:        %s\n'
-        , epochs, batch_size, lr, n_train, n_val, save_cp, device.type, crop_size
+        '\tConfig information:        %s\n'
+        , epochs, batch_size, lr, n_train, n_val, save_cp, device.type, dataset_config
         )
 
     #optimizer = optim.RMSprop(net.parameters(), lr=lr, weight_decay=1e-8, momentum=0.9)
@@ -244,8 +243,6 @@ if __name__ == '__main__':
                   dataset_config = dataset_config,
                   per_loss_wt = args.per_loss_wt,
                   pix_loss_wt = args.pix_loss_wt,
-                  input_channel = input_channel,
-                  output_channel = output_channel,
                   val_percent=args.val / 100)
     except KeyboardInterrupt:
         torch.save(net.state_dict(), 'INTERRUPTED.pth')
