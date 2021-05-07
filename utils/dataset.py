@@ -16,12 +16,11 @@ from .tools import frame2tensor
 # Data basic2 load pos_dir and des_dir to construct a feature 480x640x256 with other point zero
 class BasicDataset2(Dataset):
     def __init__(self, dataset_config = {}):
-        self.dataset_config = dataset_config.get('augumentation')
-        self.superpoint_config = dataset_config.get('superpoint')
-        self.superpoint = SuperPoint({})
-        self.imgs_dir = dataset_config['dir_img']
-        self.crop_size = dataset_config['crop_size']
-        self.rescale_size = dataset_config['rescale_size']
+        self.augumentation_config = dataset_config.get('augumentation')
+        self.superpoint = SuperPoint(dataset_config.get('superpoint',{}))
+        self.imgs_dir = self.augumentation_config['dir_img']
+        self.crop_size = self.augumentation_config['crop_size']
+        self.rescale_size = self.augumentation_config['rescale_size']
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
         self.ids = [splitext(file)[0] for file in listdir(self.imgs_dir)
