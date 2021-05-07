@@ -644,7 +644,7 @@ class dataset_r2d2_5k(Dataset):
             crop_h = int(torch.floor((h - crop_size) * crop_rand_seed_h))
             feature_nd = feature_nd[crop_h:crop_h+crop_size, crop_w:crop_w+crop_size, :]
             img_nd = img_nd[crop_h:crop_h+crop_size, crop_w:crop_w+crop_size, :]
-            img_rgb_nd = img_nd[crop_h:crop_h+crop_size, crop_w:crop_w+crop_size, :]
+            img_rgb_nd = img_rgb_nd[crop_h:crop_h+crop_size, crop_w:crop_w+crop_size, :]
 
         # random flip
         flip_rand_seed = torch.rand(1)
@@ -656,7 +656,7 @@ class dataset_r2d2_5k(Dataset):
         # HWC to CHW 
         feature_trans = feature_nd.transpose((2, 0, 1)) 
         img_trans = img_nd.transpose((2, 0, 1))  
-        img_rgb_trans = img_nd.transpose((2, 0, 1)) 
+        img_rgb_trans = img_rgb_nd.transpose((2, 0, 1))
         
         return feature_trans, img_trans, img_rgb_trans
 
@@ -667,7 +667,6 @@ class dataset_r2d2_5k(Dataset):
 
         img = Image.open(image_file).convert('L')
         img_rgb = Image.open(image_file)
-
 
         #print(pos_file)
         temp=np.load(feature_file,allow_pickle=True)
@@ -695,7 +694,7 @@ class dataset_r2d2_5k(Dataset):
         width = int(width*self.scale_size)
         desc_length = np.shape(desc)[1]  # 256 R2D2 is 128
         feature_pad = np.zeros([height,width,desc_length])    
-        for j in range(new_num):
+        for j in range(pos_num):
             x = int(pos[j][0]) 
             y = int(pos[j][1]) 
             feature_pad[y,x,:] = desc[j,:]   
