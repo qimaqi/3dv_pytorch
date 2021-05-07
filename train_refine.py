@@ -292,13 +292,13 @@ if __name__ == '__main__':
     #   - For 2 classes, use n_classes=1
     #   - For N > 2 classes, use n_classes=N
     #net = InvNet(n_channels=257, n_classes=1)   # input should be 256, resize to 32 so ram enough
-    coarsenet = UNet(n_channels=256, n_classes=1, bilinear=True)
+    coarsenet = UNet(n_channels=128, n_classes=1, bilinear=True)
 
     coarsenet.load_state_dict(torch.load('./coarse.pth', map_location=device))
 
     coarsenet.to(device=device)
 
-    refinenet = UNet(n_channels=257, n_classes=3, bilinear=True)
+    refinenet = UNet(n_channels=129, n_classes=3, bilinear=True)
     logging.info('Network:\n'
                  '\t %s channels input channels\n'
                  '\t %s output channels (grey brightness)', refinenet.n_channels,  refinenet.n_classes)
