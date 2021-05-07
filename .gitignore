@@ -5,3 +5,4 @@ checkpoints/
 *.jpg
 SUBMISSION*
 venv/
+lsf*
