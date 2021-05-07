@@ -23,35 +23,11 @@ from vgg import VGGPerception
 from torch.utils.tensorboard import SummaryWriter
 import time
 
-# To do
-# delete useless code and make it clear
-# to use logging and attribute feature 
-# infer to test the result
-
-
-#some default dir need images descripton, pos and depth. Attention this time desc and pos is in json !!!!!!!!!!
-dir_img = '/cluster/scratch/qimaqi/nyu_v1_images/'     ####### QM:change data directory path
-#dir_features = '../data/nyu_v1_features/'  # databasic2 can directly process feature
-dir_desc = '/cluster/scratch/qimaqi/nyu_v1_desc/'
-dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_1_5_invnet_/'
-dir_pos = '/cluster/scratch/qimaqi/nyu_v1_pos/'
-#log_dir = '/cluster/scratch/qimaqi/log/'    
-
-def save_image_tensor(input_tensor, filename):
-    assert (len(input_tensor.shape) == 4 and input_tensor.shape[0] == 1)
-    input_tensor = input_tensor.clone().detach()
-    # to cpu
-    input_tensor = input_tensor.to(torch.device('cpu'))
-    save_image(input_tensor, filename,normalize=True)
-
-
 def train_net(net,
               device,
-              max_points,
-              pct_points,
+              dataset_config,
               input_channel,
               output_channel,
-              crop_size, 
               per_loss_wt,
               pix_loss_wt,
               epochs=10,
@@ -62,7 +38,9 @@ def train_net(net,
               ):
 
     #save_cp = False
-    dataset = BasicDataset2(dir_img, dir_pos, dir_desc, pct_points, max_points, crop_size)
+    
+    # imgs_dir, pos_dir, desc_dir, pct_points, max_points, crop_size
+    dataset = BasicDataset2(dataset_config)
     n_val = int(len(dataset) * val_percent)
     n_train = len(dataset) - n_val
     train, val = random_split(dataset, [n_train, n_val])
@@ -188,17 +166,18 @@ def get_args():
                         help='Load model from a pretrain .pth file')
     parser.add_argument('-v', '--validation', dest='val', type=float, default=10.0,
                         help='Percent of the data that is used as validation (0-100)')            
+    parser.add_argument("--rescale_size", type=float, default=0.6,     # to do
+                        help="%(type)s: Size to crop images to (default: %(default)s)")
     parser.add_argument("--crop_size", type=int, default=256,     # to do
                         help="%(type)s: Size to crop images to (default: %(default)s)")
-    parser.add_argument("--pct_points", type=float, default=1.0,
-                        help="choose disparse point for reconstruction")
-    parser.add_argument("--max_points", type=int, default=4000,
-                        help="maximum feature used for reconstruction")
+    parser.add_argument("--max_keypoints", type=int, default=1000,
+                        help="maximum feature used for reconstruction 1000/2000/3000/4000")
     parser.add_argument("--per_loss_wt", type=float, default=5.0, help="%(type)s: Perceptual loss weight (default: %(default)s)")   
     parser.add_argument("--pix_loss_wt", type=float, default=1.0, help="%(type)s: Pixel loss weight (default: %(default)s)")           
     parser.add_argument("--feature", type=str, default='Superpoint', help="%(type)s: R2D2 or Superpoint (default: %(default)s)")           
     parser.add_argument("--output", type=int, default=1, help="%(type)s: output 1 is greyscale and output 3 is RGB (default: %(default)s)")           
-
+    parser.add_argument('--keypoint_threshold', type=float, default=0.001,help='SuperPoint keypoint detector confidence threshold')
+    parser.add_argument('--nms_radius', type=int, default=4,help='SuperPoint Non Maximum Suppression (NMS) radius (Must be positive)')
     
     return parser.parse_args()
 
@@ -217,6 +196,24 @@ if __name__ == '__main__':
         logging.info('Feature mode: %s is not Superpoint or R2D2' , args.feature)
         sys.exit(0)
 
+    dataset_config = {
+        'augumentation': {
+            'rescale_size': args.rescale_size,
+            'crop_size': args.crop_size,
+            'dir_img': '/cluster/scratch/qimaqi/nyu_v1_images/',
+            'dir_checkpoint': '/cluster/scratch/qimaqi/checkpoints_1_5_invnet_/',
+        },
+        'superpoint': {
+            'nms_radius': args.nms_radius,
+            'keypoint_threshold': args.keypoint_threshold,
+            'max_keypoints': args.max_keypoints
+        },
+        'R2D2': {
+            'weights': None,
+            'sinkhorn_iterations': None,
+            'match_threshold': None,
+        }
+    }
     output_channel = args.output
     assert output_channel == 1 or output_channel == 3, 'output channel is not grey or RGB'
 
@@ -244,9 +241,7 @@ if __name__ == '__main__':
                   batch_size=args.batchsize,
                   lr=args.lr,
                   device=device,
-                  pct_points = args.pct_points,
-                  max_points = args.max_points,
-                  crop_size = args.crop_size,
+                  dataset_config = dataset_config,
                   per_loss_wt = args.per_loss_wt,
                   pix_loss_wt = args.pix_loss_wt,
                   input_channel = input_channel,

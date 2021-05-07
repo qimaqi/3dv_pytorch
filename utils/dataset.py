@@ -9,22 +9,22 @@ import torch
 from torch.utils.data import Dataset
 import logging
 from PIL import Image
-
-
 from utils import data_load
+from .superpoint import SuperPoint
+from .tools import frame2tensor
 
 # Data basic2 load pos_dir and des_dir to construct a feature 480x640x256 with other point zero
 class BasicDataset2(Dataset):
-    def __init__(self, imgs_dir, pos_dir, desc_dir, pct_points, max_points, crop_size):
-        self.imgs_dir = imgs_dir
-        self.pos_dir = pos_dir
-        self.desc_dir = desc_dir
-        self.pct_points = pct_points
-        self.max_points = max_points
-        self.crop_size = crop_size
-        assert 0 < pct_points <= 1, 'percentage of points must be between 0 and 1'
+    def __init__(self, dataset_config = {}):
+        self.dataset_config = dataset_config.get('augumentation')
+        self.superpoint_config = dataset_config.get('superpoint')
+        self.superpoint = SuperPoint({})
+        self.imgs_dir = dataset_config['dir_img']
+        self.crop_size = dataset_config['crop_size']
+        self.rescale_size = dataset_config['rescale_size']
+        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-        self.ids = [splitext(file)[0] for file in listdir(imgs_dir)
+        self.ids = [splitext(file)[0] for file in listdir(self.imgs_dir)
                     if not file.startswith('.')]
         logging.info('Creating dataset with %s examples', len(self.ids))
 
@@ -32,86 +32,65 @@ class BasicDataset2(Dataset):
         return len(self.ids)
 
     @classmethod
-    def preprocess(cls, feature, img, crop_size):
-        # feature: HWC, img in np shape: HWC. img in size WHC
-        h, w, c = np.shape(feature) 
-  
-        feature_nd = np.array(feature)
-        img_nd = np.array(img)
-
-        if len(img_nd.shape) == 2:  # add channel to grey image
-            img_nd = np.expand_dims(img_nd, axis=2)  # HWC
-
-        _, _, c2 = np.shape(img_nd) 
-
-        if crop_size >= h or crop_size >= w:
-            crop_size = np.min(h,w)
-
-        # if crop size is 0 then no crop
-        assert crop_size >= 0, 'Crop Size must be positive'
-        if crop_size >=h or crop_size >= w: crop_size = min(h,w)
+    def preprocess(cls, img, rescale_size, crop_size):
+        # include rescale, crop and flip, flip set 30% 
+        w,h = img.size
+        scale_rand_seed_w = torch.rand(1)
+        random_scale = rescale_size + (1-rescale_size)*scale_rand_seed_w
+        new_w = int(random_scale*w)
+        new_h = int(random_scale*h)
+        img = img.resize((new_w, new_h), Image.ANTIALIAS)
+        assert crop_size <= new_h and crop_size <= new_w,'crop_size is bigger than new rescale image'
         
-        if crop_size != 0:
-            crop_rand_seed_w = torch.rand(1)
-            crop_rand_seed_h = torch.rand(1)
-            crop_w = int(torch.floor((w - crop_size) * crop_rand_seed_w))   # 640 - 480 
-            crop_h = int(torch.floor((h - crop_size) * crop_rand_seed_h))
-            feature_nd = feature_nd[crop_h:crop_h+crop_size, crop_w:crop_w+crop_size, :]
-            img_nd = img_nd[crop_h:crop_h+crop_size, crop_w:crop_w+crop_size, :]
+        img_ = np.array(img)
 
-        # random flip
+        crop_rand_seed_w = torch.rand(1)
+        crop_rand_seed_h = torch.rand(1)
+        crop_w = int(torch.floor((new_w - crop_size) * crop_rand_seed_w))   # 640 - 480 
+        crop_h = int(torch.floor((new_h - crop_size) * crop_rand_seed_h))
+        img_aug = img_[crop_h:crop_h+crop_size, crop_w:crop_w+crop_size]
+
         flip_rand_seed = torch.rand(1)
         if flip_rand_seed <= 0.3:
-            feature_nd = np.flip(feature_nd,1)  # left right flip 
-            img_nd = np.flip(img_nd,1)
-
-        # HWC to CHW 
-        feature_trans = feature_nd.transpose((2, 0, 1)) # channel x 480 x 640
-        img_trans = img_nd.transpose(( 2, 0, 1))    # batch
-
-        return feature_trans, img_trans
+            img_aug = np.flip(img_aug,1)
+        
+        return img_aug
 
     def __getitem__(self, i):
         idx = self.ids[i]
-        pos_file = glob(self.pos_dir + idx + '.*')      # one pos json !!! not npz here 
-        desc_file = glob(self.desc_dir + idx + '.*')    # one desc json !!! not npz here
         img_file = glob(self.imgs_dir + idx + '.*')     # one image jpg
+        keys = ['keypoints', 'scores', 'descriptors']
 
         #img = data_load.load_img(img_list[i])
         img = Image.open(img_file[0]).convert('L') # read img in greyscale
-        pos = np.array(data_load.load_json(pos_file[0]))   # 3 x points_num  list, the third is confidence
-        desc = np.array(data_load.load_json(desc_file[0]))  # 256 x points_num  list, 256 features
+        img_aug = self.preprocess(img, self.rescale_size, self.crop_size)
 
-        pos_num = np.shape(pos)[1]
-        desc_num = np.shape(desc)[1]
-        assert pos_num == desc_num, 'superpoint number matching problem'
+        frame_tensor = frame2tensor(img_aug, self.device)  # attention here, frame_tensor is ground truth
+        last_data = self.superpoint({'image': frame_tensor})
+        # last_data = {k: last_data[k] for k in keys} #  ['keypoints', 'scores', 'descriptors']
+        keypoints = last_data['keypoints']
+        scores = last_data['scores']
+        desc = last_data['descriptors']
+        points_num = np.shape(keypoints)[1]
 
-        # choose same max points and use disparse percentage
-        if pos_num >= self.max_points:
-            new_num = int(self.max_points)
-            desc = desc[:,:new_num]
-            pos_num = new_num
-        
-        # pct_points choose
-        new_num = int(pos_num * self.pct_points)
-        feature_cut = desc[:,:new_num]
-        pos_num = new_num
-
-        height, width = np.shape(img)  # (480,640) with scale
+        height, width = np.shape(img_aug)  # crop_size x crop_size 
         desc_length = np.shape(desc)[0]  # 256 R2D2 is 128
 
         feature_pad = np.zeros([height,width,desc_length])    # build a 480 x 640 x 256 array   HWC
-        for j in range(new_num):
-            x = int(pos[0][j]) #640
-            y = int(pos[1][j]) #480
-            feature_pad[y,x,:] = feature_cut[:,j]   # to compensate with zero
+        for j in range(points_num):
+            x = int(keypoints[0][j]) #crop_size
+            y = int(keypoints[1][j]) #crop_size
+            feature_pad[y,x,:] = desc[:,j]   # to compensate with zero
         
+        feature_trans = feature_pad.transpose((2,0,1)) # HWC to CHW
+        img_nd = np.expand_dims(img_aug,axis=2)
+        img_trans = img_nd.transpose((2,0,1)) # HWC to CHW
         # after preprocess, the feature and image will be well transposed and augumented
-        feature, img = self.preprocess(feature_pad, img, self.crop_size)   ### QM: the process only transpose channel, need more data augumentation
+        # feature, img = self.preprocess(feature_pad, img, self.crop_size)   ### QM: the process only transpose channel, need more data augumentation
 
         return {
-            'feature': torch.from_numpy(feature.copy()).type(torch.FloatTensor),
-            'image': torch.from_numpy(img.copy()).type(torch.FloatTensor)  # ground truth need to be considered
+            'feature': torch.from_numpy(feature_trans.copy()).type(torch.FloatTensor),
+            'image': torch.from_numpy(img_trans.copy()).type(torch.FloatTensor)  # ground truth need to be considered
         }
 
 
