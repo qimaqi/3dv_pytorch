@@ -35,13 +35,6 @@ def load_annotations(fname):
         data = [line.strip().split(' ') for line in f]
     return np.array(data)
 
-# dir_checkpoint = './checkpoints/'
-# # dir_depth = '../data/nyu_v1_depth/'
-# # dir_pos = '../data/nyu_v1_pos/'
-# base_image_dir = '/home/wangr/invsfm/data'
-# base_feature_dir = '/home/wangr/superpoint_resize/resize_data_superpoint_1'
-# train_5k=load_annotations(os.path.join(base_image_dir,'anns/demo_5k/train.txt'))
-
 base_image_dir='/cluster/scratch/jiaqiu/npz_torch_data/'
 dir_refine_checkpoint = '/cluster/scratch/jiaqiu/checkpoints_06_05_refine/'
 dir_d_checkpoint = '/cluster/scratch/jiaqiu/checkpoints_06_05_d/'
@@ -294,7 +287,7 @@ if __name__ == '__main__':
     #net = InvNet(n_channels=257, n_classes=1)   # input should be 256, resize to 32 so ram enough
     coarsenet = UNet(n_channels=128, n_classes=1, bilinear=True)
 
-    coarsenet.load_state_dict(torch.load('./coarse.pth', map_location=device))
+    coarsenet.load_state_dict(torch.load('/cluster/scratch/jiaqiu/checkpoints_25_04/8.pth', map_location=device))
 
     coarsenet.to(device=device)
 
