@@ -18,7 +18,11 @@ from unet import UNet
 from unet.Discriminator import Discriminator
 # from unet import discriminator_loss
 
+<<<<<<< HEAD
 from utils.dataset import dataset_r2d2_5k
+=======
+from utils.dataset import dataset_superpoint_5k
+>>>>>>> origin/main
 from torch.utils.data import DataLoader, random_split
 import torchvision.models as models
 from vgg import VGGPerception
@@ -35,6 +39,7 @@ def load_annotations(fname):
         data = [line.strip().split(' ') for line in f]
     return np.array(data)
 
+<<<<<<< HEAD
 # dir_checkpoint = './checkpoints/'
 # # dir_depth = '../data/nyu_v1_depth/'
 # # dir_pos = '../data/nyu_v1_pos/'
@@ -52,12 +57,40 @@ train_5k_image_rgb=list(train_5k[:,4])
 image_list=[]
 feature_list=[]
 
+=======
+#some default dir need images descripton, pos and depth. Attention this time desc and pos is in json !!!!!!$
+# dir_img = '../data/nyu_v1_images/'     ####### QM:change data directory path
+# #dir_features = '../data/nyu_v1_features/'
+# dir_desc = '../data/nyu_v1_desc/'
+dir_checkpoint = './checkpoints/'
+# dir_depth = '../data/nyu_v1_depth/'
+# dir_pos = '../data/nyu_v1_pos/'
+base_image_dir = '/home/wangr/invsfm/data'
+base_feature_dir = '/home/wangr/superpoint_resize/resize_data_superpoint_1'
+train_5k=load_annotations(os.path.join(base_image_dir,'anns/demo_5k/train.txt'))
+dir_d_checkpoint = './d_checkpoint/'
+dir_refine_checkpoint ='./refine_checkpoint/'
+# train_5k_pcl_xyz=train_5k[:,0]
+# train_5k_pcl_rgb=train_5k[:,1]
+# train_5k_pcl_sift=train_5k[:,2]
+# train_5k_camera=train_5k[:,3]
+train_5k_image_rgb=list(train_5k[:,4])
+
+image_list=[]
+
+feature_list=[]
+>>>>>>> origin/main
 for i in range(len(train_5k_image_rgb)):
     temp_image_name=train_5k_image_rgb[i]
     temp_path=os.path.join(base_image_dir,temp_image_name)
     image_list.append(temp_path)
+<<<<<<< HEAD
     r2d2_feature_name=temp_image_name.replace('/','^_^')+'.npz'
     feature_list.append(os.path.join(base_feature_dir,r2d2_feature_name))
+=======
+    superpoint_feature_name=temp_image_name.replace('/','^_^')+'.npz'
+    feature_list.append(os.path.join(base_feature_dir,superpoint_feature_name))
+>>>>>>> origin/main
 
 
 
@@ -80,11 +113,17 @@ def train_net(refine_net,
               img_scale = 1):
 
 
+<<<<<<< HEAD
     img_scale = 0.8
     max_points = 2000
     # pct_3D_points=0
     # dataset = dataset_superpoint_5k(image_list,feature_list,img_scale, pct_3D_points, crop_size)
     dataset = dataset_r2d2_5k(image_list, feature_list, max_points, crop_size, img_scale)
+=======
+    img_scale = 1
+    pct_3D_points=0
+    dataset = dataset_superpoint_5k(image_list,feature_list,img_scale, pct_3D_points, crop_size)
+>>>>>>> origin/main
     n_val = int(len(dataset) * val_percent)
     n_train = len(dataset) - n_val
     train, val = random_split(dataset, [n_train, n_val])
@@ -132,6 +171,10 @@ def train_net(refine_net,
             true_imgs = batch['img_rgb']
             assert coarse_input_features.shape[1] == coarsenet.n_channels, 'Channel match problem'
             coarse_input_features = coarse_input_features.to(device=device, dtype=torch.float32)
+<<<<<<< HEAD
+=======
+            coarse_net.eval()
+>>>>>>> origin/main
             coarse_pred = coarse_net(coarse_input_features)
             refine_input = torch.cat((coarse_pred,coarse_input_features),axis=1)
             refine_input = refine_input.to(device=device, dtype=torch.float32)
@@ -145,10 +188,17 @@ def train_net(refine_net,
 
             P_pred = percepton_criterion(rpred)
             P_img = percepton_criterion(true_imgs)
+<<<<<<< HEAD
             temp_fake = torch.cat((refine_input,rpred,P_pred[0]),axis=1)
             D_fake_input=[temp_fake,P_pred[1],P_pred[2]]
 
             temp_real = torch.cat((refine_input,true_imgs,P_img[0]),axis=1)
+=======
+            temp_fake = torch.cat((refine_input,rpred/255,P_pred[0]),axis=1)
+            D_fake_input=[temp_fake,P_pred[1],P_pred[2]]
+
+            temp_real = torch.cat((refine_input,true_imgs/255,P_img[0]),axis=1)
+>>>>>>> origin/main
             D_real_input=[temp_real,P_img[1],P_img[2]]
             n_cha,_,_,_=refine_input.shape
 
@@ -167,6 +217,7 @@ def train_net(refine_net,
             dgt1 = dgt1.to(device,dtype=torch.long)
 
 
+<<<<<<< HEAD
 
 
 
@@ -237,6 +288,78 @@ def train_net(refine_net,
         torch.save(D.state_dict(),
                    dir_d_checkpoint + str(epoch+1) + '.pth')
         logging.info('Checkpoint %s saved! ',epoch+1)
+=======
+            for param in D.parameters():
+                param.requires_grad = True
+            for param in refine_net.parameters():
+                param.requires_grad = False
+
+            dloss = cr_loss(d_pred,dgt)
+            optimizer_d.zero_grad()
+            dloss.backward()
+            optimizer_d.step()
+
+            ## freeze dis
+            for param in D.parameters():
+                param.requires_grad = False
+            for param in refine_net.parameters():
+                param.requires_grad = True
+            coarse_input_features = batch['feature']
+            true_imgs = batch['img_rgb']
+            coarse_input_features = coarse_input_features.to(device=device, dtype=torch.float32)
+            coarse_pred = coarse_net(coarse_input_features)
+            refine_input = torch.cat((coarse_pred,coarse_input_features),axis=1)
+            refine_input = refine_input.to(device=device, dtype=torch.float32)
+
+
+            true_imgs = true_imgs.to(device=device, dtype=torch.float32)
+
+            pred = refine_net(refine_input)  # ##### check the max and min
+            rpred = (pred+1.)*127.5
+            P_pred = percepton_criterion(rpred)
+            perception_loss = ( l2_loss(P_pred[0],P_img[0]) + l2_loss(P_pred[1],P_img[1]) + l2_loss(P_pred[2],P_img[2])) / 3
+            temp_fake = torch.cat((refine_input,rpred/255,P_pred[0]),axis=1)
+            D_fake_input=[temp_fake,P_pred[1],P_pred[2]]
+            D_fake = D(D_fake_input)
+            radvloss = cr_loss(D_fake,dgt1)
+            pixel_loss = pixel_criterion(rpred/255,true_imgs/255)
+            loss = pixel_loss*pix_loss_wt + perception_loss*per_loss_wt + radvloss*adv_loss_wt
+            epoch_loss += loss.item()
+            writer.add_scalar('Loss/train', epoch_loss, epoch)
+            optimizer_r.zero_grad()
+            loss.backward()
+            optimizer_r.step()
+
+
+
+            global_step += 1
+
+
+            if global_step % (n_train // (10 * batch_size)) == 0:
+                for tag, value in refinenet.named_parameters():
+                    tag = tag.replace('.', '/')
+                    #writer.add_histogram('weights/' + tag, value.data.cpu().numpy(), global_step)
+                    #writer.add_histogram('grads/' + tag, value.grad.data.cpu().numpy(), global_step)
+                val_score = eval_refinenet(refinenet,D,coarse_net, val_loader, device)
+                writer.add_scalar('Loss/test', val_score, epoch)
+                scheduler.step()
+                print('refine net score: ',(val_score), 'in epoch', epoch )
+                #writer.add_scalar('learning_rate', optimizer.param_groups[0]['lr'], global_step)
+
+        if save_cp:
+            try:
+                os.mkdir(dir_refine_checkpoint)
+                os.mkdir(dir_d_checkpoint)
+
+                logging.info('Created checkpoint directory')
+            except OSError:
+                pass
+            torch.save(refinenet.state_dict(),
+                       dir_refine_checkpoint + str(epoch+1) + '.pth')
+            torch.save(D.state_dict(),
+                       dir_d_checkpoint + str(epoch+1) + '.pth')
+            logging.info('Checkpoint %s saved! ',epoch+1)
+>>>>>>> origin/main
 
 #writer.close()
 
@@ -263,7 +386,11 @@ def get_args():
     parser.add_argument("--pct_3D_points", type=lambda s: [float(i) for i in s.split(',')][:2], default=[5.,100.],     # to do
                         help="float,float: Min and max percent of 3D points to keep when performing random subsampling for data augmentation "+ \
                              "(default: 5.,100.)")
+<<<<<<< HEAD
     parser.add_argument("--per_loss_wt", type=float, default=1.0, help="%(type)s: Perceptual loss weight (default: %(default)s)")
+=======
+    parser.add_argument("--per_loss_wt", type=float, default=5.0, help="%(type)s: Perceptual loss weight (default: %(default)s)")
+>>>>>>> origin/main
     parser.add_argument("--pix_loss_wt", type=float, default=1.0, help="%(type)s: Pixel loss weight (default: %(default)s)")
     parser.add_argument("--adv_loss_wt", type=float, default=1.0, help="%(type)s: Discriminator weight (default: %(default)s)")
     parser.add_argument("--max_iter", type=int, default=1e6, help="%(type)s: Stop training after MAX_ITER iterations (default: %(default)s)")
@@ -293,6 +420,7 @@ if __name__ == '__main__':
     #   - For 2 classes, use n_classes=1
     #   - For N > 2 classes, use n_classes=N
     #net = InvNet(n_channels=257, n_classes=1)   # input should be 256, resize to 32 so ram enough
+<<<<<<< HEAD
     coarsenet = UNet(n_channels=128, n_classes=1, bilinear=True)
 
     coarsenet.load_state_dict(torch.load('/cluster/scratch/jiaqiu/checkpoints_25_04/8.pth', map_location=device))
@@ -300,6 +428,15 @@ if __name__ == '__main__':
     coarsenet.to(device=device)
 
     refinenet = UNet(n_channels=129, n_classes=3, bilinear=True)
+=======
+    coarsenet = UNet(n_channels=256, n_classes=1, bilinear=True)
+
+    coarsenet.load_state_dict(torch.load('./coarse.pth', map_location=device))
+
+    coarsenet.to(device=device)
+
+    refinenet = UNet(n_channels=257, n_classes=3, bilinear=True)
+>>>>>>> origin/main
     logging.info('Network:\n'
                  '\t %s channels input channels\n'
                  '\t %s output channels (grey brightness)', refinenet.n_channels,  refinenet.n_classes)

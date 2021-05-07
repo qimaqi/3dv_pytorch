@@ -23,9 +23,15 @@ class Discriminator(nn.Module):
         super(Discriminator, self).__init__()
 
         # Store selfions for forward pass
+<<<<<<< HEAD
         self.dis_input_sizes = [256, 128, 64]
         self.dis_output_sizes = [8, 4, 1]
         self.dis_input_num_channels = [196, 128, 256, 512, 512]
+=======
+        self.dis_input_sizes = [256,128, 64]
+        self.dis_output_sizes = [8, 4, 1]
+        self.dis_input_num_channels = [324, 128, 256, 512, 512]
+>>>>>>> origin/main
         self.dis_num_channels = 64
         self.dis_kernel_size = 4
         self.dis_kernel_size_io = 3

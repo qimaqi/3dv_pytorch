@@ -13,16 +13,12 @@ from eval import eval_net
 #from unet import InvNet
 from unet import UNet
 
-#from torch.utils.tensorboard import SummaryWriter
-#from utils.dataset import BasicDataset2
-from utils.dataset import BasicDatasetR2D2
+from utils.dataset import dataset_superpoint_5k
 from torch.utils.data import DataLoader, random_split
 import torchvision.models as models
 from vgg import VGGPerception
-import random
 from torch.utils.tensorboard import SummaryWriter
 import time
-import pytorch_ssim
 
 # To do
 # delete useless code and make it clear
@@ -212,6 +208,24 @@ def train_net(net,
             logging.info('Checkpoint %s saved! ',epoch+1)
 
     #writer.close()
+
+# def parse_args():
+#     parser = argparse.ArgumentParser(description='Train the CoarseNet on images and correspond superpoint descripton',
+#                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+#     parser.add_argument(
+#         '-c',
+#         '--config',
+#         type=str,
+#         default='configs/train_parameter.yaml',
+#         help='config file path')
+#     parser.add_argument(
+#         '-o',
+#         '--override',
+#         action='append',
+#         default=[],
+#         help='config options to be overridden')
+#     args = parser.parse_args()
+#     return args
 
 
 def get_args():
