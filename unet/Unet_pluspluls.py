@@ -31,14 +31,14 @@ class UNet_Nested(nn.Module):
         self.up_concat21 = unetUp(filters[3], 1024,filters[2], self.is_deconv) #512 512
         self.up_concat31 = unetUp(filters[4], 1024, filters[3], self.is_deconv)
 
-        self.up_concat02 = unetUp(filters[1], 512, filters[0], self.is_deconv, 3) #256, 256 
-        self.up_concat12 = unetUp(filters[2], 512,  filters[1], self.is_deconv, 3) #512 256
-        self.up_concat22 = unetUp(filters[3], 1024, filters[2], self.is_deconv, 3) #1024 512
+        self.up_concat02 = unetUp(filters[1], 256*3, filters[0], self.is_deconv, 3) #256, 256 
+        self.up_concat12 = unetUp(filters[2], 256*3,  filters[1], self.is_deconv, 3) #512 256
+        self.up_concat22 = unetUp(filters[3], 512*3, filters[2], self.is_deconv, 3) #1024 512
 
-        self.up_concat03 = unetUp(filters[1], 512, filters[0], self.is_deconv, 4)
-        self.up_concat13 = unetUp(filters[2], 512, filters[1], self.is_deconv, 4)
+        self.up_concat03 = unetUp(filters[1], 256 *4, filters[0], self.is_deconv, 4)
+        self.up_concat13 = unetUp(filters[2], 256 *4, filters[1], self.is_deconv, 4)
         
-        self.up_concat04 = unetUp(filters[1], 512, filters[0], self.is_deconv, 5)
+        self.up_concat04 = unetUp(filters[1], 256 *5, filters[0], self.is_deconv, 5)
         
         # final conv (without any concat)
         self.final_1 = nn.Conv2d(filters[0], n_classes, 1)
@@ -65,16 +65,16 @@ class UNet_Nested(nn.Module):
         maxpool3 = self.maxpool(X_30)    # 128*32*32        qi:512*16*16
         X_40 = self.conv40(maxpool3)     # 256*32*32     qi:512*16*16
         # column : 1
-        X_01 = self.up_concat01(X_10,X_00) #
-        X_11 = self.up_concat11(X_20,X_10)
-        X_21 = self.up_concat21(X_30,X_20)
+        X_01 = self.up_concat01(X_10,X_00) # 256
+        X_11 = self.up_concat11(X_20,X_10) # 256
+        X_21 = self.up_concat21(X_30,X_20) # 
         X_31 = self.up_concat31(X_40,X_30)
         # column : 2
-        X_02 = self.up_concat02(X_11,X_00,X_01)
-        X_12 = self.up_concat12(X_21,X_10,X_11)
+        X_02 = self.up_concat02(X_11,X_00,X_01) # X_00, 256, X_01 256
+        X_12 = self.up_concat12(X_21,X_10,X_11) # X_10  256 ,X_11 256
         X_22 = self.up_concat22(X_31,X_20,X_21)
         # column : 3
-        X_03 = self.up_concat03(X_12,X_00,X_01,X_02)
+        X_03 = self.up_concat03(X_12,X_00,X_01,X_02) # 256 *4
         X_13 = self.up_concat13(X_22,X_10,X_11,X_12)
         # column : 4
         X_04 = self.up_concat04(X_13,X_00,X_01,X_02,X_03)
