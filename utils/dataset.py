@@ -73,7 +73,7 @@ class BasicDataset2(Dataset):
 
         keypoints_np = keypoints[0].numpy()
         # scores_np = scores[0].numpy()
-        desc_np = desc[0].numpy()
+        desc_np = desc[0].detach().numpy()
         # print(len(keypoints))
         #print(keypoints_tensor.size())
         #print(scores)
