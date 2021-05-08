@@ -13,72 +13,20 @@ import torch.nn as nn
 from torch import optim
 
 from eval import eval_net
-#from unet import InvNet
-from unet import UNet
+from unet import InvNet
+# from unet import UNet
 
-from utils.dataset import dataset_superpoint_5k
+from utils.dataset import BasicDataset2
 from torch.utils.data import DataLoader, random_split
 import torchvision.models as models
 from vgg import VGGPerception
 from torch.utils.tensorboard import SummaryWriter
 import time
-
-# To do
-# delete useless code and make it clear
-# to use logging and attribute feature 
-# infer to test the result
-
-
-#some default dir need images descripton, pos and depth. Attention this time desc and pos is in json !!!!!!!!!!
-def load_annotations(fname):
-    with open(fname,'r') as f:
-        data = [line.strip().split(' ') for line in f]
-    return np.array(data)
-
-#some default dir need images descripton, pos and depth. Attention this time desc and pos is in json !!!!!!!!!!
-# dir_img = '../data/nyu_v1_images/'     ####### QM:change data directory path
-# #dir_features = '../data/nyu_v1_features/'
-# dir_desc = '../data/nyu_v1_desc/'
-dir_checkpoint = './checkpoints/'
-# dir_depth = '../data/nyu_v1_depth/'
-# dir_pos = '../data/nyu_v1_pos/'
-base_image_dir = '/home/wangr/invsfm/data'
-base_feature_dir = '/home/wangr/superpoint_resize/resize_data_superpoint_1'
-train_5k=load_annotations(os.path.join(base_image_dir,'anns/demo_5k/train.txt'))
-# train_5k_pcl_xyz=train_5k[:,0]
-# train_5k_pcl_rgb=train_5k[:,1]
-# train_5k_pcl_sift=train_5k[:,2]
-# train_5k_camera=train_5k[:,3]
-train_5k_image_rgb=list(train_5k[:,4])
-
-image_list=[]
-
-feature_list=[]
-for i in range(len(train_5k_image_rgb)):
-    temp_image_name=train_5k_image_rgb[i]
-    temp_path=os.path.join(base_image_dir,temp_image_name)
-    image_list.append(temp_path)
-    superpoint_feature_name=temp_image_name.replace('/','^_^')+'.npz'
-    feature_list.append(os.path.join(base_feature_dir,superpoint_feature_name))
-
-    
-
-
-def save_image_tensor(input_tensor, filename):
-    assert (len(input_tensor.shape) == 4 and input_tensor.shape[0] == 1)
-    input_tensor = input_tensor.clone().detach()
-    # to cpu
-    input_tensor = input_tensor.to(torch.device('cpu'))
-    save_image(input_tensor, filename,normalize=True)
-
+dir_checkpoint = './checkpoints/5_7/'
 
 def train_net(net,
               device,
-              max_points,
-              pct_points,
-              input_channel,
-              output_channel,
-              crop_size, 
+              dataset_config,
               per_loss_wt,
               pix_loss_wt,
               epochs=10,
@@ -88,16 +36,16 @@ def train_net(net,
               save_cp=True
               ):
 
-    #save_cp = Fals
-    img_scale = 1 
-    pct_3D_points=0
-    dataset = dataset_superpoint_5k(image_list,feature_list,img_scale, pct_3D_points, crop_size)
+    #save_cp = False
+    
+    # imgs_dir, pos_dir, desc_dir, pct_points, max_points, crop_size
+    dataset = BasicDataset2(dataset_config)
     n_val = int(len(dataset) * val_percent)
     n_train = len(dataset) - n_val
     train, val = random_split(dataset, [n_train, n_val])
-    train_loader = DataLoader(train, batch_size=batch_size, shuffle=True, num_workers=2, pin_memory=True)
-    val_batch_size = batch_size
-    val_loader = DataLoader(val, batch_size=val_batch_size, shuffle=False, num_workers=4, pin_memory=True, drop_last=True)
+    train_loader = DataLoader(train, batch_size=batch_size, shuffle=True, num_workers=0, pin_memory=True)
+    val_batch_size = 1
+    val_loader = DataLoader(val, batch_size=val_batch_size, shuffle=False, num_workers=0, pin_memory=True, drop_last=True)
     writer = SummaryWriter()
     global_step = 0
 
@@ -109,13 +57,13 @@ def train_net(net,
         '\tValidation size:  %s\n'
         '\tCheckpoints:      %s\n' 
         '\tDevice:           %s\n' 
-        '\tCrop Size:        %s\n'
-        , epochs, batch_size, lr, n_train, n_val, save_cp, device.type, crop_size
+        '\tConfig information:        %s\n'
+        , epochs, batch_size, lr, n_train, n_val, save_cp, device.type, dataset_config
         )
 
     #optimizer = optim.RMSprop(net.parameters(), lr=lr, weight_decay=1e-8, momentum=0.9)
     optimizer = optim.Adam(net.parameters(), lr=lr, eps = 1e-8)
-    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=2)
+    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=3)
     #scheduler = optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=5, T_mult=1) pytorch 1.01
     #scheduler = optim.lr_scheduler.MultiStepLR(optimizer, milestones=[5,12,16], gamma=0.1)
 
@@ -225,27 +173,28 @@ def train_net(net,
 def get_args():
     parser = argparse.ArgumentParser(description='Train the CoarseNet on images and correspond superpoint descripton',
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('-e', '--epochs', metavar='E', type=int, default=18,
+    parser.add_argument('-e', '--epochs', metavar='E', type=int, default=24,
                         help='Number of epochs', dest='epochs')
     parser.add_argument('-b', '--batch-size', metavar='B', type=int, nargs='?', default=4,
                         help='Batch size', dest='batchsize')
-    parser.add_argument('-l', '--learning-rate', metavar='LR', type=float, nargs='?', default=1e-3,
+    parser.add_argument('-l', '--learning-rate', metavar='LR', type=float, nargs='?', default=1e-5,
                         help='Learning rate', dest='lr')
     parser.add_argument('-f', '--load', dest='load', type=str, default=False,
                         help='Load model from a pretrain .pth file')
     parser.add_argument('-v', '--validation', dest='val', type=float, default=10.0,
                         help='Percent of the data that is used as validation (0-100)')            
+    parser.add_argument("--rescale_size", type=float, default=0.6,     # to do
+                        help="%(type)s: Size to crop images to (default: %(default)s)")
     parser.add_argument("--crop_size", type=int, default=256,     # to do
                         help="%(type)s: Size to crop images to (default: %(default)s)")
-    parser.add_argument("--pct_points", type=float, default=1.0,
-                        help="choose disparse point for reconstruction")
-    parser.add_argument("--max_points", type=int, default=4000,
-                        help="maximum feature used for reconstruction")
+    parser.add_argument("--max_keypoints", type=int, default=1000,
+                        help="maximum feature used for reconstruction 1000/2000/3000/4000")
     parser.add_argument("--per_loss_wt", type=float, default=5.0, help="%(type)s: Perceptual loss weight (default: %(default)s)")   
     parser.add_argument("--pix_loss_wt", type=float, default=1.0, help="%(type)s: Pixel loss weight (default: %(default)s)")           
     parser.add_argument("--feature", type=str, default='Superpoint', help="%(type)s: R2D2 or Superpoint (default: %(default)s)")           
     parser.add_argument("--output", type=int, default=1, help="%(type)s: output 1 is greyscale and output 3 is RGB (default: %(default)s)")           
-
+    parser.add_argument('--keypoint_threshold', type=float, default=0.001,help='SuperPoint keypoint detector confidence threshold')
+    parser.add_argument('--nms_radius', type=int, default=4,help='SuperPoint Non Maximum Suppression (NMS) radius (Must be positive)')
     
     return parser.parse_args()
 
@@ -264,13 +213,31 @@ if __name__ == '__main__':
         logging.info('Feature mode: %s is not Superpoint or R2D2' , args.feature)
         sys.exit(0)
 
+    dataset_config = {
+        'augumentation': {
+            'rescale_size': args.rescale_size,
+            'crop_size': args.crop_size,
+            'dir_img': '/cluster/scratch/qimaqi/nyu_v1_images/',
+            'dir_checkpoint': '/cluster/scratch/qimaqi/checkpoints_1_5_invnet_/',
+        },
+        'superpoint': {
+            'nms_radius': args.nms_radius,
+            'keypoint_threshold': args.keypoint_threshold,
+            'max_keypoints': args.max_keypoints
+        },
+        'R2D2': {
+            'weights': None,
+            'sinkhorn_iterations': None,
+            'match_threshold': None,
+        }
+    }
     output_channel = args.output
     assert output_channel == 1 or output_channel == 3, 'output channel is not grey or RGB'
 
     #net = InvNet(n_channels=257, n_classes=1)   
     # bilinear good or not???
-    net = UNet(n_channels=input_channel, n_classes=output_channel, bilinear=True)
-    logging.info('Network:\n'
+    net = InvNet(n_channels=input_channel, n_classes=output_channel)
+    logging.info('Network:InvNet \n'
             '\t %s channels input channels\n' 
             '\t %s output channels (grey brightness)', net.n_channels,  net.n_classes)
 
@@ -291,9 +258,7 @@ if __name__ == '__main__':
                   batch_size=args.batchsize,
                   lr=args.lr,
                   device=device,
-                  pct_points = args.pct_points,
-                  max_points = args.max_points,
-                  crop_size = args.crop_size,
+                  dataset_config = dataset_config,
                   per_loss_wt = args.per_loss_wt,
                   pix_loss_wt = args.pix_loss_wt,
                   input_channel = input_channel,
