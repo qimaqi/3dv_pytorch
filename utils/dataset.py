@@ -17,7 +17,7 @@ from .tools import frame2tensor
 class BasicDataset2(Dataset):
     def __init__(self, dataset_config = {}):
         self.augumentation_config = dataset_config.get('augumentation')
-        self.superpoint = SuperPoint(dataset_config.get('superpoint',{}))
+        self.superpoint = SuperPoint(dataset_config.get('superpoint',{})).eval().to(device='cpu')
         self.imgs_dir = self.augumentation_config['dir_img']
         self.crop_size = self.augumentation_config['crop_size']
         self.rescale_size = self.augumentation_config['rescale_size']
@@ -64,7 +64,7 @@ class BasicDataset2(Dataset):
         img = Image.open(img_file[0]).convert('L') # read img in greyscale
         img_aug = self.preprocess(img, self.rescale_size, self.crop_size)
 
-        frame_tensor = frame2tensor(img_aug, self.device)  # attention here, frame_tensor is ground truth
+        frame_tensor = frame2tensor(img_aug, 'cpu')  # attention here, frame_tensor is ground truth
         last_data = self.superpoint({'image': frame_tensor})
         # last_data = {k: last_data[k] for k in keys} #  ['keypoints', 'scores', 'descriptors']
         keypoints = last_data['keypoints']
