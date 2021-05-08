@@ -71,8 +71,11 @@ class BasicDataset2(Dataset):
         scores = last_data['scores']
         desc = last_data['descriptors']
 
+        keypoints_tensor = keypoints[0]
         # print(len(keypoints))
-        print(keypoints)
+        print(keypoints_tensor.size())
+        print(scores)
+
         #keypoints_np = np.array(keypoints)
         #scores_np = np.array(scores)
         #desc_np = np.array(desc)
@@ -81,7 +84,7 @@ class BasicDataset2(Dataset):
         #print(np.shape(scores_np)) #
         #print(np.shape(desc_np)) #
 
-        points_num = np.shape(keypoints)[1]
+        # points_num = np.shape(keypoints)[1]
 
         height, width = np.shape(img_aug)  # crop_size x crop_size 
         desc_length = np.shape(desc)[0]  # 256 R2D2 is 128
