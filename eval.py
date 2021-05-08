@@ -6,6 +6,7 @@ from vgg import VGGPerception
 from torchvision.utils import save_image
 import pytorch_ssim
 import numpy as np
+import os
 
 def save_image_tensor(input_tensor, filename):
     assert (len(input_tensor.shape) == 4 and input_tensor.shape[0] == 1)
