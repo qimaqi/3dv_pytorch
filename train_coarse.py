@@ -13,7 +13,7 @@ import torch.nn as nn
 from torch import optim
 
 from eval import eval_net
-from unet import InvNet
+from unet import UNet_Nested
 # from unet import UNet
 
 from utils.dataset import BasicDataset2
@@ -222,7 +222,7 @@ if __name__ == '__main__':
 
     #net = InvNet(n_channels=257, n_classes=1)   
     # bilinear good or not???
-    net = InvNet(n_channels=input_channel, n_classes=output_channel)
+    net = UNet_Nested(n_channels=input_channel, n_classes=output_channel)
     logging.info('Network:InvNet \n'
             '\t %s channels input channels\n' 
             '\t %s output channels (grey brightness)', net.n_channels,  net.n_classes)
