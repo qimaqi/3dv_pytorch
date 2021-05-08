@@ -8,6 +8,7 @@ class UNet_Nested(nn.Module):
     def __init__(self, n_channels=256, n_classes=1, feature_scale=2, is_deconv=True, is_batchnorm=True, is_ds=True):
         super(UNet_Nested, self).__init__()
         self.n_channels = n_channels
+        self.n_classes = n_classes
         self.feature_scale = feature_scale
         self.is_deconv = is_deconv
         self.is_batchnorm = is_batchnorm
