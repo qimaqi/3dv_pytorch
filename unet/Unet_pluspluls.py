@@ -5,7 +5,7 @@ from .tools import init_weights
 
 class UNet_Nested(nn.Module):
 
-    def __init__(self, n_channels=256, n_classes=1, feature_scale=2, is_deconv=True, is_batchnorm=True, is_ds=True):
+    def __init__(self, n_channels=256, n_classes=1, feature_scale=1, is_deconv=False, is_batchnorm=True, is_ds=True):
         super(UNet_Nested, self).__init__()
         self.n_channels = n_channels
         self.n_classes = n_classes
@@ -14,7 +14,7 @@ class UNet_Nested(nn.Module):
         self.is_batchnorm = is_batchnorm
         self.is_ds = is_ds
 
-        filters = [64, 128, 256, 512, 1024]
+        filters = [256, 256, 512, 512, 512] # [64, 128, 256, 512, 1024]
         filters = [int(x / self.feature_scale) for x in filters]
 
         # downsampling
