@@ -71,9 +71,9 @@ class BasicDataset2(Dataset):
         scores = last_data['scores']
         desc = last_data['descriptors']
 
-        print(np.shape(keypoints))
-        print(np.shape(scores))
-        print(np.shape(desc))
+        print(keypoints.size())
+        print(scores.size())
+        print(desc.size())
 
         points_num = np.shape(keypoints)[1]
 
