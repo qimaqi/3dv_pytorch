@@ -107,7 +107,7 @@ def train_net(net,
         for batch in train_loader:
             input_features = batch['feature']
             true_imgs = batch['image']
-            assert input_features.shape[1] == net.n_channels, 'Channel match problem'
+            # assert input_features.shape[1] == net.n_channels, 'Channel match problem'
 
             input_features = input_features.to(device=device, dtype=torch.float32)
             true_imgs = true_imgs.to(device=device, dtype=torch.float32)
@@ -223,7 +223,7 @@ if __name__ == '__main__':
     #net = InvNet(n_channels=257, n_classes=1)   
     # bilinear good or not???
     net = UNet_Nested(in_channels=input_channel, n_classes=output_channel)
-    logging.info('Network:InvNet \n'
+    logging.info('Network:Unet++ \n'
             '\t %s channels input channels\n' 
             '\t %s output channels (grey brightness)', net.in_channels, output_channel)
 
