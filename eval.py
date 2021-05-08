@@ -40,7 +40,7 @@ def eval_net(net, loader, device):
     try:
         os.mkdir(output_dir)
         os.mkdir(img_dir)
-        logging.info('Created eval directory')
+        print('Created eval directory')
     except OSError:
         pass
 
