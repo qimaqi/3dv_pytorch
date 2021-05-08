@@ -225,7 +225,7 @@ if __name__ == '__main__':
     net = UNet_Nested(in_channels=input_channel, n_classes=output_channel)
     logging.info('Network:InvNet \n'
             '\t %s channels input channels\n' 
-            '\t %s output channels (grey brightness)', net.n_channels,  net.n_classes)
+            '\t %s output channels (grey brightness)', net.in_channels,  net.n_classes)
 
 
     if args.load:
