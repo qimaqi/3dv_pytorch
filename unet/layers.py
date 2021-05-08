@@ -39,9 +39,9 @@ class unetConv2(nn.Module):
         return x
 
 class unetUp(nn.Module):
-    def __init__(self, in_size, out_size, is_deconv, n_concat=2):
+    def __init__(self, in_size, cat_size, out_size, is_deconv, n_concat=2):
         super(unetUp, self).__init__()
-        self.conv = unetConv2(in_size+(n_concat-2)*out_size, out_size, False)
+        self.conv = unetConv2(cat_size, out_size, True)
         if is_deconv:
             self.up = nn.ConvTranspose2d(in_size, out_size, kernel_size=2, stride=2, padding=0)
         else:
