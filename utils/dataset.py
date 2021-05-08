@@ -71,12 +71,13 @@ class BasicDataset2(Dataset):
         scores = last_data['scores']
         desc = last_data['descriptors']
 
-        print(len(keypoints))
+        # print(len(keypoints))
+        print(keypoints)
         #keypoints_np = np.array(keypoints)
         #scores_np = np.array(scores)
         #desc_np = np.array(desc)
 
-        print((keypoints_np[0].size())) #
+        # print((keypoints_np[0].size())) #
         #print(np.shape(scores_np)) #
         #print(np.shape(desc_np)) #
 
