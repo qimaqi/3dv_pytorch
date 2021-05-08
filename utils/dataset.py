@@ -70,6 +70,11 @@ class BasicDataset2(Dataset):
         keypoints = last_data['keypoints']
         scores = last_data['scores']
         desc = last_data['descriptors']
+
+        print(np.shape(keypoints))
+        print(np.shape(scores))
+        print(np.shape(desc))
+
         points_num = np.shape(keypoints)[1]
 
         height, width = np.shape(img_aug)  # crop_size x crop_size 
