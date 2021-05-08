@@ -222,7 +222,7 @@ if __name__ == '__main__':
 
     #net = InvNet(n_channels=257, n_classes=1)   
     # bilinear good or not???
-    net = UNet_Nested(n_channels=input_channel, n_classes=output_channel)
+    net = UNet_Nested(in_channels=input_channel, n_classes=output_channel)
     logging.info('Network:InvNet \n'
             '\t %s channels input channels\n' 
             '\t %s output channels (grey brightness)', net.n_channels,  net.n_classes)
