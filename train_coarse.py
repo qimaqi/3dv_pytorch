@@ -13,16 +13,33 @@ import torch.nn as nn
 from torch import optim
 
 from eval import eval_net
-from unet import InvNet
+from unet import UNet
 # from unet import UNet
 
-from utils.dataset import BasicDataset2
+from utils.dataset import R2D2_dataset
 from torch.utils.data import DataLoader, random_split
 import torchvision.models as models
 from vgg import VGGPerception
 from torch.utils.tensorboard import SummaryWriter
 import time
-dir_checkpoint = './checkpoints/5_8_online/'
+
+def load_annotations(fname):
+    with open(fname,'r') as f:
+        data = [line.strip().split(' ') for line in f]
+    return np.array(data)
+
+base_image_dir='/cluster/scratch/jiaqiu/npz_torch_data/'
+# base_image_dir='D:/npz_torch_data/'
+train_5k=load_annotations(os.path.join(base_image_dir,'anns/demo_5k/train.txt'))
+train_5k_image_rgb=list(train_5k[:,4])
+image_list=[]
+for i in range(len(train_5k_image_rgb)):
+    temp_image_name=train_5k_image_rgb[i]
+    temp_path=os.path.join(base_image_dir,temp_image_name)
+    image_list.append(temp_path)
+
+
+dir_checkpoint = '/cluster/scratch/jiaqiu/checkpoints_10_5_para/'
 
 def train_net(net,
               device,
@@ -39,7 +56,7 @@ def train_net(net,
     #save_cp = False
     
     # imgs_dir, pos_dir, desc_dir, pct_points, max_points, crop_size
-    dataset = BasicDataset2(dataset_config)
+    dataset = R2D2_dataset(dataset_config)
     n_val = int(len(dataset) * val_percent)
     n_train = len(dataset) - n_val
     train, val = random_split(dataset, [n_train, n_val])
@@ -191,7 +208,7 @@ def get_args():
                         help="maximum feature used for reconstruction 1000/2000/3000/4000")
     parser.add_argument("--per_loss_wt", type=float, default=5.0, help="%(type)s: Perceptual loss weight (default: %(default)s)")   
     parser.add_argument("--pix_loss_wt", type=float, default=1.0, help="%(type)s: Pixel loss weight (default: %(default)s)")           
-    parser.add_argument("--feature", type=str, default='Superpoint', help="%(type)s: R2D2 or Superpoint (default: %(default)s)")           
+    parser.add_argument("--feature", type=str, default='R2D2', help="%(type)s: R2D2 or Superpoint (default: %(default)s)")           
     parser.add_argument("--output", type=int, default=1, help="%(type)s: output 1 is greyscale and output 3 is RGB (default: %(default)s)")           
     parser.add_argument('--keypoint_threshold', type=float, default=0.001,help='SuperPoint keypoint detector confidence threshold')
     parser.add_argument('--nms_radius', type=int, default=4,help='SuperPoint Non Maximum Suppression (NMS) radius (Must be positive)')
@@ -217,8 +234,8 @@ if __name__ == '__main__':
         'augumentation': {
             'rescale_size': args.rescale_size,
             'crop_size': args.crop_size,
-            'dir_img': '/cluster/scratch/qimaqi/nyu_v1_images/',
-            'dir_checkpoint': '/cluster/scratch/qimaqi/checkpoints_1_5_invnet_/',
+            'dir_img': image_list,
+            'dir_checkpoint': '/cluster/scratch/jiaqiu/checkpoints_10_5_para/',
         },
         'superpoint': {
             'nms_radius': args.nms_radius,
@@ -226,9 +243,16 @@ if __name__ == '__main__':
             'max_keypoints': args.max_keypoints
         },
         'R2D2': {
-            'weights': None,
-            'sinkhorn_iterations': None,
-            'match_threshold': None,
+            'gpu': 0,
+            'model': './models/r2d2_WAF_N16.pt',
+            'reliability_thr': 0,
+            'repeatability_thr': 0,
+            'scale_f': 2**0.25,
+            'min_scale': 0,
+            'max_scale': 1,
+            'min_size': 128, 
+            'max_size': 1024,
+            'max_keypoints': args.max_keypoints
         }
     }
     output_channel = args.output
@@ -236,7 +260,7 @@ if __name__ == '__main__':
 
     #net = InvNet(n_channels=257, n_classes=1)   
     # bilinear good or not???
-    net = InvNet(n_channels=input_channel, n_classes=output_channel)
+    net = UNet(n_channels=input_channel, n_classes=output_channel)
     logging.info('Network:InvNet \n'
             '\t %s channels input channels\n' 
             '\t %s output channels (grey brightness)', net.n_channels,  net.n_classes)
@@ -261,8 +285,6 @@ if __name__ == '__main__':
                   dataset_config = dataset_config,
                   per_loss_wt = args.per_loss_wt,
                   pix_loss_wt = args.pix_loss_wt,
-                  input_channel = input_channel,
-                  output_channel = output_channel,
                   val_percent=args.val / 100)
     except KeyboardInterrupt:
         torch.save(net.state_dict(), 'INTERRUPTED.pth')
