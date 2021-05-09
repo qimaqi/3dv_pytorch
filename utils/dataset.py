@@ -16,12 +16,13 @@ from .tools import frame2tensor
 # Data basic2 load pos_dir and des_dir to construct a feature 480x640x256 with other point zero
 class BasicDataset2(Dataset):
     def __init__(self, dataset_config = {}):
+        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.augumentation_config = dataset_config.get('augumentation')
-        self.superpoint = SuperPoint(dataset_config.get('superpoint',{})).eval().to(device='cpu')
+        self.superpoint = SuperPoint(dataset_config.get('superpoint',{})).eval().to(self.device)
         self.imgs_dir = self.augumentation_config['dir_img']
         self.crop_size = self.augumentation_config['crop_size']
         self.rescale_size = self.augumentation_config['rescale_size']
-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        
 
         self.ids = [splitext(file)[0] for file in listdir(self.imgs_dir)
                     if not file.startswith('.')]
@@ -63,8 +64,9 @@ class BasicDataset2(Dataset):
         #img = data_load.load_img(img_list[i])
         img = Image.open(img_file[0]).convert('L') # read img in greyscale
         img_aug = self.preprocess(img, self.rescale_size, self.crop_size)
-
-        frame_tensor = frame2tensor(img_aug, 'cpu')  # attention here, frame_tensor is ground truth
+        # img_np = np.array(img_aug)
+        #frame_tensor = frame2tensor(img_aug, self.device)  # attention here, frame_tensor is ground truth
+        frame_tensor = torch.from_numpy(img_aug.copy()).type(torch.FloatTensor)
         last_data = self.superpoint({'image': frame_tensor})
         # last_data = {k: last_data[k] for k in keys} #  ['keypoints', 'scores', 'descriptors']
         keypoints = last_data['keypoints']
