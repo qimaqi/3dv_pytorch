@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from .layers import unetConv2, unetUp
+from .layers import unetConv2, unetUp, OutConv
 from .tools import init_weights
 
 class UNet_Nested(nn.Module):
@@ -41,10 +41,10 @@ class UNet_Nested(nn.Module):
         self.up_concat04 = unetUp(filters[1], 256 *5, filters[0], self.is_deconv, 5)
         
         # final conv (without any concat)
-        self.final_1 = nn.Conv2d(filters[0], n_classes, 1)
-        self.final_2 = nn.Conv2d(filters[0], n_classes, 1)
-        self.final_3 = nn.Conv2d(filters[0], n_classes, 1)
-        self.final_4 = nn.Conv2d(filters[0], n_classes, 1)
+        self.final_1 = OutConv(filters[0], n_classes)
+        self.final_2 = OutConv(filters[0], n_classes)
+        self.final_3 = OutConv(filters[0], n_classes)
+        self.final_4 = OutConv(filters[0], n_classes)
 
         # initialise weights
         for m in self.modules():
