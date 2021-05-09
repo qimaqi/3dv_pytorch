@@ -60,9 +60,9 @@ def train_net(net,
     n_val = int(len(dataset) * val_percent)
     n_train = len(dataset) - n_val
     train, val = random_split(dataset, [n_train, n_val])
-    train_loader = DataLoader(train, batch_size=batch_size, shuffle=True, num_workers=2, pin_memory=True)
+    train_loader = DataLoader(train, batch_size=batch_size, shuffle=True, num_workers=0, pin_memory=True)
     val_batch_size = 1
-    val_loader = DataLoader(val, batch_size=val_batch_size, shuffle=False, num_workers=2, pin_memory=True, drop_last=True)
+    val_loader = DataLoader(val, batch_size=val_batch_size, shuffle=False, num_workers=0, pin_memory=True, drop_last=True)
     writer = SummaryWriter()
     global_step = 0
 
@@ -260,7 +260,7 @@ if __name__ == '__main__':
 
     #net = InvNet(n_channels=257, n_classes=1)   
     # bilinear good or not???
-    net = UNet(n_channels=input_channel, n_classes=output_channel)
+    net = UNet(n_channels=input_channel, n_classes=output_channel, bilinear=True)
     logging.info('Network:InvNet \n'
             '\t %s channels input channels\n' 
             '\t %s output channels (grey brightness)', net.n_channels,  net.n_classes)
