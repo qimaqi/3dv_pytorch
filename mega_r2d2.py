@@ -1,8 +1,3 @@
-# Copyright 2019-present NAVER Corp.
-# CC BY-NC-SA 3.0
-# Available only for non-commercial use
-
-
 import os, pdb
 from PIL import Image
 import numpy as np
@@ -12,8 +7,9 @@ from tools import common
 from tools.dataloader import norm_RGB
 from nets.patchnet import *
 
-from scipy.io import loadmat
-import cv2
+import json
+import matplotlib.pyplot as plt
+
 
 
 def load_network(model_fn): 
@@ -28,11 +24,6 @@ def load_network(model_fn):
     net.load_state_dict({k.replace('module.',''):v for k,v in weights.items()})
     return net.eval()
 
-def read_image(img_path):
-    img = cv2.imread(img_path)
-    b,g,r = cv2.split(img)
-    img_rgb = cv2.merge([r,g,b])
-    return img_rgb
 
 class NonMaxSuppression (torch.nn.Module):
     def __init__(self, rel_thr=0.7, rep_thr=0.7):
@@ -115,8 +106,22 @@ def extract_multiscale( net, img, detector, scale_f=2**0.25,
     D = torch.cat(D)
     return XYS, D, scores
 
+def load_annotations(fname):
+    with open(fname,'r') as f:
+        data = [line.strip().split(' ') for line in f]
+    return np.array(data)
+    
+def read_image(impath,resize_scale):
+    img = Image.open(impath).convert('RGB')
+    w,h = img.size
+    new_w = int(resize_scale*w)
+    new_h = int(resize_scale*h)
+    img = img.resize((new_w, new_h), Image.ANTIALIAS)
+    img = np.array(img)
+    return img
 
-def extract_keypoints(input_image, gpu, model, reliability_thr, repeatability_thr, scale_f, min_scale, max_scale, min_size, max_size, top_k, save_dir, save_name):
+
+def extract_keypoints(input_img, gpu, model, reliability_thr, repeatability_thr, scale_f, min_scale, max_scale, min_size, max_size, top_k):
     iscuda = common.torch_set_gpu(gpu)
 
     # load the network...
@@ -163,7 +168,9 @@ def extract_keypoints(input_image, gpu, model, reliability_thr, repeatability_th
     #         descriptors = desc[idxs], 
     #         scores = scores[idxs])
     
-    img = norm_RGB(input_image)[None]
+    img = input_img
+    img = norm_RGB(img)[None]
+    print(i)
     if iscuda: img = img.cuda()
 
     # extract keypoints/descriptors for a single image
@@ -175,74 +182,55 @@ def extract_keypoints(input_image, gpu, model, reliability_thr, repeatability_th
     scores = scores.cpu().numpy()
     idxs = scores.argsort()[-top_k or None:]
 
-    #print(f"Saving {len(idxs)} keypoints to {all_file_dir}")
+    print(f"Saving {len(idxs)}")
     keypoints = xys[idxs]
     descriptors = desc[idxs]
+
+    return keypoints, descriptors
+
+# if __name__ == '__main__':
+
+#     model = './models/r2d2_WAF_N16.pt'
+#     scale_f = 2**0.25
+#     min_size = 256
+#     max_size = 1024
+#     min_scale = 0
+#     max_scale = 1
+#     reliability_thr = 0.7
+#     repeatability_thr = 0.7
+#     gpu = 0
+#     top_k = 6000
+
+#     base_image_dir= '/cluster/scratch/jiaqiu/npz_torch_data/'
+#     save_source_dir = '/cluster/scratch/jiaqiu/'
+#     feature_type = 'r2d2'
+#     resize_scale = 0.6 ## [0.6, 0.8, 1]
+
+#     train_5k=load_annotations(os.path.join(base_image_dir,'anns/demo_5k/train.txt'))
+#     train_5k=train_5k[:,4]
     
-    #pos_dict_r2d2[str(i)] = keypoints.tolist()
-    #desc_dict_r2d2[str(i)] = descriptors.tolist()
-
-    np.savez_compressed(os.path.join(save_dir,save_name), pts=keypoints, desc=descriptors)
-
-
-        
-
-if __name__ == '__main__':
-    # import argparse
-    # parser = argparse.ArgumentParser("Extract keypoints for a given image")
-    # parser.add_argument("--model", type=str, required=True, help='model path')
+#     test_5k=load_annotations(os.path.join(base_image_dir,'anns/demo_5k/test.txt'))
+#     test_5k=test_5k[:,4]
     
-    # parser.add_argument("--images", type=str, required=True, nargs='+', help='images / list')
-    # parser.add_argument("--tag", type=str, default='r2d2', help='output file tag')
-    
-    # parser.add_argument("--top-k", type=int, default=5000, help='number of keypoints')
+#     val_5k=load_annotations(os.path.join(base_image_dir,'anns/demo_5k/val.txt'))
+#     val_5k=val_5k[:,4]
 
-    # parser.add_argument("--scale-f", type=float, default=2**0.25)
-    # parser.add_argument("--min-size", type=int, default=256)
-    # parser.add_argument("--max-size", type=int, default=1024)
-    # parser.add_argument("--min-scale", type=float, default=0)
-    # parser.add_argument("--max-scale", type=float, default=1)
-    
-    # parser.add_argument("--reliability-thr", type=float, default=0.7)
-    # parser.add_argument("--repeatability-thr", type=float, default=0.7)
+#     image_list=list(train_5k)+list(test_5k)+list(val_5k)
 
-    # parser.add_argument("--gpu", type=int, nargs='+', default=[0], help='use -1 for CPU')
-    # args = parser.parse_args()
+#     temp_name = 'resize_data_'
+#     save_dir = os.path.join(save_source_dir,temp_name+feature_type+'_'+str(resize_scale))
 
-    # extract_keypoints(args)
+#     if not os.path.exists(save_dir):
+#         os.makedirs(save_dir)
 
-    model = './models/r2d2_WAF_N16.pt'
-    scale_f = 2**0.25
-    min_size = 256
-    max_size = 1024
-    min_scale = 0
-    max_scale = 1
-    reliability_thr = 0.7
-    repeatability_thr = 0.7
-    gpu = [0]
-    top_k = 5000
+#     print('start saving data')
+#     for i in range(len(image_list)):
+#         temp=image_list[i].strip()
+#         test_image=os.path.join(base_image_dir, temp)
+#         save_name=temp.replace('/','^_^')
+#         #Get points and descriptors.
+#         input_img = read_image(test_image,resize_scale)
 
-    base_image_dir='D:\MegaDepth_v1'
-    person='Q' #M for Qi Ma; W for Rui Wang; Q for jiacheng Qiu;
-    save_dir='D:\mega_r2d2'
-    ##
-   
-    mat_contents = loadmat("sample_list")
-    a=mat_contents['sample_list']
-    if person=='Q':
-        image_list=a[0:7000]
-    elif person=='M':
-        image_list=a[7000:14000]
-    else:
-        image_list=a[14000:]
+#         keypoints, descriptors = extract_keypoints(input_img, gpu, model, reliability_thr, repeatability_thr, scale_f, min_scale, max_scale, min_size, max_size, top_k)
 
-    for i in range(len(image_list)):
-        temp=image_list[i].strip()
-        test_image=os.path.join(base_image_dir,temp)
-        save_name=temp.replace('/','_').split('.')[0]
-        #Get points and descriptors.
-        input_image = read_image(test_image)
-        extract_keypoints(input_image, gpu, model, reliability_thr, repeatability_thr, scale_f, min_scale, max_scale, min_size, max_size, top_k, save_dir, save_name)
-
-
-       
+#         np.savez_compressed(os.path.join(save_dir,save_name), pts=keypoints, desc=descriptors)
