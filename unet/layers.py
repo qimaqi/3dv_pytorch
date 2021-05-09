@@ -89,3 +89,5 @@ class OutConv(nn.Module):
                 nn.Conv2d(32, out_channels, kernel_size=3, padding=1),
                 nn.Tanh()
                 )  
+    def forward(self,x):
+        return self.outconv(x)
