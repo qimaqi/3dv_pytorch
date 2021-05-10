@@ -22,7 +22,7 @@ import torchvision.models as models
 from vgg import VGGPerception
 from torch.utils.tensorboard import SummaryWriter
 import time
-dir_checkpoint = './checkpoints/5_8_online/'
+dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints/5_10_online/'
 
 def train_net(net,
               device,
