@@ -93,8 +93,8 @@ class BasicDataset2(Dataset):
         #print(np.shape(desc_np)) #
 
         points_num = np.shape(keypoints_np)[1]
-        print(points_num)
-        print(frame_tensor.size())
+        # print(points_num)
+        # print(frame_tensor.size())
 
         height, width = np.shape(img_aug)  # crop_size x crop_size 
         desc_length = np.shape(desc_np)[0]  # 256 R2D2 is 128
