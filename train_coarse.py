@@ -22,6 +22,8 @@ import torchvision.models as models
 from vgg import VGGPerception
 from torch.utils.tensorboard import SummaryWriter
 import time
+import torch.multiprocessing as mp
+
 dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints/5_10_online/'
 
 def train_net(net,
@@ -231,6 +233,8 @@ if __name__ == '__main__':
         logging.info('Model loaded from %s', args.load)
 
     net.to(device=device)
+    torch.multiprocessing.set_start_method('spawn')
+    
     # faster convolutions, but more memory
     # cudnn.benchmark = True
 
