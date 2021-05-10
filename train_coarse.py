@@ -177,7 +177,7 @@ def get_args():
     parser.add_argument("--pix_loss_wt", type=float, default=1.0, help="%(type)s: Pixel loss weight (default: %(default)s)")           
     parser.add_argument("--feature", type=str, default='Superpoint', help="%(type)s: R2D2 or Superpoint (default: %(default)s)")           
     parser.add_argument("--output", type=int, default=1, help="%(type)s: output 1 is greyscale and output 3 is RGB (default: %(default)s)")           
-    parser.add_argument('--keypoint_threshold', type=float, default=0,help='SuperPoint keypoint detector confidence threshold')
+    parser.add_argument('--keypoint_threshold', type=float, default=0.05,help='SuperPoint keypoint detector confidence threshold')
     parser.add_argument('--nms_radius', type=int, default=4,help='SuperPoint Non Maximum Suppression (NMS) radius (Must be positive)')
     
     return parser.parse_args()
