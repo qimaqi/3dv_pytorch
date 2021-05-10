@@ -18,7 +18,7 @@ class BasicDataset2(Dataset):
     def __init__(self, dataset_config = {}):
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.augumentation_config = dataset_config.get('augumentation')
-        self.superpoint = SuperPoint(dataset_config.get('superpoint',{})).eval().to(self.device)
+        self.superpoint = SuperPoint(dataset_config.get('superpoint',{})).eval().to('cpu')#self.device
         self.imgs_dir = self.augumentation_config['dir_img']
         self.crop_size = self.augumentation_config['crop_size']
         self.rescale_size = self.augumentation_config['rescale_size']
@@ -69,7 +69,7 @@ class BasicDataset2(Dataset):
         # img_np = np.array(img_aug)
         #frame_tensor = frame2tensor(img_aug, self.device)  # attention here, frame_tensor is ground truth
         # frame_tensor = torch.from_numpy(img_trans.copy()).type(torch.FloatTensor)
-        frame_tensor = torch.from_numpy(img_aug/255.).float()[None, None].to(self.device)
+        frame_tensor = torch.from_numpy(img_aug/255.).float()[None, None].to('cpu')# self.device)
         #print(frame_tensor.size())
         last_data = self.superpoint({'image': frame_tensor})
         # last_data = {k: last_data[k] for k in keys} #  ['keypoints', 'scores', 'descriptors']
