@@ -233,8 +233,8 @@ if __name__ == '__main__':
         logging.info('Model loaded from %s', args.load)
 
     net.to(device=device)
-    torch.multiprocessing.set_start_method('spawn')
-    
+    # torch.multiprocessing.set_start_method('spawn')
+
     # faster convolutions, but more memory
     # cudnn.benchmark = True
 
