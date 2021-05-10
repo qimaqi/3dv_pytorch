@@ -68,7 +68,9 @@ class BasicDataset2(Dataset):
         img_trans = img_nd.transpose((2,0,1))
         # img_np = np.array(img_aug)
         #frame_tensor = frame2tensor(img_aug, self.device)  # attention here, frame_tensor is ground truth
-        frame_tensor = torch.from_numpy(img_trans.copy()).type(torch.FloatTensor)
+        # frame_tensor = torch.from_numpy(img_trans.copy()).type(torch.FloatTensor)
+        frame_tensor = torch.from_numpy(img_aug/255.).float()[None, None].to(self.device)
+        print(frame_tensor.size())
         last_data = self.superpoint({'image': frame_tensor})
         # last_data = {k: last_data[k] for k in keys} #  ['keypoints', 'scores', 'descriptors']
         keypoints = last_data['keypoints']
