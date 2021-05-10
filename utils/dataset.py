@@ -64,9 +64,11 @@ class BasicDataset2(Dataset):
         #img = data_load.load_img(img_list[i])
         img = Image.open(img_file[0]).convert('L') # read img in greyscale
         img_aug = self.preprocess(img, self.rescale_size, self.crop_size)
+        img_nd = np.expand_dims(img_aug,axis=2)
+        img_trans = img_nd.transpose((2,0,1))
         # img_np = np.array(img_aug)
         #frame_tensor = frame2tensor(img_aug, self.device)  # attention here, frame_tensor is ground truth
-        frame_tensor = torch.from_numpy(img_aug.copy()).type(torch.FloatTensor)
+        frame_tensor = torch.from_numpy(img_trans.copy()).type(torch.FloatTensor)
         last_data = self.superpoint({'image': frame_tensor})
         # last_data = {k: last_data[k] for k in keys} #  ['keypoints', 'scores', 'descriptors']
         keypoints = last_data['keypoints']
@@ -100,8 +102,7 @@ class BasicDataset2(Dataset):
             feature_pad[y,x,:] = desc_np[:,j]   # to compensate with zero
         
         feature_trans = feature_pad.transpose((2,0,1)) # HWC to CHW
-        img_nd = np.expand_dims(img_aug,axis=2)
-        img_trans = img_nd.transpose((2,0,1)) # HWC to CHW
+         # HWC to CHW
         # after preprocess, the feature and image will be well transposed and augumented
         # feature, img = self.preprocess(feature_pad, img, self.crop_size)   ### QM: the process only transpose channel, need more data augumentation
 
