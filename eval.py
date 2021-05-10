@@ -6,6 +6,8 @@ from vgg import VGGPerception
 from torchvision.utils import save_image
 import pytorch_ssim
 import numpy as np
+import os
+
 
 def save_image_tensor(input_tensor, filename):
     assert (len(input_tensor.shape) == 4 and input_tensor.shape[0] == 1)
@@ -35,6 +37,14 @@ def eval_net(net, loader, device):
     sum_ssim_loss = 0
 
     global_step = 0 
+    image_dir = '/cluster/scratch/qimaqi/debug_image_unet++_10_5_lr5e4/'
+    output_dir = '/cluster/scratch/qimaqi/debug_image_unet++_10_5_lr5e4/'
+    try:
+        os.mkdir(image_dir)
+        os.mkdir(output_dir)
+        #logging.info('Created checkpoint directory')
+    except OSError:
+        pass
     #with tqdm(total=n_val, desc='Validation round', unit='batch', leave=False) as pbar:
     for batch in loader:
         #imgs, true_masks = batch['image'], batch['mask']
@@ -59,8 +69,8 @@ def eval_net(net, loader, device):
         tot += pixel_loss*pix_loss_wt + perception_loss*per_loss_wt
 
         # debug part
-        tmp_output_dir = '/cluster/scratch/qimaqi/debug_output_eval_invnet_8_5_lr4/' +str(global_step) + '.png'
-        tmp_img_dir = '/cluster/scratch/qimaqi/debug_images_eval_invnet_8_5_lr4/'+ str(global_step) + '.png'
+        tmp_output_dir = output_dir +str(global_step) + '.png'
+        tmp_img_dir = image_dir+ str(global_step) + '.png'
         save_image_tensor(cpred,tmp_output_dir)
         save_image_tensor(true_imgs,tmp_img_dir)
 

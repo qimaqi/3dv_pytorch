@@ -33,7 +33,7 @@ import time
 dir_img = '/cluster/scratch/qimaqi/nyu_v1_images/'     ####### QM:change data directory path
 #dir_features = '../data/nyu_v1_features/'  # databasic2 can directly process feature
 dir_desc = '/cluster/scratch/qimaqi/nyu_v1_desc/'
-dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_1_5_invnet_/'
+dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_unet++_10_5/'
 dir_pos = '/cluster/scratch/qimaqi/nyu_v1_pos/'
 #log_dir = '/cluster/scratch/qimaqi/log/'    
 
@@ -182,7 +182,7 @@ def get_args():
                         help='Number of epochs', dest='epochs')
     parser.add_argument('-b', '--batch-size', metavar='B', type=int, nargs='?', default=2,
                         help='Batch size', dest='batchsize')
-    parser.add_argument('-l', '--learning-rate', metavar='LR', type=float, nargs='?', default=1e-4,
+    parser.add_argument('-l', '--learning-rate', metavar='LR', type=float, nargs='?', default=5e-4,
                         help='Learning rate', dest='lr')
     parser.add_argument('-f', '--load', dest='load', type=str, default=False,
                         help='Load model from a pretrain .pth file')
