@@ -24,7 +24,7 @@ from torch.utils.tensorboard import SummaryWriter
 import time
 import torch.multiprocessing as mp
 
-dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints/5_10_online/'
+dir_checkpoint = '/cluster/scratch/qimaqi/5_10_online/'
 
 def train_net(net,
               device,
