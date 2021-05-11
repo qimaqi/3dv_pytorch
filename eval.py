@@ -33,10 +33,11 @@ def eval_net(net, loader, device):
     per_loss_wt = 5
     sum_pix_loss = 0
     sum_per_loss = 0
+    sum_mae_loss = 0
     sum_ssim_loss = 0
 
-    output_dir = '/cluster/scratch/jiaqiu/debug_output_eval_online_11_5/'
-    img_dir = '/cluster/scratch/jiaqiu/debug_images_eval_online_11_5/'
+    output_dir = '/cluster/scratch/jiaqiu/debug_output_eval_online_12_5/'
+    img_dir = '/cluster/scratch/jiaqiu/debug_images_eval_online_12_5/'
     try:
         os.mkdir(output_dir)
         os.mkdir(img_dir)
@@ -61,10 +62,12 @@ def eval_net(net, loader, device):
 
         perception_loss = ( l2_loss(P_pred[0],P_img[0]) + l2_loss(P_pred[1],P_img[1]) + l2_loss(P_pred[2],P_img[2])) / 3
         pixel_loss = pixel_criterion(cpred/255,true_imgs/255)
+        mae_loss = nn.L1Loss()(cpred, true_imgs)
         ssim_out = -ssim_loss(cpred, true_imgs)
         ssim_value = - ssim_out.item()
         sum_pix_loss += pixel_loss
         sum_per_loss += perception_loss
+        sum_mae_loss += mae_loss
         sum_ssim_loss += ssim_value
         tot += pixel_loss*pix_loss_wt + perception_loss*per_loss_wt
 
@@ -79,5 +82,6 @@ def eval_net(net, loader, device):
 
     net.train()
     print('Coarsenet pixel_loss: ',(sum_pix_loss/n_val), 'Coarsenet perception_loss:', sum_per_loss/n_val )
+    print('MAE Value: ',(sum_mae_loss/n_val))
     print('SSIM Value: ',(sum_ssim_loss/n_val))
     return tot / n_val
