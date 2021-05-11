@@ -103,8 +103,8 @@ class BasicDataset2(Dataset):
         desc_length = np.shape(desc_np)[0]  # 256 R2D2 is 128
 
         feature_pad = np.zeros([height,width,desc_length])    # build a 480 x 640 x 256 array   HWC
-        print(points_num)
-        print(keypoints_np[10][0],keypoints_np[10][1])
+        # print(points_num)
+        # print(keypoints_np[10][0],keypoints_np[10][1])
         for j in range(points_num):
             x = int(keypoints_np[j][0]) #crop_size
             y = int(keypoints_np[j][1]) #crop_size
