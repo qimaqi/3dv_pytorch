@@ -136,6 +136,7 @@ def _vgg(arch, cfg, batch_norm, pretrained, progress, **kwargs):
     #                                          progress=progress)
     #    model.load_state_dict(state_dict)
     model.load_state_dict(torch.load('/cluster/home/jiaqiu/3dv_pytorch/vgg16-397923af.pth'))
+    # model.load_state_dict(torch.load(r'C:\Users\bobch\OneDrive\Documents\3dv\codes\3dv_pytorch\vgg16-397923af.pth'))
     return model
 
 

@@ -14,10 +14,8 @@ import matplotlib.pyplot as plt
 
 def load_network(model_fn): 
     checkpoint = torch.load(model_fn)
-    print("\n>> Creating net = " + checkpoint['net']) 
     net = eval(checkpoint['net'])
     nb_of_weights = common.model_size(net)
-    print(f" ( Model size: {nb_of_weights/1000:.0f}K parameters )")
 
     # initialization
     weights = checkpoint['state_dict']
@@ -106,19 +104,19 @@ def extract_multiscale( net, img, detector, scale_f=2**0.25,
     D = torch.cat(D)
     return XYS, D, scores
 
-def load_annotations(fname):
-    with open(fname,'r') as f:
-        data = [line.strip().split(' ') for line in f]
-    return np.array(data)
+# def load_annotations(fname):
+#     with open(fname,'r') as f:
+#         data = [line.strip().split(' ') for line in f]
+#     return np.array(data)
     
-def read_image(impath,resize_scale):
-    img = Image.open(impath).convert('RGB')
-    w,h = img.size
-    new_w = int(resize_scale*w)
-    new_h = int(resize_scale*h)
-    img = img.resize((new_w, new_h), Image.ANTIALIAS)
-    img = np.array(img)
-    return img
+# def read_image(impath,resize_scale):
+#     img = Image.open(impath).convert('RGB')
+#     w,h = img.size
+#     new_w = int(resize_scale*w)
+#     new_h = int(resize_scale*h)
+#     img = img.resize((new_w, new_h), Image.ANTIALIAS)
+#     img = np.array(img)
+#     return img
 
 def remove_borders(keypoints, descriptors, scores, border: int, height: int, width: int):
     """ Removes keypoints too close to the border """
@@ -162,17 +160,14 @@ def extract_keypoints(input_img, config):
 
     # extract keypoints/descriptors for a single image
     xys, desc, scores = extract_multiscale(net, img, detector, scale_f, min_scale, 
-        max_scale, min_size, max_size, verbose = True)
+        max_scale, min_size, max_size, verbose = False)
     
     xys = xys.cpu().numpy()
-    print(np.shape(xys))
     desc = desc.cpu().numpy()
     scores = scores.cpu().numpy()
     border = 4
     xys, desc, scores = remove_borders(xys, desc, scores, border, H, W)
     idxs = scores.argsort()[-top_k or None:]
-
-    print(f"Saving {len(idxs)}")
     keypoints = xys[idxs]
     descriptors = desc[idxs]
 

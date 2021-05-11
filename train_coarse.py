@@ -39,7 +39,7 @@ for i in range(len(train_5k_image_rgb)):
     image_list.append(temp_path)
 
 
-dir_checkpoint = '/cluster/scratch/jiaqiu/checkpoints_10_5_para/'
+dir_checkpoint = '/cluster/scratch/jiaqiu/checkpoints_11_5_test/'
 
 def train_net(net,
               device,
@@ -127,8 +127,7 @@ def train_net(net,
             loss.backward()
             nn.utils.clip_grad_value_(net.parameters(), 0.1)
             optimizer.step()
-
-
+            print('pixel_loss: ',pixel_loss, 'perception_loss:', perception_loss)
             global_step += 1
             # debug part
             #if global_step % (n_train // (10 * batch_size)) == 0:
@@ -190,17 +189,17 @@ def train_net(net,
 def get_args():
     parser = argparse.ArgumentParser(description='Train the CoarseNet on images and correspond superpoint descripton',
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('-e', '--epochs', metavar='E', type=int, default=24,
+    parser.add_argument('-e', '--epochs', metavar='E', type=int, default=16,
                         help='Number of epochs', dest='epochs')
-    parser.add_argument('-b', '--batch-size', metavar='B', type=int, nargs='?', default=6,
+    parser.add_argument('-b', '--batch-size', metavar='B', type=int, nargs='?', default=4,
                         help='Batch size', dest='batchsize')
-    parser.add_argument('-l', '--learning-rate', metavar='LR', type=float, nargs='?', default=1e-5,
+    parser.add_argument('-l', '--learning-rate', metavar='LR', type=float, nargs='?', default=1e-3,
                         help='Learning rate', dest='lr')
     parser.add_argument('-f', '--load', dest='load', type=str, default=False,
                         help='Load model from a pretrain .pth file')
     parser.add_argument('-v', '--validation', dest='val', type=float, default=10.0,
                         help='Percent of the data that is used as validation (0-100)')            
-    parser.add_argument("--rescale_size", type=float, default=0.6,     # to do
+    parser.add_argument("--rescale_size", type=float, default=1,     # to do
                         help="%(type)s: Size to crop images to (default: %(default)s)")
     parser.add_argument("--crop_size", type=int, default=256,     # to do
                         help="%(type)s: Size to crop images to (default: %(default)s)")
@@ -235,7 +234,7 @@ if __name__ == '__main__':
             'rescale_size': args.rescale_size,
             'crop_size': args.crop_size,
             'dir_img': image_list,
-            'dir_checkpoint': '/cluster/scratch/jiaqiu/checkpoints_10_5_para/',
+            'dir_checkpoint': '/cluster/scratch/jiaqiu/checkpoints_11_5_para/',
         },
         'superpoint': {
             'nms_radius': args.nms_radius,
@@ -245,8 +244,8 @@ if __name__ == '__main__':
         'R2D2': {
             'gpu': 0,
             'model': './models/r2d2_WAF_N16.pt',
-            'reliability_thr': 0,
-            'repeatability_thr': 0,
+            'reliability_thr': 0.7,
+            'repeatability_thr': 0.7,
             'scale_f': 2**0.25,
             'min_scale': 0,
             'max_scale': 1,

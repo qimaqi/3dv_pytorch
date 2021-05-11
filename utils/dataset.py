@@ -126,7 +126,7 @@ class R2D2_dataset(Dataset):
         return len(self.ids)
 
     @classmethod
-    def preprocess(cls, img, rescale_size, crop_size):
+    def preprocess(cls, img, img_grey, rescale_size, crop_size):
         # include rescale, crop and flip, flip set 30% 
         w,h = img.size
         scale_rand_seed_w = torch.rand(1)
@@ -134,21 +134,25 @@ class R2D2_dataset(Dataset):
         new_w = int(random_scale*w)
         new_h = int(random_scale*h)
         img = img.resize((new_w, new_h), Image.ANTIALIAS)
+        img_grey = img_grey.resize((new_w, new_h), Image.ANTIALIAS)
         assert crop_size <= new_h and crop_size <= new_w,'crop_size is bigger than new rescale image'
         
         img_ = np.array(img)
+        img_grey_ = np.array(img_grey)
 
         crop_rand_seed_w = torch.rand(1)
         crop_rand_seed_h = torch.rand(1)
         crop_w = int(torch.floor((new_w - crop_size) * crop_rand_seed_w))   # 640 - 480 
         crop_h = int(torch.floor((new_h - crop_size) * crop_rand_seed_h))
         img_aug = img_[crop_h:crop_h+crop_size, crop_w:crop_w+crop_size]
+        img_grey_aug = img_grey_[crop_h:crop_h+crop_size, crop_w:crop_w+crop_size]
 
         flip_rand_seed = torch.rand(1)
         if flip_rand_seed <= 0.3:
             img_aug = np.flip(img_aug,1)
+            img_grey_aug = np.flip(img_grey_aug,1)
         
-        return img_aug
+        return img_aug, img_grey_aug
 
     def __getitem__(self, i):
         idx = self.ids[i]
@@ -158,8 +162,8 @@ class R2D2_dataset(Dataset):
         #img = data_load.load_img(img_list[i])
         img = Image.open(image_file).convert('RGB') 
         img_grey = Image.open(image_file).convert('L') # read img in greyscale
-        img_aug = self.preprocess(img, self.rescale_size, self.crop_size)
-        img_grey = self.preprocess(img_grey, self.rescale_size, self.crop_size)
+        img_aug, img_grey = self.preprocess(img, img_grey, self.rescale_size, self.crop_size)
+    
         # img_np = np.array(img_aug)
         #frame_tensor = frame2tensor(img_aug, self.device)  # attention here, frame_tensor is ground truth
         # frame_tensor = torch.from_numpy(img_aug.copy()).type(torch.FloatTensor)
