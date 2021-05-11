@@ -38,7 +38,7 @@ def eval_net(net, loader, device):
 
     global_step = 0 
     image_dir = '/cluster/scratch/qimaqi/debug_image_unet++_10_5_lr5e4/'
-    output_dir = '/cluster/scratch/qimaqi/debug_image_unet++_10_5_lr5e4/'
+    output_dir = '/cluster/scratch/qimaqi/debug_output_unet++_10_5_lr5e4/'
     try:
         os.mkdir(image_dir)
         os.mkdir(output_dir)
