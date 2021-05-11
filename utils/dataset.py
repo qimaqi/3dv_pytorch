@@ -6,6 +6,7 @@ from os import listdir
 import numpy as np
 from glob import glob
 import torch
+from torch.utils import data
 from torch.utils.data import Dataset
 import logging
 from PIL import Image
@@ -13,6 +14,7 @@ from utils import data_load
 from .superpoint import SuperPoint
 from .tools import frame2tensor
 from mega_r2d2 import extract_keypoints
+import os
 
 # Data basic2 load pos_dir and des_dir to construct a feature 480x640x256 with other point zero
 class BasicDataset2(Dataset):
@@ -112,14 +114,22 @@ class BasicDataset2(Dataset):
         }
 
 class R2D2_dataset(Dataset):
-    def __init__(self, dataset_config = {}):
+    def __init__(self, set_type, dataset_config = {}):
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.set_type = set_type
         self.augumentation_config = dataset_config.get('augumentation')
         self.R2D2 = dataset_config.get('R2D2')
-        self.image_list = self.augumentation_config['dir_img']
+        self.dir_img = self.augumentation_config['dir_img']
         self.crop_size = self.augumentation_config['crop_size']
         self.rescale_size = self.augumentation_config['rescale_size']
-        self.ids = list(range(len(self.image_list)))
+
+        if self.set_type == 'train':
+            data=load_annotations(os.path.join(self.dir_img ,'anns/demo_5k/train.txt'))
+        else:
+            data=load_annotations(os.path.join(self.dir_img ,'anns/demo_5k/val.txt'))
+        
+        self.image_rgb=list(data[:,4])
+        self.ids = list(range(len(self.image_rgb)))
         logging.info('Creating dataset with %s examples', len(self.ids))
 
     def __len__(self):
@@ -156,7 +166,7 @@ class R2D2_dataset(Dataset):
 
     def __getitem__(self, i):
         idx = self.ids[i]
-        image_file = self.image_list[idx]     # one image jpg
+        image_file = os.path.join(self.dir_img, self.image_rgb[idx])     # one image jpg
         keys = ['keypoints', 'scores', 'descriptors']
 
         #img = data_load.load_img(img_list[i])

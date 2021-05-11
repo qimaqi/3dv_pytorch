@@ -17,26 +17,11 @@ from unet import UNet
 # from unet import UNet
 
 from utils.dataset import R2D2_dataset
-from torch.utils.data import DataLoader, random_split
+from torch.utils.data import DataLoader
 import torchvision.models as models
 from vgg import VGGPerception
 from torch.utils.tensorboard import SummaryWriter
 import time
-
-def load_annotations(fname):
-    with open(fname,'r') as f:
-        data = [line.strip().split(' ') for line in f]
-    return np.array(data)
-
-base_image_dir='/cluster/scratch/jiaqiu/npz_torch_data/'
-# base_image_dir='D:/npz_torch_data/'
-train_5k=load_annotations(os.path.join(base_image_dir,'anns/demo_5k/train.txt'))
-train_5k_image_rgb=list(train_5k[:,4])
-image_list=[]
-for i in range(len(train_5k_image_rgb)):
-    temp_image_name=train_5k_image_rgb[i]
-    temp_path=os.path.join(base_image_dir,temp_image_name)
-    image_list.append(temp_path)
 
 
 dir_checkpoint = '/cluster/scratch/jiaqiu/checkpoints_11_5_test/'
@@ -56,10 +41,10 @@ def train_net(net,
     #save_cp = False
     
     # imgs_dir, pos_dir, desc_dir, pct_points, max_points, crop_size
-    dataset = R2D2_dataset(dataset_config)
-    n_val = int(len(dataset) * val_percent)
-    n_train = len(dataset) - n_val
-    train, val = random_split(dataset, [n_train, n_val])
+    train = R2D2_dataset('train', dataset_config)
+    n_train = len(train)
+    val = R2D2_dataset('val', dataset_config)
+    n_val = len(val)
     train_loader = DataLoader(train, batch_size=batch_size, shuffle=True, num_workers=0, pin_memory=True)
     val_batch_size = 1
     val_loader = DataLoader(val, batch_size=val_batch_size, shuffle=False, num_workers=0, pin_memory=True, drop_last=True)
@@ -233,7 +218,7 @@ if __name__ == '__main__':
         'augumentation': {
             'rescale_size': args.rescale_size,
             'crop_size': args.crop_size,
-            'dir_img': image_list,
+            'dir_img': 'D:/npz_torch_data/',
             'dir_checkpoint': '/cluster/scratch/jiaqiu/checkpoints_11_5_para/',
         },
         'superpoint': {
