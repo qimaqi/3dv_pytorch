@@ -92,20 +92,22 @@ class BasicDataset2(Dataset):
         #print(np.shape(scores_np)) #
         #print(np.shape(desc_np)) #
 
-        points_num = np.shape(keypoints_np)[1]
+        points_num = np.shape(keypoints_np)[0]
         # print('points_num',points_num) # return 2
         # print('points_num',np.shape(keypoints_np)[0]) # return N
         # print(frame_tensor.size())
-        print('keypoints_np',np.shape(keypoints_np))
-        print('desc_np',np.shape(desc_np))
+        # print('keypoints_np',np.shape(keypoints_np))  # Nx2
+        # print('desc_np',np.shape(desc_np)) # 256 x N
 
         height, width = np.shape(img_aug)  # crop_size x crop_size 
         desc_length = np.shape(desc_np)[0]  # 256 R2D2 is 128
 
         feature_pad = np.zeros([height,width,desc_length])    # build a 480 x 640 x 256 array   HWC
+        print(points_num)
+        print(keypoints_np[10][0],keypoints_np[10][1])
         for j in range(points_num):
-            x = int(keypoints_np[0][j]) #crop_size
-            y = int(keypoints_np[1][j]) #crop_size
+            x = int(keypoints_np[j][0]) #crop_size
+            y = int(keypoints_np[j][1]) #crop_size
             feature_pad[y,x,:] = desc_np[:,j]   # to compensate with zero
         
         feature_trans = feature_pad.transpose((2,0,1)) # HWC to CHW
