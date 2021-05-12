@@ -24,14 +24,37 @@ from torch.utils.tensorboard import SummaryWriter
 import time
 import pytorch_ssim
 
+def load_annotations(fname):
+    with open(fname,'r') as f:
+        data = [line.strip().split(' ') for line in f]
+    return np.array(data)
 
-#some default dir need images descripton, pos and depth. Attention this time desc and pos is in json !!!!!!!!!!
-dir_img = '/cluster/scratch/qimaqi/nyu_v1_images/'     ####### QM:change data directory path
-#dir_features = '../data/nyu_v1_features/'  # databasic2 can directly process feature
-dir_desc = '/cluster/scratch/qimaqi/nyu_v1_desc/'
-dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_28_4_unet/'
-dir_pos = '/cluster/scratch/qimaqi/nyu_v1_pos/'
-#log_dir = '/cluster/scratch/qimaqi/log/'    
+base_image_dir= '/cluster/scratch/qimaqi/data_5k'           #'/Users/wangrui/Projects/invsfm/'
+base_feature_dir = '/cluster/scratch/qimaqi/data_5k/save_source_dir/resize_data_superpoint_1'
+
+#base_image_dir = '/home/wangr/invsfm/data'
+# base_feature_dir = '/home/wangr/superpoint_resize/resize_data_superpoint_1'
+train_5k=load_annotations(os.path.join(base_image_dir,'anns/demo_5k/train.txt'))
+train_5k_image_rgb=list(train_5k[:,4])
+
+image_list=[]
+
+feature_list=[]
+for i in range(len(train_5k_image_rgb)):
+    temp_image_name=train_5k_image_rgb[i]
+    temp_path=os.path.join(base_image_dir,temp_image_name)
+    image_list.append(temp_path)
+    superpoint_feature_name=temp_image_name.replace('/','^_^')+'.npz'
+    feature_list.append(os.path.join(base_feature_dir,superpoint_feature_name))
+
+# #some default dir need images descripton, pos and depth. Attention this time desc and pos is in json !!!!!!!!!!
+# dir_img = '/cluster/scratch/qimaqi/nyu_v1_images/'     ####### QM:change data directory path
+# #dir_features = '../data/nyu_v1_features/'  # databasic2 can directly process feature
+# dir_desc = '/cluster/scratch/qimaqi/nyu_v1_desc/'
+# dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_28_4_unet/'
+# dir_pos = '/cluster/scratch/qimaqi/nyu_v1_pos/'
+# #log_dir = '/cluster/scratch/qimaqi/log/'  
+  
 
 def save_image_tensor(input_tensor, filename):
     assert (len(input_tensor.shape) == 4 and input_tensor.shape[0] == 1)
@@ -134,7 +157,7 @@ def train_net(net,
 
 
             loss.backward()
-            nn.utils.clip_grad_value_(net.parameters(), 0.5)
+            nn.utils.clip_grad_value_(net.parameters(), 0.1)
             optimizer.step()
 
             global_step += 1
@@ -180,21 +203,21 @@ def train_net(net,
 def get_args():
     parser = argparse.ArgumentParser(description='Train the CoarseNet on images and correspond superpoint descripton',
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('-e', '--epochs', metavar='E', type=int, default=24,
+    parser.add_argument('-e', '--epochs', metavar='E', type=int, default=16,
                         help='Number of epochs', dest='epochs')
     parser.add_argument('-b', '--batch-size', metavar='B', type=int, nargs='?', default=4,
                         help='Batch size', dest='batchsize')
-    parser.add_argument('-l', '--learning-rate', metavar='LR', type=float, nargs='?', default=1e-4,
+    parser.add_argument('-l', '--learning-rate', metavar='LR', type=float, nargs='?', default=1e-3,
                         help='Learning rate', dest='lr')
     parser.add_argument('-f', '--load', dest='load', type=str, default=False,
                         help='Load model from a pretrain .pth file')
     parser.add_argument('-v', '--validation', dest='val', type=float, default=10.0,
                         help='Percent of the data that is used as validation (0-100)')            
-    parser.add_argument("--crop_size", type=int, default=320,     # to do
+    parser.add_argument("--crop_size", type=int, default=256,     # to do
                         help="%(type)s: Size to crop images to (default: %(default)s)")
     parser.add_argument("--pct_points", type=float, default=1.0,
                         help="choose disparse point for reconstruction")
-    parser.add_argument("--max_points", type=int, default=4000,
+    parser.add_argument("--max_points", type=int, default=1000,
                         help="maximum feature used for reconstruction")
     parser.add_argument("--per_loss_wt", type=float, default=5.0, help="%(type)s: Perceptual loss weight (default: %(default)s)")   
     parser.add_argument("--pix_loss_wt", type=float, default=1.0, help="%(type)s: Pixel loss weight (default: %(default)s)")           
