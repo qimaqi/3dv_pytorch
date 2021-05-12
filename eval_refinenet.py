@@ -22,7 +22,7 @@ def eval_refinenet(refine_net, D,coarse_net,loader, device):
     percepton_criterion.to(device=device)
     l2_loss = nn.MSELoss()
     pix_loss_wt = 1
-    per_loss_wt = 1
+    per_loss_wt = 5
     adv_loss_wt = 1
     sum_pix_loss = 0
     sum_per_loss = 0
@@ -48,7 +48,7 @@ def eval_refinenet(refine_net, D,coarse_net,loader, device):
             P_pred = percepton_criterion(rpred)
             P_img = percepton_criterion(true_imgs)
             perception_loss = ( l2_loss(P_pred[0],P_img[0]) + l2_loss(P_pred[1],P_img[1]) + l2_loss(P_pred[2],P_img[2])) / 3
-            temp_fake = torch.cat((refine_input,rpred,P_pred[0]),axis=1)
+            temp_fake = torch.cat((refine_input,rpred/255,P_pred[0]),axis=1)
             D_fake_input=[temp_fake,P_pred[1],P_pred[2]]
             D_fake = D(D_fake_input)
             n_cha,_,_,_=refine_input.shape

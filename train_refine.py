@@ -148,11 +148,11 @@ def train_net(refine_net,
 
             P_pred = percepton_criterion(rpred)
             P_img = percepton_criterion(true_imgs)
-            temp_fake = torch.cat((refine_input,rpred,P_pred[0]),axis=1)
-            D_fake_input=[temp_fake/255,P_pred[1],P_pred[2]]
+            temp_fake = torch.cat((refine_input,rpred/255,P_pred[0]),axis=1)
+            D_fake_input=[temp_fake,P_pred[1],P_pred[2]]
 
-            temp_real = torch.cat((refine_input,true_imgs,P_img[0]),axis=1)
-            D_real_input=[temp_real/255,P_img[1],P_img[2]]
+            temp_real = torch.cat((refine_input,true_imgs/255,P_img[0]),axis=1)
+            D_real_input=[temp_real,P_img[1],P_img[2]]
             n_cha,_,_,_=refine_input.shape
 
             D_fake = D(D_fake_input)
@@ -199,8 +199,8 @@ def train_net(refine_net,
             rpred = (pred+1.)*127.5
             P_pred = percepton_criterion(rpred)
             perception_loss = ( l2_loss(P_pred[0],P_img[0]) + l2_loss(P_pred[1],P_img[1]) + l2_loss(P_pred[2],P_img[2])) / 3
-            temp_fake = torch.cat((refine_input,rpred,P_pred[0]),axis=1)
-            D_fake_input=[temp_fake/255,P_pred[1],P_pred[2]]
+            temp_fake = torch.cat((refine_input,rpred/255,P_pred[0]),axis=1)
+            D_fake_input=[temp_fake,P_pred[1],P_pred[2]]
             D_fake = D(D_fake_input)
             radvloss = cr_loss(D_fake,dgt1)
             pixel_loss = pixel_criterion(rpred/255,true_imgs/255)

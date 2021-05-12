@@ -1,5 +1,6 @@
 # InvNet: generate image from feature
 
+# This branch is now for refinenet and the coarsenet 
 
 ## Usage
 **Note : Use Python 3.6 or newer**
