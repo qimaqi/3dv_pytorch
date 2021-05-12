@@ -225,12 +225,13 @@ class BasicDataset3(Dataset):
 
 
 class dataset_superpoint_5k(Dataset):
-    def __init__(self, image_list, feature_list,scale, pct_3D_points, crop_size):
+    def __init__(self, image_list, feature_list,scale, pct_3D_points, crop_size, max_points=4000):
         self.image_list = image_list
         self.feature_list = feature_list
         self.scale = scale
         self.pct_3D_points = pct_3D_points
         self.crop_size = crop_size
+        self.max_points = max_points
         assert 0 < scale <= 1, 'Scale must be between 0 and 1'
 
         self.ids = list(range(len(image_list)))
@@ -312,6 +313,8 @@ class dataset_superpoint_5k(Dataset):
         height, width = np.shape(img)  # 480,640
         desc_length = np.shape(desc)[0]  # 256 
 
+        if pos_num >= self.max_points:
+            pos_num = self.max_points
 
         #feature = np.zeros([width,height,desc_length])   # build a 640 x 480 x 256 array
         feature = np.zeros([height,width,desc_length])    # build a 480 x 640 x 257 array   HWC

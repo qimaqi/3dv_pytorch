@@ -39,20 +39,26 @@ def load_annotations(fname):
 # dir_img = '../data/nyu_v1_images/'     ####### QM:change data directory path
 # #dir_features = '../data/nyu_v1_features/'
 # dir_desc = '../data/nyu_v1_desc/'
-dir_checkpoint = './checkpoints/'
+dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_12_5/'
 # dir_depth = '../data/nyu_v1_depth/'
 # dir_pos = '../data/nyu_v1_pos/'
-base_image_dir = '/home/wangr/invsfm/data'
-base_feature_dir = '/home/wangr/superpoint_resize/resize_data_superpoint_1'
+#base_image_dir = '/home/wangr/invsfm/data'
+#base_feature_dir = '/home/wangr/superpoint_resize/resize_data_superpoint_1'
+base_image_dir= '/cluster/scratch/qimaqi/data_5k'           #'/Users/wangrui/Projects/invsfm/'
+base_feature_dir = '/cluster/scratch/qimaqi/data_5k/save_source_dir/resize_data_superpoint_1'
+
 train_5k=load_annotations(os.path.join(base_image_dir,'anns/demo_5k/train.txt'))
+val_5k=load_annotations(os.path.join(base_image_dir,'anns/demo_5k/val.txt'))
+test_5k=load_annotations(os.path.join(base_image_dir,'anns/demo_5k/test.txt'))
 # train_5k_pcl_xyz=train_5k[:,0]
 # train_5k_pcl_rgb=train_5k[:,1]
 # train_5k_pcl_sift=train_5k[:,2]
 # train_5k_camera=train_5k[:,3]
 train_5k_image_rgb=list(train_5k[:,4])
+val_5k_image_rgb=list(val_5k[:,4])
+test_5k_image_rgb=list(test_5k[:,4])
 
 image_list=[]
-
 feature_list=[]
 for i in range(len(train_5k_image_rgb)):
     temp_image_name=train_5k_image_rgb[i]
@@ -61,6 +67,14 @@ for i in range(len(train_5k_image_rgb)):
     superpoint_feature_name=temp_image_name.replace('/','^_^')+'.npz'
     feature_list.append(os.path.join(base_feature_dir,superpoint_feature_name))
 
+val_image_list=[]
+val_feature_list=[]
+for i in range(len(val_5k_image_rgb)):
+    temp_image_name=val_5k_image_rgb[i]
+    temp_path=os.path.join(base_image_dir,temp_image_name)
+    val_image_list.append(temp_path)
+    superpoint_feature_name=temp_image_name.replace('/','^_^')+'.npz'
+    val_feature_list.append(os.path.join(base_feature_dir,superpoint_feature_name))
     
 
 
@@ -91,7 +105,8 @@ def train_net(net,
     #save_cp = Fals
     img_scale = 1 
     pct_3D_points=0
-    dataset = dataset_superpoint_5k(image_list,feature_list,img_scale, pct_3D_points, crop_size)
+    dataset = dataset_superpoint_5k(image_list,feature_list,img_scale, pct_3D_points, crop_size, max_points)
+    val_dataset = dataset_superpoint_5k(val_image_list,val_feature_list,img_scale, pct_3D_points, crop_size, max_points)
     n_val = int(len(dataset) * val_percent)
     n_train = len(dataset) - n_val
     train, val = random_split(dataset, [n_train, n_val])
@@ -225,7 +240,7 @@ def train_net(net,
 def get_args():
     parser = argparse.ArgumentParser(description='Train the CoarseNet on images and correspond superpoint descripton',
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('-e', '--epochs', metavar='E', type=int, default=18,
+    parser.add_argument('-e', '--epochs', metavar='E', type=int, default=16,
                         help='Number of epochs', dest='epochs')
     parser.add_argument('-b', '--batch-size', metavar='B', type=int, nargs='?', default=4,
                         help='Batch size', dest='batchsize')
@@ -239,7 +254,7 @@ def get_args():
                         help="%(type)s: Size to crop images to (default: %(default)s)")
     parser.add_argument("--pct_points", type=float, default=1.0,
                         help="choose disparse point for reconstruction")
-    parser.add_argument("--max_points", type=int, default=4000,
+    parser.add_argument("--max_points", type=int, default=1000,
                         help="maximum feature used for reconstruction")
     parser.add_argument("--per_loss_wt", type=float, default=5.0, help="%(type)s: Perceptual loss weight (default: %(default)s)")   
     parser.add_argument("--pix_loss_wt", type=float, default=1.0, help="%(type)s: Pixel loss weight (default: %(default)s)")           
