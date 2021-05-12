@@ -44,7 +44,7 @@ dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_12_5/'
 # dir_pos = '../data/nyu_v1_pos/'
 #base_image_dir = '/home/wangr/invsfm/data'
 #base_feature_dir = '/home/wangr/superpoint_resize/resize_data_superpoint_1'
-base_image_dir= '/cluster/scratch/qimaqi/data_5k'           #'/Users/wangrui/Projects/invsfm/'
+base_image_dir= '/cluster/scratch/qimaqi/data_5k/data'           #'/Users/wangrui/Projects/invsfm/'
 base_feature_dir = '/cluster/scratch/qimaqi/data_5k/save_source_dir/resize_data_superpoint_1'
 
 train_5k=load_annotations(os.path.join(base_image_dir,'anns/demo_5k/train.txt'))
