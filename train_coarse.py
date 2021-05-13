@@ -16,7 +16,7 @@ from eval import eval_net
 from unet import UNet_Nested
 # from unet import UNet
 
-from utils.dataset import BasicDataset2
+from utils.dataset import BasicDataset2, dataset_superpoint_5k
 from torch.utils.data import DataLoader, random_split
 import torchvision.models as models
 from vgg import VGGPerception
@@ -28,14 +28,50 @@ import time
 # to use logging and attribute feature 
 # infer to test the result
 
+def load_annotations(fname):
+    with open(fname,'r') as f:
+        data = [line.strip().split(' ') for line in f]
+    return np.array(data)
 
-#some default dir need images descripton, pos and depth. Attention this time desc and pos is in json !!!!!!!!!!
-dir_img = '/cluster/scratch/qimaqi/nyu_v1_images/'     ####### QM:change data directory path
-#dir_features = '../data/nyu_v1_features/'  # databasic2 can directly process feature
-dir_desc = '/cluster/scratch/qimaqi/nyu_v1_desc/'
-dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_unet++_10_5/'
-dir_pos = '/cluster/scratch/qimaqi/nyu_v1_pos/'
-#log_dir = '/cluster/scratch/qimaqi/log/'    
+# #some default dir need images descripton, pos and depth. Attention this time desc and pos is in json !!!!!!!!!!
+# dir_img = '/cluster/scratch/qimaqi/nyu_v1_images/'     ####### QM:change data directory path
+# #dir_features = '../data/nyu_v1_features/'  # databasic2 can directly process feature
+# dir_desc = '/cluster/scratch/qimaqi/nyu_v1_desc/'
+# dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_unet++_10_5/'
+# dir_pos = '/cluster/scratch/qimaqi/nyu_v1_pos/'
+# #log_dir = '/cluster/scratch/qimaqi/log/'    
+
+dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_12_5/'
+base_image_dir= '/cluster/scratch/qimaqi/data_5k/data'           #'/Users/wangrui/Projects/invsfm/'
+base_feature_dir = '/cluster/scratch/qimaqi/data_5k/save_source_dir/resize_data_superpoint_1'
+
+
+train_5k=load_annotations(os.path.join(base_image_dir,'anns/demo_5k/train.txt'))
+val_5k=load_annotations(os.path.join(base_image_dir,'anns/demo_5k/val.txt'))
+test_5k=load_annotations(os.path.join(base_image_dir,'anns/demo_5k/test.txt'))
+
+train_5k_image_rgb=list(train_5k[:,4])
+val_5k_image_rgb=list(val_5k[:,4])
+test_5k_image_rgb=list(test_5k[:,4])
+
+image_list=[]
+feature_list=[]
+for i in range(len(train_5k_image_rgb)):
+    temp_image_name=train_5k_image_rgb[i]
+    temp_path=os.path.join(base_image_dir,temp_image_name)
+    image_list.append(temp_path)
+    superpoint_feature_name=temp_image_name.replace('/','^_^')+'.npz'
+    feature_list.append(os.path.join(base_feature_dir,superpoint_feature_name))
+
+val_image_list=[]
+val_feature_list=[]
+for i in range(len(val_5k_image_rgb)):
+    temp_image_name=val_5k_image_rgb[i]
+    temp_path=os.path.join(base_image_dir,temp_image_name)
+    val_image_list.append(temp_path)
+    superpoint_feature_name=temp_image_name.replace('/','^_^')+'.npz'
+    val_feature_list.append(os.path.join(base_feature_dir,superpoint_feature_name))
+
 
 def save_image_tensor(input_tensor, filename):
     assert (len(input_tensor.shape) == 4 and input_tensor.shape[0] == 1)
@@ -62,13 +98,19 @@ def train_net(net,
               ):
 
     #save_cp = False
-    dataset = BasicDataset2(dir_img, dir_pos, dir_desc, pct_points, max_points, crop_size)
-    n_val = int(len(dataset) * val_percent)
-    n_train = len(dataset) - n_val
-    train, val = random_split(dataset, [n_train, n_val])
-    train_loader = DataLoader(train, batch_size=batch_size, shuffle=True, num_workers=2, pin_memory=True)
+    # dataset = BasicDataset2(dir_img, dir_pos, dir_desc, pct_points, max_points, crop_size)
+    img_scale = 1
+    pct_3D_points = 1
+    dataset = dataset_superpoint_5k(image_list,feature_list,img_scale, pct_3D_points, crop_size, max_points)
+    val_dataset = dataset_superpoint_5k(val_image_list,val_feature_list,img_scale, pct_3D_points, crop_size, max_points)
+    #n_val = int(len(dataset) * val_percent)
+    #n_train = len(dataset) - n_val
+    #train, val = random_split(dataset, [n_train, n_val])
+    n_train = len(dataset)
+    n_val = len(val_dataset)
+    train_loader = DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=2, pin_memory=True)
     val_batch_size = 1
-    val_loader = DataLoader(val, batch_size=val_batch_size, shuffle=False, num_workers=2, pin_memory=True, drop_last=True)
+    val_loader = DataLoader(val_dataset, batch_size=val_batch_size, shuffle=False, num_workers=2, pin_memory=True, drop_last=True)
     writer = SummaryWriter()
     global_step = 0
 
