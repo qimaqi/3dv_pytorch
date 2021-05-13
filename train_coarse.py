@@ -168,9 +168,10 @@ def train_net(net,
                 logging.info('Created checkpoint directory')
             except OSError:
                 pass
-            torch.save(net.state_dict(),
-                       dir_checkpoint + str(epoch+1) + '.pth')
-            logging.info('Checkpoint %s saved! ',epoch+1)
+            if (epoch+1)%4==0:
+                torch.save(net.state_dict(),
+                        dir_checkpoint + str(epoch+1) + '.pth')
+                logging.info('Checkpoint %s saved! ',epoch+1)
 
     #writer.close()
 
@@ -178,9 +179,9 @@ def train_net(net,
 def get_args():
     parser = argparse.ArgumentParser(description='Train the CoarseNet on images and correspond superpoint descripton',
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('-e', '--epochs', metavar='E', type=int, default=24,
+    parser.add_argument('-e', '--epochs', metavar='E', type=int, default=16,
                         help='Number of epochs', dest='epochs')
-    parser.add_argument('-b', '--batch-size', metavar='B', type=int, nargs='?', default=2,
+    parser.add_argument('-b', '--batch-size', metavar='B', type=int, nargs='?', default=3,
                         help='Batch size', dest='batchsize')
     parser.add_argument('-l', '--learning-rate', metavar='LR', type=float, nargs='?', default=5e-4,
                         help='Learning rate', dest='lr')
@@ -192,7 +193,7 @@ def get_args():
                         help="%(type)s: Size to crop images to (default: %(default)s)")
     parser.add_argument("--pct_points", type=float, default=1.0,
                         help="choose disparse point for reconstruction")
-    parser.add_argument("--max_points", type=int, default=4000,
+    parser.add_argument("--max_points", type=int, default=1000,
                         help="maximum feature used for reconstruction")
     parser.add_argument("--per_loss_wt", type=float, default=5.0, help="%(type)s: Perceptual loss weight (default: %(default)s)")   
     parser.add_argument("--pix_loss_wt", type=float, default=1.0, help="%(type)s: Pixel loss weight (default: %(default)s)")           
