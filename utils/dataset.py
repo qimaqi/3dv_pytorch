@@ -7,11 +7,19 @@ import numpy as np
 from glob import glob
 import torch
 from torch.utils.data import Dataset
+from torchvision.utils import save_image
 import logging
 from PIL import Image
 from utils import data_load
 from .superpoint import SuperPoint
 from .tools import frame2tensor
+
+def save_image_tensor(input_tensor, filename):
+    assert (len(input_tensor.shape) == 4 and input_tensor.shape[0] == 1)
+    input_tensor = input_tensor.clone().detach()
+    # to cpu
+    input_tensor = input_tensor.to(torch.device('cpu'))
+    save_image(input_tensor, filename, normalize=True)
 
 # Data basic2 load pos_dir and des_dir to construct a feature 480x640x256 with other point zero
 class BasicDataset2(Dataset):
