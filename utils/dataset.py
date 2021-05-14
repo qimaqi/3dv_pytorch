@@ -13,6 +13,13 @@ from PIL import Image
 
 from utils import data_load
 
+def border_remove(feature,crop_size):
+    for h in range(crop_size):
+        for w in range(crop_size):
+            if (h<=4) or (w<=4) or (h>=crop_size-4) or ((w>=crop_size-4)):
+                feature[h,w,:] = 0
+        
+    return feature
 
 #BasicDataset2 only for load feature which already 640x480 with 0
 class BasicDataset2(Dataset):
@@ -84,14 +91,15 @@ class BasicDataset2(Dataset):
             feature_nd = feature_nd[crop_h:crop_h+crop_size, crop_w:crop_w+crop_size, :]
             img_nd = img_nd[crop_h:crop_h+crop_size, crop_w:crop_w+crop_size, :]
 
+        feature_rnd = border_remove(feature_nd,crop_size)
         # random flip
-        flip_rand_seed = torch.rand(1)
-        if flip_rand_seed <= 0.3:
-            feature_nd = np.flip(feature_nd,1)  # left right flip 
-            img_nd = np.flip(img_nd,1)
+        # flip_rand_seed = torch.rand(1)
+        # if flip_rand_seed <= 0.3:
+        #     feature_nd = np.flip(feature_nd,1)  # left right flip 
+        #     img_nd = np.flip(img_nd,1)
 
         # HWC to CHW 
-        feature_trans = feature_nd.transpose((2, 0, 1)) # channel x 480 x 640
+        feature_trans = feature_rnd.transpose((2, 0, 1)) # channel x 480 x 640
         img_trans = img_nd.transpose(( 2, 0, 1))    # batch
 
         return feature_trans, img_trans

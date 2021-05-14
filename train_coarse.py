@@ -193,7 +193,7 @@ def train_net(net,
             #    print('true_images maximum', torch.max(true_imgs))
             #    print('true_images minimum', torch.min(true_imgs))
 
-            if global_step % (n_train // (10 * batch_size)) == 0:
+            if global_step % (n_train // (5 * batch_size)) == 0:
                 for tag, value in net.named_parameters():
                     tag = tag.replace('.', '/')
                     writer.add_histogram('weights/' + tag, value.data.cpu().numpy(), global_step)
@@ -256,7 +256,7 @@ def get_args():
                         help="%(type)s: Size to crop images to (default: %(default)s)")
     parser.add_argument("--pct_points", type=float, default=1.0,
                         help="choose disparse point for reconstruction")
-    parser.add_argument("--max_points", type=int, default=2000,
+    parser.add_argument("--max_points", type=int, default=1000,
                         help="maximum feature used for reconstruction")
     parser.add_argument("--per_loss_wt", type=float, default=5.0, help="%(type)s: Perceptual loss weight (default: %(default)s)")   
     parser.add_argument("--pix_loss_wt", type=float, default=1.0, help="%(type)s: Pixel loss weight (default: %(default)s)")           
