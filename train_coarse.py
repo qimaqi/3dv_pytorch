@@ -39,7 +39,7 @@ def load_annotations(fname):
 # dir_img = '../data/nyu_v1_images/'     ####### QM:change data directory path
 # #dir_features = '../data/nyu_v1_features/'
 # dir_desc = '../data/nyu_v1_desc/'
-dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_14_5_lr1e-4/'
+dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_14_5_unet_max_1000_lr1e-3/'
 # dir_depth = '../data/nyu_v1_depth/'
 # dir_pos = '../data/nyu_v1_pos/'
 #base_image_dir = '/home/wangr/invsfm/data'
