@@ -39,7 +39,7 @@ def load_annotations(fname):
 # dir_img = '../data/nyu_v1_images/'     ####### QM:change data directory path
 # #dir_features = '../data/nyu_v1_features/'
 # dir_desc = '../data/nyu_v1_desc/'
-dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_14_5_unet_max_3000_lr1e-3/'
+dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_14_5_unet_max_6000_lr1e-3/'
 # dir_depth = '../data/nyu_v1_depth/'
 # dir_pos = '../data/nyu_v1_pos/'
 #base_image_dir = '/home/wangr/invsfm/data'
@@ -214,9 +214,10 @@ def train_net(net,
                 logging.info('Created checkpoint directory')
             except OSError:
                 pass
-            torch.save(net.state_dict(),
-                       dir_checkpoint + str(epoch+1) + '.pth')
-            logging.info('Checkpoint %s saved! ',epoch+1)
+            if (epoch+1)%4==0:
+                torch.save(net.state_dict(),
+                        dir_checkpoint + str(epoch+1) + '.pth')
+                logging.info('Checkpoint %s saved! ',epoch+1)
 
     #writer.close()
 
@@ -256,7 +257,7 @@ def get_args():
                         help="%(type)s: Size to crop images to (default: %(default)s)")
     parser.add_argument("--pct_points", type=float, default=1.0,
                         help="choose disparse point for reconstruction")
-    parser.add_argument("--max_points", type=int, default=3000,
+    parser.add_argument("--max_points", type=int, default=6000,
                         help="maximum feature used for reconstruction")
     parser.add_argument("--per_loss_wt", type=float, default=5.0, help="%(type)s: Perceptual loss weight (default: %(default)s)")   
     parser.add_argument("--pix_loss_wt", type=float, default=1.0, help="%(type)s: Pixel loss weight (default: %(default)s)")           
@@ -287,7 +288,7 @@ if __name__ == '__main__':
     #net = InvNet(n_channels=257, n_classes=1)   
     # bilinear good or not???
     net = UNet(n_channels=input_channel, n_classes=output_channel, bilinear=True)
-    logging.info('Network: Unet 3000 points test\n'
+    logging.info('Network: Unet 6000 points test\n'
             '\t %s channels input channels\n' 
             '\t %s output channels (grey brightness)', net.n_channels,  net.n_classes)
 
