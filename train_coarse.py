@@ -24,7 +24,7 @@ from torch.utils.tensorboard import SummaryWriter
 import time
 
 
-dir_checkpoint = '/cluster/scratch/jiaqiu/checkpoints_11_5_test/'
+dir_checkpoint = '/cluster/scratch/jiaqiu/scale1_3000/'
 
 def train_net(net,
               device,
@@ -112,7 +112,7 @@ def train_net(net,
             loss.backward()
             nn.utils.clip_grad_value_(net.parameters(), 0.1)
             optimizer.step()
-            print('pixel_loss: ',pixel_loss, 'perception_loss:', perception_loss)
+            # print('pixel_loss: ',pixel_loss, 'perception_loss:', perception_loss)
             global_step += 1
             # debug part
             #if global_step % (n_train // (10 * batch_size)) == 0:
@@ -134,7 +134,7 @@ def train_net(net,
                 val_score = eval_net(net, val_loader, device)
                 #print('epoch end time',time.ctime())
                 scheduler.step(val_score)
-                print('Coarsenet score: ',(val_score), 'in epoch', epoch )
+                logging.info('Coarsenet score : %s in epoch %s', val_score, epoch)
                 writer.add_scalar('learning_rate', optimizer.param_groups[0]['lr'], global_step)
                 writer.add_scalar('total_loss', val_score, global_step)
                 writer.add_images('output', cpred, global_step)
@@ -180,7 +180,7 @@ def get_args():
                         help='Batch size', dest='batchsize')
     parser.add_argument('-l', '--learning-rate', metavar='LR', type=float, nargs='?', default=1e-3,
                         help='Learning rate', dest='lr')
-    parser.add_argument('-f', '--load', dest='load', type=str, default=False,
+    parser.add_argument('-f', '--load', dest='load', type=str, default='/cluster/scratch/jiaqiu/scale1_2000/14.pth',
                         help='Load model from a pretrain .pth file')
     parser.add_argument('-v', '--validation', dest='val', type=float, default=10.0,
                         help='Percent of the data that is used as validation (0-100)')            
@@ -188,7 +188,7 @@ def get_args():
                         help="%(type)s: Size to crop images to (default: %(default)s)")
     parser.add_argument("--crop_size", type=int, default=256,     # to do
                         help="%(type)s: Size to crop images to (default: %(default)s)")
-    parser.add_argument("--max_keypoints", type=int, default=1000,
+    parser.add_argument("--max_keypoints", type=int, default=3000,
                         help="maximum feature used for reconstruction 1000/2000/3000/4000")
     parser.add_argument("--per_loss_wt", type=float, default=5.0, help="%(type)s: Perceptual loss weight (default: %(default)s)")   
     parser.add_argument("--pix_loss_wt", type=float, default=1.0, help="%(type)s: Pixel loss weight (default: %(default)s)")           
@@ -218,8 +218,9 @@ if __name__ == '__main__':
         'augumentation': {
             'rescale_size': args.rescale_size,
             'crop_size': args.crop_size,
-            'dir_img': 'D:/npz_torch_data/',
-            'dir_checkpoint': '/cluster/scratch/jiaqiu/checkpoints_11_5_para/',
+            # 'dir_img': 'D:/npz_torch_data/',
+            'dir_img': '/cluster/scratch/jiaqiu/npz_torch_data/',
+            'dir_checkpoint': '/cluster/scratch/jiaqiu/scale1_3000/',
         },
         'superpoint': {
             'nms_radius': args.nms_radius,
@@ -245,7 +246,7 @@ if __name__ == '__main__':
     #net = InvNet(n_channels=257, n_classes=1)   
     # bilinear good or not???
     net = UNet(n_channels=input_channel, n_classes=output_channel, bilinear=True)
-    logging.info('Network:InvNet \n'
+    logging.info('Network:UNet \n'
             '\t %s channels input channels\n' 
             '\t %s output channels (grey brightness)', net.n_channels,  net.n_classes)
 

@@ -7,10 +7,6 @@ from tools import common
 from tools.dataloader import norm_RGB
 from nets.patchnet import *
 
-import json
-import matplotlib.pyplot as plt
-
-
 
 def load_network(model_fn): 
     checkpoint = torch.load(model_fn)
@@ -42,6 +38,17 @@ class NonMaxSuppression (torch.nn.Module):
         maxima *= (reliability   >= self.rel_thr)
 
         return maxima.nonzero().t()[2:4]
+
+# def plot_features(image, points, scores):
+#     ax = plt.axes()
+#     ax.imshow(image, cmap='gray')
+
+#     patches = []
+#     num = np.shape(points)[0]
+#     for i in range(num):
+#         patches.append(Wedge((points[i,0], points[i,1]), scores[i]*5, 0, 360))
+#     collection = PatchCollection(patches, alpha=0.5)
+#     ax.add_collection(collection)
 
 
 def extract_multiscale( net, img, detector, scale_f=2**0.25, 
@@ -118,12 +125,14 @@ def extract_multiscale( net, img, detector, scale_f=2**0.25,
 #     img = np.array(img)
 #     return img
 
+
+
 def remove_borders(keypoints, descriptors, scores, border: int, height: int, width: int):
     """ Removes keypoints too close to the border """
     mask = []
     for i in range(keypoints.shape[0]):
-        mask_h = (keypoints[i, 0] >= border) & (keypoints[i, 0] < (height - border))
-        mask_w = (keypoints[i, 1] >= border) & (keypoints[i, 1] < (width - border))
+        mask_w = (keypoints[i, 0] >= border) & (keypoints[i, 0] < (width - border))
+        mask_h = (keypoints[i, 1] >= border) & (keypoints[i, 1] < (height - border))
         if mask_h & mask_w == 1:
             mask.append(i)
     return keypoints[mask], descriptors[mask], scores[mask]
@@ -151,7 +160,7 @@ def extract_keypoints(input_img, config):
         rel_thr = reliability_thr, 
         rep_thr = repeatability_thr)
     
-    img = input_img
+    img = input_img  
     H, W, _ = img.shape
 
     img = norm_RGB(img)[None]
@@ -187,38 +196,38 @@ def extract_keypoints(input_img, config):
 #     reliability_thr = 0.7
 #     repeatability_thr = 0.7
 #     gpu = 0
-#     top_k = 6000
+#     top_k = 1000
 
-#     base_image_dir= '/cluster/scratch/jiaqiu/npz_torch_data/'
+#     base_image_dir= 'D:/npz_torch_data/'
 #     save_source_dir = '/cluster/scratch/jiaqiu/'
 #     feature_type = 'r2d2'
-#     resize_scale = 0.6 ## [0.6, 0.8, 1]
+#     resize_scale = 1 ## [0.6, 0.8, 1]
 
-#     train_5k=load_annotations(os.path.join(base_image_dir,'anns/demo_5k/train.txt'))
-#     train_5k=train_5k[:,4]
+# #     train_5k=load_annotations(os.path.join(base_image_dir,'anns/demo_5k/train.txt'))
+# #     train_5k=train_5k[:,4]
     
 #     test_5k=load_annotations(os.path.join(base_image_dir,'anns/demo_5k/test.txt'))
 #     test_5k=test_5k[:,4]
     
-#     val_5k=load_annotations(os.path.join(base_image_dir,'anns/demo_5k/val.txt'))
-#     val_5k=val_5k[:,4]
+# #     val_5k=load_annotations(os.path.join(base_image_dir,'anns/demo_5k/val.txt'))
+# #     val_5k=val_5k[:,4]
 
-#     image_list=list(train_5k)+list(test_5k)+list(val_5k)
+# #     image_list=list(train_5k)+list(test_5k)+list(val_5k)
 
-#     temp_name = 'resize_data_'
-#     save_dir = os.path.join(save_source_dir,temp_name+feature_type+'_'+str(resize_scale))
+# #     temp_name = 'resize_data_'
+# #     save_dir = os.path.join(save_source_dir,temp_name+feature_type+'_'+str(resize_scale))
 
-#     if not os.path.exists(save_dir):
-#         os.makedirs(save_dir)
-
+# #     if not os.path.exists(save_dir):
+# #         os.makedirs(save_dir)
+#     image_list = list(test_5k)
 #     print('start saving data')
-#     for i in range(len(image_list)):
+#     for i in range(50):
 #         temp=image_list[i].strip()
 #         test_image=os.path.join(base_image_dir, temp)
 #         save_name=temp.replace('/','^_^')
 #         #Get points and descriptors.
 #         input_img = read_image(test_image,resize_scale)
 
-#         keypoints, descriptors = extract_keypoints(input_img, gpu, model, reliability_thr, repeatability_thr, scale_f, min_scale, max_scale, min_size, max_size, top_k)
+#         extract_keypoints(input_img, gpu, model, reliability_thr, repeatability_thr, scale_f, min_scale, max_scale, min_size, max_size, top_k, save_name)
 
-#         np.savez_compressed(os.path.join(save_dir,save_name), pts=keypoints, desc=descriptors)
+# #         np.savez_compressed(os.path.join(save_dir,save_name), pts=keypoints, desc=descriptors)
