@@ -179,7 +179,6 @@ def extract_keypoints(input_img, config):
     idxs = scores.argsort()[-top_k or None:]
     keypoints = xys[idxs]
     descriptors = desc[idxs]
-
     return {
             'keypoints': keypoints,
             'descriptors': descriptors,

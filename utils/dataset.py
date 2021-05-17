@@ -115,7 +115,6 @@ class BasicDataset2(Dataset):
 
 class R2D2_dataset(Dataset):
     def __init__(self, set_type, dataset_config = {}):
-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.set_type = set_type
         self.augumentation_config = dataset_config.get('augumentation')
         self.R2D2 = dataset_config.get('R2D2')
@@ -167,8 +166,6 @@ class R2D2_dataset(Dataset):
     def __getitem__(self, i):
         idx = self.ids[i]
         image_file = os.path.join(self.dir_img, self.image_rgb[idx])     # one image jpg
-        keys = ['keypoints', 'scores', 'descriptors']
-
         #img = data_load.load_img(img_list[i])
         img = Image.open(image_file).convert('RGB') 
         img_grey = Image.open(image_file).convert('L') # read img in greyscale
@@ -220,79 +217,70 @@ class R2D2_dataset(Dataset):
         }
 
 
-
-
-
 # use for infer, 
 class InferDataset(Dataset):
-    def __init__(self, imgs_dir, depth_dir, pos_dir, desc_dir, pct_3D_points):
-        self.imgs_dir = imgs_dir
-        self.pos_dir = pos_dir
-        self.desc_dir = desc_dir
-        self.depth_dir = depth_dir
-        self.pct_3D_points = pct_3D_points
-
-        self.ids = [splitext(file)[0] for file in listdir(imgs_dir)
-                    if not file.startswith('.')]
+    def __init__(self, dataset_config = {}):
+        self.augumentation_config = dataset_config.get('augumentation')
+        self.R2D2 = dataset_config.get('R2D2')
+        self.crop_size = self.augumentation_config['crop_size']
+        self.dir_img = self.augumentation_config['dir_img']
+        data=load_annotations(os.path.join(self.dir_img ,'anns/demo_5k/test.txt'))
+        
+        self.image_rgb=list(data[:,4])
+        self.ids = list(range(len(self.image_rgb)))
         logging.info('Creating dataset with %s examples', len(self.ids))
 
     def __len__(self):
         return len(self.ids)
 
     @classmethod
-    def preprocess(cls, feature):
-        # feature: HWC, img in np shape: HWC. img in size WHC
-        h, w, c = np.shape(feature) 
-        #print(h,w,c) # 480, 640, 256
-  
-        feature_nd = np.array(feature)
-        crop_size = 256
+    def preprocess(cls, img, crop_size):
+        w,h = img.size
+        min_side = min(w, h)
+        if min_side == w:
+            img = img.resize((300, int(h * 300 / w)), Image.ANTIALIAS)
+        else:
+            img = img.resize((int(w * 300 / h), 300), Image.ANTIALIAS)
 
-        assert crop_size >= 0, 'Crop Size must be positive'
-        if crop_size != 0:
-            crop_rand_seed_w = torch.rand(1)
-            crop_rand_seed_h = torch.rand(1)
-            crop_w = int(torch.floor((w - crop_size) * crop_rand_seed_w))   # 640 - 480 
-            crop_h = int(torch.floor((h - crop_size) * crop_rand_seed_h))
-            feature_nd = feature_nd[crop_h:crop_h+crop_size, crop_w:crop_w+crop_size, :]
+        new_w, new_h = img.size
+        assert crop_size <= new_h and crop_size <= new_w
+        img = np.array(img)
+        crop_w = int((np.floor(new_w - crop_size)/2))
+        crop_h = int((np.floor(new_h - crop_size)/2))
+        img_crop = img[crop_h:crop_h+crop_size, crop_w:crop_w+crop_size]
 
-        # HWC to CHW 
-        feature_trans = feature_nd.transpose((2, 0, 1)) # channel x 480 x 640
-        return feature_trans
+        return img_crop
 
     def __getitem__(self, i):
         idx = self.ids[i]
-        depth_file = glob(self.depth_dir + idx + '.*')  # one depth npz
-        pos_file = glob(self.pos_dir + idx + '.*')      # one pos json !!! not npz here 
-        desc_file = glob(self.desc_dir + idx + '.*')    # one desc json !!! not npz here
-        img_file = glob(self.imgs_dir + idx + '.*')     # one image jpg
+        image_file = os.path.join(self.dir_img, self.image_rgb[idx])     # one image jpg
+        img = Image.open(image_file).convert('RGB') 
+        # img = self.preprocess(img, self.scale)
+        img = self.preprocess(img, self.crop_size)
+        img_cnt = np.ascontiguousarray(img)
+        last_data = extract_keypoints(img_cnt, self.R2D2)
 
-        depth = np.load(depth_file[0])['depth']
-        img = Image.open(img_file[0]).convert('L')
+        keypoints_np = last_data['keypoints']
+        # scores = last_data['scores']
+        desc_np = last_data['descriptors']
 
-        pos = np.array(data_load.load_json(pos_file[0]))   # 3 x points_num  list, the third is confidence
-        desc = np.array(data_load.load_json(desc_file[0]))  # 256 x points_num  list, 256 features
-
-        pos_num = np.shape(pos)[1]
-        desc_num = np.shape(desc)[1]
-        assert pos_num == desc_num, 'superpoint number matching problem'
-        height, width = np.shape(img)  # 480,640
-        desc_length = np.shape(desc)[0]  # 256 
-
+        points_num = np.shape(keypoints_np)[0]
+        height, width, _ = np.shape(img)  # crop_size x crop_size 
+        desc_length = np.shape(desc_np)[1]  # 256 R2D2 is 128
 
         #feature = np.zeros([width,height,desc_length])   # build a 640 x 480 x 256 array
-        feature = np.zeros([height,width,desc_length+1 ])    # build a 480 x 640 x 257 array   HWC
-        for j in range(pos_num):
-            x = int(pos[0][j]) #640
-            y = int(pos[1][j]) #480
-            feature[y,x,1:] = desc[:,j]   # to compensate with zero
-            feature[y,x,1] = (np.array(img)[y,x]/127.5-1)
+        feature_pad = np.zeros([height,width,desc_length])    # build a 480 x 640 x 256 array   HWC
+        for j in range(points_num):
+            x = int(keypoints_np[j][0]) #crop_size
+            y = int(keypoints_np[j][1]) #crop_size
+            feature_pad[y,x,:] = desc_np[j,:]   # to compensate with zero
 
-        feature = self.preprocess(feature)
-
-
+        feature_trans = feature_pad.transpose((2,0,1))
+        img_trans = img.transpose((2,0,1))
+        
         return {
-            'feature': torch.from_numpy(feature.copy()).type(torch.FloatTensor),
+            'feature': torch.from_numpy(feature_trans.copy()).type(torch.FloatTensor),
+            'image' : torch.from_numpy(img_trans.copy()).type(torch.FloatTensor),
             'index': idx  # feature name
         }
 

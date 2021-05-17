@@ -180,7 +180,7 @@ def get_args():
                         help='Batch size', dest='batchsize')
     parser.add_argument('-l', '--learning-rate', metavar='LR', type=float, nargs='?', default=1e-3,
                         help='Learning rate', dest='lr')
-    parser.add_argument('-f', '--load', dest='load', type=str, default='/cluster/scratch/jiaqiu/scale1_2000/14.pth',
+    parser.add_argument('-f', '--load', dest='load', type=str, default=False,
                         help='Load model from a pretrain .pth file')
     parser.add_argument('-v', '--validation', dest='val', type=float, default=10.0,
                         help='Percent of the data that is used as validation (0-100)')            
@@ -188,7 +188,7 @@ def get_args():
                         help="%(type)s: Size to crop images to (default: %(default)s)")
     parser.add_argument("--crop_size", type=int, default=256,     # to do
                         help="%(type)s: Size to crop images to (default: %(default)s)")
-    parser.add_argument("--max_keypoints", type=int, default=3000,
+    parser.add_argument("--max_keypoints", type=int, default=1000,
                         help="maximum feature used for reconstruction 1000/2000/3000/4000")
     parser.add_argument("--per_loss_wt", type=float, default=5.0, help="%(type)s: Perceptual loss weight (default: %(default)s)")   
     parser.add_argument("--pix_loss_wt", type=float, default=1.0, help="%(type)s: Pixel loss weight (default: %(default)s)")           
@@ -218,8 +218,8 @@ if __name__ == '__main__':
         'augumentation': {
             'rescale_size': args.rescale_size,
             'crop_size': args.crop_size,
-            # 'dir_img': 'D:/npz_torch_data/',
-            'dir_img': '/cluster/scratch/jiaqiu/npz_torch_data/',
+            'dir_img': 'D:/npz_torch_data/',
+            # 'dir_img': '/cluster/scratch/jiaqiu/npz_torch_data/',
             'dir_checkpoint': '/cluster/scratch/jiaqiu/scale1_3000/',
         },
         'superpoint': {
