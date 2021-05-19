@@ -67,8 +67,10 @@ if __name__ == '__main__':
         #Get points and descriptors.
         input_image, input_gray = read_image(test_image,resize_scale)
 
-        image_path = os.path.join(save_truth_resize,save_name+'.jpg')
-        gray_path =os.path.join(save_gray_resize,save_name+'.jpg')
+        #image_path = os.path.join(save_truth_resize,save_name+'.jpg')
+        #gray_path =os.path.join(save_gray_resize,save_name+'.jpg')
+        image_path = os.path.join(save_truth_resize,str(i)+'.jpg')
+        gray_path =os.path.join(save_gray_resize,str(i)+'.jpg')
 
         input_image.save(image_path)
         input_gray.save(gray_path)
