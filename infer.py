@@ -18,18 +18,28 @@ def load_annotations(fname):
         data = [line.strip().split(' ') for line in f]
     return np.array(data)
 
-infer_output_dir = './infer_256/'
-dir_checkpoint = './checkpoints/11.pth'
-base_image_dir = '/home/wangr/invsfm/data'
-base_feature_dir = '/home/wangr/superpoint_resize/resize_data_superpoint_1'
-train_5k=load_annotations(os.path.join(base_image_dir,'anns/demo_5k/val.txt'))
-train_5k_image_rgb=list(train_5k[:,4])
+# infer_output_dir = './infer_256/'
+# dir_checkpoint = './checkpoints/11.pth'
+# base_image_dir = '/home/wangr/invsfm/data'
+# base_feature_dir = '/home/wangr/superpoint_resize/resize_data_superpoint_1'
+
+# train_5k=load_annotations(os.path.join(base_image_dir,'anns/demo_5k/val.txt'))
+# train_5k_image_rgb=list(train_5k[:,4])
+
+infer_output_dir = '/cluster/scratch/qimaqi/data_5k/infer_256/'
+dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_17_5_unet_max_6000_lr1e-4/5.pth'
+base_image_dir = '/cluster/scratch/qimaqi/data_5k/data' 
+base_feature_dir  = '/cluster/scratch/qimaqi/data_5k/save_source_dir/resize_data_superpoint_1'
+
+
+test_5k=load_annotations(os.path.join(base_image_dir,'anns/demo_5k/test.txt'))
+test_5k_image_rgb=list(test_5k[:,4])
 
 image_list=[]
 
 feature_list=[]
-for i in range(len(train_5k_image_rgb)):
-    temp_image_name=train_5k_image_rgb[i]
+for i in range(len(test_5k_image_rgb)):
+    temp_image_name=test_5k_image_rgb[i]
     temp_path=os.path.join(base_image_dir,temp_image_name)
     image_list.append(temp_path)
     superpoint_feature_name=temp_image_name.replace('/','^_^')+'.npz'
