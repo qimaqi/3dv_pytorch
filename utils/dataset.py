@@ -13,6 +13,9 @@ from PIL import Image
 from utils import data_load
 from .superpoint import SuperPoint
 from .tools import frame2tensor
+import matplotlib.pyplot as plt
+import cv2
+import os
 
 def save_image_tensor(input_tensor, filename):
     assert (len(input_tensor.shape) == 4 and input_tensor.shape[0] == 1)
@@ -72,6 +75,13 @@ class BasicDataset2(Dataset):
         #img = data_load.load_img(img_list[i])
         img = Image.open(img_file[0]).convert('L') # read img in greyscale
         img_aug = self.preprocess(img, self.rescale_size, self.crop_size)
+        # print(np.shape(img_aug))
+        #cv2.imshow('test_image',img_aug)
+        
+        img2 = img_aug.astype(np.float32)
+        # plt.figure(figsize=(256,256))
+        # plt.imshow(img2,cmap='gray')
+        # plt.show()
         img_nd = np.expand_dims(img_aug,axis=2)
         img_trans = img_nd.transpose((2,0,1))
         # img_np = np.array(img_aug)
@@ -101,6 +111,10 @@ class BasicDataset2(Dataset):
         #print(np.shape(desc_np)) #
 
         points_num = np.shape(keypoints_np)[0]
+        for j in range(points_num):
+            cv2.circle(img=img2, center = (int(keypoints_np[j,0]),int(keypoints_np[j,1])), radius =1,color = (0, 0, 0), thickness= -1)
+        cv2.imwrite('F:/invsfm/src/data/debug_output3/'+str(idx)+'.png',img2)
+        print(points_num)
         # print('points_num',points_num) # return 2
         # print('points_num',np.shape(keypoints_np)[0]) # return N
         # print(frame_tensor.size())

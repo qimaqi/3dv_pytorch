@@ -36,13 +36,33 @@ dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_11_4/5.pth'
 dir_depth = 'F:/invsfm/src/data/infer_depth/'
 dir_pos = 'F:/invsfm/src/data/infer_pos/'
 dir_img = 'F:/invsfm/src/data/infer_imgs/' 
+from utils.dataset import BasicDataset2
+dataset_config = {
+    'augumentation': {
+        'rescale_size': 1,
+        'crop_size': 256,
+        'dir_img': dir_img,
+        'dir_checkpoint': '/cluster/scratch/qimaqi/checkpoints_1_5_invnet_/',
+    },
+    'superpoint': {
+        'nms_radius': 4,
+        'keypoint_threshold': 0.003,
+        'max_keypoints': 1000
+    },
+    'R2D2': {
+        'weights': None,
+        'sinkhorn_iterations': None,
+        'match_threshold': None,
+    }
+}
+dataset = BasicDataset2(dataset_config)
 
-img_scale = 0.5
-pct_3D_points = 0
-crop_size = 256
-batch_size = 1
-dataset = BasicDataset3(dir_img, dir_depth, dir_pos, dir_desc, img_scale, pct_3D_points, crop_size)
-train_loader = DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=0, pin_memory=False)
+# img_scale = 1
+# pct_3D_points = 0
+# crop_size = 48
+# batch_size = 1
+# dataset = BasicDataset3(dir_img, dir_depth, dir_pos, dir_desc, img_scale, pct_3D_points, crop_size)
+train_loader = DataLoader(dataset, batch_size=1, shuffle=True, num_workers=0, pin_memory=False)
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 n_train = len(dataset)
 
