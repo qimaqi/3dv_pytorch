@@ -286,14 +286,16 @@ class dataset_superpoint_5k(Dataset):
             img_rgb_nd = img_rgb_nd[crop_h:crop_h+crop_size, crop_w:crop_w+crop_size, :]
 
         # random flip
-        flip_rand_seed = torch.rand(1)
-        if flip_rand_seed <= 0.3:
-            feature_nd = np.flip(feature_nd,1)  # left right flip 
-            img_nd = np.flip(img_nd,1)
-            img_rgb_nd = np.flip(img_rgb_nd,1)
+        # flip_rand_seed = torch.rand(1)
+        # if flip_rand_seed <= 0.3:
+        #     feature_nd = np.flip(feature_nd,1)  # left right flip 
+        #     img_nd = np.flip(img_nd,1)
+        #     img_rgb_nd = np.flip(img_rgb_nd,1)
+
+        feature_rnd = border_remove(feature_nd,crop_size)
 
         # HWC to CHW 
-        feature_trans = feature_nd.transpose((2, 0, 1)) # channel x 480 x 640
+        feature_trans = feature_rnd.transpose((2, 0, 1)) # channel x 480 x 640
         img_trans = img_nd.transpose(( 2, 0, 1))    # batch
         img_rgb_nd = img_rgb_nd.transpose(( 2, 0, 1))
 
