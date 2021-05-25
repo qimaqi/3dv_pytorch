@@ -41,7 +41,7 @@ def load_annotations(fname):
 # dir_pos = '/cluster/scratch/qimaqi/nyu_v1_pos/'
 # #log_dir = '/cluster/scratch/qimaqi/log/'    
 
-dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_12_5/'
+dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_25_5_unet++_1000/'
 base_image_dir= '/cluster/scratch/qimaqi/data_5k/data'           #'/Users/wangrui/Projects/invsfm/'
 base_feature_dir = '/cluster/scratch/qimaqi/data_5k/save_source_dir/resize_data_superpoint_1'
 
