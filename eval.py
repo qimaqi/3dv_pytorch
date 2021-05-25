@@ -69,10 +69,10 @@ def eval_net(net, loader, device):
         tot += pixel_loss*pix_loss_wt + perception_loss*per_loss_wt
 
         # debug part
-        tmp_output_dir = output_dir +str(global_step) + '.png'
-        tmp_img_dir = image_dir+ str(global_step) + '.png'
-        save_image_tensor(cpred,tmp_output_dir)
-        save_image_tensor(true_imgs,tmp_img_dir)
+        # tmp_output_dir = output_dir +str(global_step) + '.png'
+        # tmp_img_dir = image_dir+ str(global_step) + '.png'
+        # save_image_tensor(cpred,tmp_output_dir)
+        # save_image_tensor(true_imgs,tmp_img_dir)
 
         global_step += 1
 

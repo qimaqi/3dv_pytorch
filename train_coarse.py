@@ -109,8 +109,8 @@ def train_net(net,
     n_train = len(dataset)
     n_val = len(val_dataset)
     train_loader = DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=2, pin_memory=True)
-    val_batch_size = 1
-    val_loader = DataLoader(val_dataset, batch_size=val_batch_size, shuffle=False, num_workers=2, pin_memory=True, drop_last=True)
+    # val_batch_size = 1
+    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=2, pin_memory=True, drop_last=True)
     writer = SummaryWriter()
     global_step = 0
 
@@ -189,7 +189,7 @@ def train_net(net,
             #    print('true_images maximum', torch.max(true_imgs))
             #    print('true_images minimum', torch.min(true_imgs))
 
-            if global_step % (n_train // (10 * batch_size)) == 0:
+            if global_step % (n_train // (5 * batch_size)) == 0:
                 for tag, value in net.named_parameters():
                     tag = tag.replace('.', '/')
                     writer.add_histogram('weights/' + tag, value.data.cpu().numpy(), global_step)
@@ -225,7 +225,7 @@ def get_args():
                         help='Number of epochs', dest='epochs')
     parser.add_argument('-b', '--batch-size', metavar='B', type=int, nargs='?', default=2,
                         help='Batch size', dest='batchsize')
-    parser.add_argument('-l', '--learning-rate', metavar='LR', type=float, nargs='?', default=5e-4,
+    parser.add_argument('-l', '--learning-rate', metavar='LR', type=float, nargs='?', default=1e-4,
                         help='Learning rate', dest='lr')
     parser.add_argument('-f', '--load', dest='load', type=str, default=False,
                         help='Load model from a pretrain .pth file')
@@ -267,8 +267,9 @@ if __name__ == '__main__':
     # bilinear good or not???
     net = UNet_Nested(n_channels=input_channel, n_classes=output_channel)
     logging.info('Network:Unet++ \n'
+            '\t %s max_points used\n' 
             '\t %s channels input channels\n' 
-            '\t %s output channels (grey brightness)', net.n_channels, output_channel)
+            '\t %s output channels (grey brightness)', args.max_points, net.n_channels, output_channel)
 
 
     if args.load:
