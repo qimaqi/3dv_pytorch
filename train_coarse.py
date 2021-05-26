@@ -41,7 +41,7 @@ def load_annotations(fname):
 # dir_pos = '/cluster/scratch/qimaqi/nyu_v1_pos/'
 # #log_dir = '/cluster/scratch/qimaqi/log/'    
 
-dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_25_5_unet++_1000/'
+dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_26_5_unet++_1000/'
 base_image_dir= '/cluster/scratch/qimaqi/data_5k/data'           #'/Users/wangrui/Projects/invsfm/'
 base_feature_dir = '/cluster/scratch/qimaqi/data_5k/save_source_dir/resize_data_superpoint_1'
 
@@ -210,10 +210,9 @@ def train_net(net,
                 logging.info('Created checkpoint directory')
             except OSError:
                 pass
-            if (epoch+1)%4==0:
-                torch.save(net.state_dict(),
-                        dir_checkpoint + str(epoch+1) + '.pth')
-                logging.info('Checkpoint %s saved! ',epoch+1)
+            torch.save(net.state_dict(),
+                    dir_checkpoint + str(epoch+1) + '.pth')
+            logging.info('Checkpoint %s saved! ',epoch+1)
 
     #writer.close()
 
@@ -227,7 +226,7 @@ def get_args():
                         help='Batch size', dest='batchsize')
     parser.add_argument('-l', '--learning-rate', metavar='LR', type=float, nargs='?', default=1e-4,
                         help='Learning rate', dest='lr')
-    parser.add_argument('-f', '--load', dest='load', type=str, default=False,
+    parser.add_argument('-f', '--load', dest='load', type=str, default='/cluster/scratch/qimaqi/checkpoints_25_5_unet++_1000/4.pth',
                         help='Load model from a pretrain .pth file')
     parser.add_argument('-v', '--validation', dest='val', type=float, default=10.0,
                         help='Percent of the data that is used as validation (0-100)')            
