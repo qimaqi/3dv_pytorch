@@ -435,56 +435,33 @@ class dataset_superpoint_5k_online(Dataset):
         return len(self.ids)
 
     @classmethod
-    def preprocess(cls, feature, img,img_rgb, scale, crop_size):
-        # feature: HWC, img in np shape: HWC. img in size WHC
+    def preprocess(cls, img, img_grey, rescale_size, crop_size):
+        # include rescale, crop and flip, flip set 30% 
+        w,h = img.size
+        scale_rand_seed_w = torch.rand(1)
+        random_scale = rescale_size + (1-rescale_size)*scale_rand_seed_w
+        new_w = int(random_scale*w)
+        new_h = int(random_scale*h)
+        img = img.resize((new_w, new_h), Image.ANTIALIAS)
+        img_grey = img_grey.resize((new_w, new_h), Image.ANTIALIAS)
+        assert crop_size <= new_h and crop_size <= new_w,'crop_size is bigger than new rescale image'
+        
+        img_ = np.array(img)
+        img_grey_ = np.array(img_grey)
 
+        crop_rand_seed_w = torch.rand(1)
+        crop_rand_seed_h = torch.rand(1)
+        crop_w = int(torch.floor((new_w - crop_size) * crop_rand_seed_w))   # 640 - 480 
+        crop_h = int(torch.floor((new_h - crop_size) * crop_rand_seed_h))
+        img_aug = img_[crop_h:crop_h+crop_size, crop_w:crop_w+crop_size]
+        img_grey_aug = img_grey_[crop_h:crop_h+crop_size, crop_w:crop_w+crop_size]
 
-        if scale != 1:
-            w,h = img.size
-            new_w = int(scale*w)
-            new_h = int(scale*h)
-            img = img.resize((new_w, new_h), Image.ANTIALIAS)
-            img_rgb = img_rgb.resize((new_w, new_h), Image.ANTIALIAS)
-
-            
-        h, w, c = np.shape(feature) 
-        #print(h,w,c) # 480, 640, 256
-  
-        feature_nd = np.array(feature)
-        img_nd = np.array(img)
-        img_rgb_nd = np.array(img_rgb)
-
-        if len(img_nd.shape) == 2:  # add channel to grey image
-            img_nd = np.expand_dims(img_nd, axis=2)  # HWC
-
-        _, _, c2 = np.shape(img_nd) 
-
-        # if crop size is 0 then no crop
-        assert crop_size >= 0, 'Crop Size must be positive'
-        if crop_size != 0:
-            crop_rand_seed_w = torch.rand(1)
-            crop_rand_seed_h = torch.rand(1)
-            crop_w = int(torch.floor((w - crop_size) * crop_rand_seed_w))   # 640 - 480 
-            crop_h = int(torch.floor((h - crop_size) * crop_rand_seed_h))
-            feature_nd = feature_nd[crop_h:crop_h+crop_size, crop_w:crop_w+crop_size, :]
-            img_nd = img_nd[crop_h:crop_h+crop_size, crop_w:crop_w+crop_size, :]
-            img_rgb_nd = img_rgb_nd[crop_h:crop_h+crop_size, crop_w:crop_w+crop_size, :]
-
-        # random flip
-        # flip_rand_seed = torch.rand(1)
-        # if flip_rand_seed <= 0.3:
-        #     feature_nd = np.flip(feature_nd,1)  # left right flip 
-        #     img_nd = np.flip(img_nd,1)
-        #     img_rgb_nd = np.flip(img_rgb_nd,1)
-
-        feature_rnd = border_remove(feature_nd,crop_size)
-
-        # HWC to CHW 
-        feature_trans = feature_rnd.transpose((2, 0, 1)) # channel x 480 x 640
-        img_trans = img_nd.transpose(( 2, 0, 1))    # batch
-        img_rgb_nd = img_rgb_nd.transpose(( 2, 0, 1))
-
-        return feature_trans, img_trans,img_rgb_nd
+        flip_rand_seed = torch.rand(1)
+        if flip_rand_seed <= 0.3:
+            img_aug = np.flip(img_aug,1)
+            img_grey_aug = np.flip(img_grey_aug,1)
+        
+        return img_aug, img_grey_aug
 
     def __getitem__(self, i):
         idx = self.ids[i]
@@ -493,38 +470,60 @@ class dataset_superpoint_5k_online(Dataset):
 
         #img = data_load.load_img(img_list[i])
    
-        img = Image.open(image_file).convert('L')
+        img_grey = Image.open(image_file).convert('L')
         img_rgb = Image.open(image_file)
-
+        img_aug, img_grey = self.preprocess(img_rgb, img_grey, self.rescale_size, self.crop_size)
+        img_grey_normalized = (img_grey.astype('float32')/255.)
         #print(pos_file)
 
-        temp=np.load(feature_file,allow_pickle=True)
-        pos=temp['pts']
-        desc=temp['desc']
+        # superpoint load and infer
+        weights_path = './utils/superpoint_v1.pth'
+        nms_dist = 4
+        conf_thresh = 0
+        nn_thresh = 0.7
+        cuda = False
+        fe = SuperPointFrontend(weights_path= weights_path,
+                          nms_dist= nms_dist,
+                          conf_thresh=conf_thresh,
+                          nn_thresh=nn_thresh,
+                          cuda=cuda)
 
-        pos_num = np.shape(pos)[1]
-        desc_num = np.shape(desc)[1]
+        pts, desc, _ = fe.run(img_grey_normalized)
+
+        new_pts=pts[:,0:self.max_points]
+        new_desc=desc[:,0:self.max_points]
+
+        #temp=np.load(feature_file,allow_pickle=True)
+        #pos=temp['pts']
+        #desc=temp['desc']
+
+        pos_num = np.shape(new_pts)[1]
+        desc_num = np.shape(new_desc)[1]
         assert pos_num == desc_num, 'superpoint number matching problem'
-        height, width = np.shape(img)  # 480,640
-        desc_length = np.shape(desc)[0]  # 256 
+        height, width = np.shape(img_grey)  # 480,640
+        desc_length = np.shape(new_desc)[0]  # 256 
 
         if pos_num >= self.max_points:
             pos_num = self.max_points
 
         #feature = np.zeros([width,height,desc_length])   # build a 640 x 480 x 256 array
-        feature = np.zeros([height,width,desc_length])    # build a 480 x 640 x 257 array   HWC
+        feature_pad = np.zeros([height,width,desc_length])    # build a 480 x 640 x 257 array   HWC
         for j in range(pos_num):
-            x = int(pos[0][j]) #640
-            y = int(pos[1][j]) #480
-            feature[y,x,:] = desc[:,j]   # to compensate with zero
+            x = int(new_pts[0][j]) #640
+            y = int(new_pts[1][j]) #480
+            feature_pad[y,x,:] = new_desc[:,j]   # to compensate with zero
   
-        
+        feature_rb = border_remove(feature_pad,self.crop_size) #remove border
+        feature_trans = feature_rb.transpose((2,0,1)) # HWC to CHW
+        img_nd = np.expand_dims(img_grey,axis=2)
+        img_trans = img_nd.transpose((2,0,1)) # HWC to CHW
+
         # after preprocess, the feature and image will be well transposed and augumented
-        feature, img,img_rgb = self.preprocess(feature, img, img_rgb, self.scale, self.crop_size)   ### QM: the process only transpose channel, need more data augumentation
+        #feature, img,img_rgb = self.preprocess(feature, img, img_rgb, self.scale, self.crop_size)   ### QM: the process only transpose channel, need more data augumentation
 
         return {
-            'feature': torch.from_numpy(feature.copy()).type(torch.FloatTensor),
-            'image': torch.from_numpy(img.copy()).type(torch.FloatTensor) , # ground truth need to be considered
+            'feature': torch.from_numpy(feature_trans.copy()).type(torch.FloatTensor),
+            'image': torch.from_numpy(img_trans.copy()).type(torch.FloatTensor) , # ground truth need to be considered
             'img_rgb': torch.from_numpy(img_rgb.copy()).type(torch.FloatTensor)
         }
 
