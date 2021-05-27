@@ -523,8 +523,8 @@ class dataset_superpoint_5k_online(Dataset):
 
         return {
             'feature': torch.from_numpy(feature_trans.copy()).type(torch.FloatTensor),
-            'image': torch.from_numpy(img_trans.copy()).type(torch.FloatTensor) , # ground truth need to be considered
-            'img_rgb': torch.from_numpy(img_rgb.copy()).type(torch.FloatTensor)
+            'image': torch.from_numpy(img_trans.copy()).type(torch.FloatTensor) # ground truth need to be considered
+            #'img_rgb': torch.from_numpy(img_rgb.copy()).type(torch.FloatTensor)
         }
 
 class SuperPointNet(torch.nn.Module):
