@@ -13,10 +13,10 @@ import torch.nn as nn
 from torch import optim
 
 from eval import eval_net
-from unet import InvNet
-# from unet import UNet
+# from unet import InvNet
+from unet import UNet
 
-from utils.dataset import dataset_superpoint_5k
+from utils.dataset import dataset_superpoint_5k, dataset_superpoint_5k_online
 from torch.utils.data import DataLoader, random_split
 import torchvision.models as models
 from vgg import VGGPerception
@@ -39,7 +39,7 @@ def load_annotations(fname):
 # dir_img = '../data/nyu_v1_images/'     ####### QM:change data directory path
 # #dir_features = '../data/nyu_v1_features/'
 # dir_desc = '../data/nyu_v1_desc/'
-dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_25_5_invnet_max_1000_lr1e-4/'
+dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_27_unet_online_max_1000_lr1e-4/'
 # dir_depth = '../data/nyu_v1_depth/'
 # dir_pos = '../data/nyu_v1_pos/'
 #base_image_dir = '/home/wangr/invsfm/data'
@@ -105,8 +105,8 @@ def train_net(net,
     #save_cp = Fals
     img_scale = 1 
     pct_3D_points=0
-    dataset = dataset_superpoint_5k(image_list,feature_list,img_scale, pct_3D_points, crop_size, max_points)
-    val_dataset = dataset_superpoint_5k(val_image_list,val_feature_list,img_scale, pct_3D_points, crop_size, max_points)
+    dataset = dataset_superpoint_5k_online(image_list,feature_list,img_scale, pct_3D_points, crop_size, max_points)
+    val_dataset = dataset_superpoint_5k_online(val_image_list,val_feature_list,img_scale, pct_3D_points, crop_size, max_points)
     # n_val = int(len(dataset) * val_percent)
     # n_train = len(dataset) - n_val
     # train, val = random_split(dataset, [n_train, n_val])
@@ -249,7 +249,7 @@ def get_args():
                         help='Batch size', dest='batchsize')
     parser.add_argument('-l', '--learning-rate', metavar='LR', type=float, nargs='?', default=1e-4,
                         help='Learning rate', dest='lr')
-    parser.add_argument('-f', '--load', dest='load', type=str, default= '/cluster/scratch/qimaqi/checkpoints_25_5_invnet_max_1000_lr1e-4/5.pth',
+    parser.add_argument('-f', '--load', dest='load', type=str, default= False, #'/cluster/scratch/qimaqi/checkpoints_25_5_invnet_max_1000_lr1e-4/5.pth',
                         help='Load model from a pretrain .pth file')
     parser.add_argument('-v', '--validation', dest='val', type=float, default=10.0,
                         help='Percent of the data that is used as validation (0-100)')            
@@ -285,10 +285,10 @@ if __name__ == '__main__':
     output_channel = args.output
     assert output_channel == 1 or output_channel == 3, 'output channel is not grey or RGB'
 
-    net = InvNet(n_channels=256, n_classes=1)   
+    #net = InvNet(n_channels=256, n_classes=1)   
     # bilinear good or not???
-    #net = UNet(n_channels=input_channel, n_classes=output_channel, bilinear=True)
-    logging.info('Network: Invnet \n'
+    net = UNet(n_channels=input_channel, n_classes=output_channel, bilinear=True)
+    logging.info('Network: Unet_online \n'
             '\t %s Max points used\n' 
             '\t %s channels input channels\n' 
             '\t %s output channels (grey brightness)',args.max_points, net.n_channels,  net.n_classes)
