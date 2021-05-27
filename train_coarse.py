@@ -103,7 +103,7 @@ def train_net(net,
               ):
 
     #save_cp = Fals
-    img_scale = 1 
+    img_scale =0.6 
     pct_3D_points=0
     dataset = dataset_superpoint_5k_online(image_list,feature_list,img_scale, pct_3D_points, crop_size, max_points)
     val_dataset = dataset_superpoint_5k_online(val_image_list,val_feature_list,img_scale, pct_3D_points, crop_size, max_points)
