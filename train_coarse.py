@@ -39,7 +39,11 @@ def load_annotations(fname):
 # dir_img = '../data/nyu_v1_images/'     ####### QM:change data directory path
 # #dir_features = '../data/nyu_v1_features/'
 # dir_desc = '../data/nyu_v1_desc/'
+<<<<<<< HEAD
 dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_28_5_unet_max_1000_lr1e-4/'
+=======
+dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_27_5_invnet_max_1000_lr1e-4/'
+>>>>>>> 5f847b496267ad3ba1fb56c3d860f49a6b8a1f3f
 # dir_depth = '../data/nyu_v1_depth/'
 # dir_pos = '../data/nyu_v1_pos/'
 #base_image_dir = '/home/wangr/invsfm/data'
@@ -248,9 +252,13 @@ def get_args():
                         help='Number of epochs', dest='epochs')
     parser.add_argument('-b', '--batch-size', metavar='B', type=int, nargs='?', default=4,
                         help='Batch size', dest='batchsize')
-    parser.add_argument('-l', '--learning-rate', metavar='LR', type=float, nargs='?', default=1e-4,
+    parser.add_argument('-l', '--learning-rate', metavar='LR', type=float, nargs='?', default=1e-5,
                         help='Learning rate', dest='lr')
+<<<<<<< HEAD
     parser.add_argument('-f', '--load', dest='load', type=str, default= '/cluster/scratch/qimaqi/checkpoints_17_5_unet_max_1000_lr1e-4/5.pth',
+=======
+    parser.add_argument('-f', '--load', dest='load', type=str, default= '/cluster/scratch/qimaqi/checkpoints_25_5_invnet_max_1000_lr1e-4/4.pth',
+>>>>>>> 5f847b496267ad3ba1fb56c3d860f49a6b8a1f3f
                         help='Load model from a pretrain .pth file')
     parser.add_argument('-v', '--validation', dest='val', type=float, default=10.0,
                         help='Percent of the data that is used as validation (0-100)')            
