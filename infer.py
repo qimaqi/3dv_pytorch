@@ -34,9 +34,12 @@ base_feature_dir  = '/cluster/scratch/qimaqi/data_5k/save_source_dir/resize_data
 
 test_5k=load_annotations(os.path.join(base_image_dir,'anns/demo_5k/test.txt'))
 test_5k_image_rgb=list(test_5k[:,4])
+val_5k=load_annotations(os.path.join(base_image_dir,'anns/demo_5k/val.txt'))
+val_5k_image_rgb=list(val_5k[:,4])
+
+
 
 image_list=[]
-
 feature_list=[]
 for i in range(len(test_5k_image_rgb)):
     temp_image_name=test_5k_image_rgb[i]
@@ -45,7 +48,15 @@ for i in range(len(test_5k_image_rgb)):
     superpoint_feature_name=temp_image_name.replace('/','^_^')+'.npz'
     feature_list.append(os.path.join(base_feature_dir,superpoint_feature_name))
 
-    
+
+val_image_list=[]
+val_feature_list=[]
+for i in range(len(val_5k_image_rgb)):
+    temp_image_name=val_5k_image_rgb[i]
+    temp_path=os.path.join(base_image_dir,temp_image_name)
+    val_image_list.append(temp_path)
+    superpoint_feature_name=temp_image_name.replace('/','^_^')+'.npz'
+    val_feature_list.append(os.path.join(base_feature_dir,superpoint_feature_name))
 
 
 def run_infer(net,infer_loader,device):
