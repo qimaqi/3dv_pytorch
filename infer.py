@@ -4,7 +4,7 @@ import torch.nn as nn
 import logging
 
 from vgg import VGGPerception
-from utils.dataset import dataset_superpoint_5k
+from utils.dataset import dataset_superpoint_5k, dataset_superpoint_5k_online
 from torch.utils.data import DataLoader
 
 from torchvision.utils import save_image
@@ -26,10 +26,16 @@ def load_annotations(fname):
 # train_5k=load_annotations(os.path.join(base_image_dir,'anns/demo_5k/val.txt'))
 # train_5k_image_rgb=list(train_5k[:,4])
 
-infer_output_dir = '/cluster/scratch/qimaqi/data_5k/infer_256/'
-dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_17_5_unet_max_6000_lr1e-4/5.pth'
+infer_output_dir = '/cluster/scratch/qimaqi/data_5k/infer_end_demo_online1000/'
+dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_27_5_unet_online_max_1000_lr1e-4/8.pth'
 base_image_dir = '/cluster/scratch/qimaqi/data_5k/data' 
 base_feature_dir  = '/cluster/scratch/qimaqi/data_5k/save_source_dir/resize_data_superpoint_1'
+
+try:
+    os.mkdir(infer_output_dir)
+    logging.info('Created infer_output_dir directory')
+except OSError:
+    pass
 
 
 test_5k=load_annotations(os.path.join(base_image_dir,'anns/demo_5k/test.txt'))
@@ -116,7 +122,7 @@ if __name__ == '__main__':
         torch.load(dir_checkpoint)
         )
 
-    dataset = dataset_superpoint_5k(image_list,feature_list,img_scale, pct_3D_points, crop_size)
+    dataset = dataset_superpoint_5k_online(val_image_list,val_feature_list,img_scale, pct_3D_points, crop_size)
     infer_loader = DataLoader(dataset, batch_size=batch_size, shuffle=False, num_workers=1, pin_memory=True, drop_last=True)
     n_infer = int(len(dataset))
 
