@@ -13,8 +13,8 @@ import torch.nn as nn
 from torch import optim
 
 from eval import eval_net
-from unet import InvNet
-# from unet import UNet
+# from unet import InvNet
+from unet import UNet
 
 from utils.dataset import dataset_superpoint_5k
 from torch.utils.data import DataLoader, random_split
@@ -39,7 +39,7 @@ def load_annotations(fname):
 # dir_img = '../data/nyu_v1_images/'     ####### QM:change data directory path
 # #dir_features = '../data/nyu_v1_features/'
 # dir_desc = '../data/nyu_v1_desc/'
-dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_25_5_invnet_max_6000_lr1e-4/'
+dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_28_5_unet_max_6000_lr1e-4/'
 # dir_depth = '../data/nyu_v1_depth/'
 # dir_pos = '../data/nyu_v1_pos/'
 #base_image_dir = '/home/wangr/invsfm/data'
@@ -238,7 +238,7 @@ def train_net(net,
 #         help='config options to be overridden')
 #     args = parser.parse_args()
 #     return args
-
+# unet1000 '/cluster/scratch/qimaqi/checkpoints_17_5_unet_max_6000_lr1e-4/5.pth',
 
 def get_args():
     parser = argparse.ArgumentParser(description='Train the CoarseNet on images and correspond superpoint descripton',
@@ -249,7 +249,7 @@ def get_args():
                         help='Batch size', dest='batchsize')
     parser.add_argument('-l', '--learning-rate', metavar='LR', type=float, nargs='?', default=1e-4,
                         help='Learning rate', dest='lr')
-    parser.add_argument('-f', '--load', dest='load', type=str, default='/cluster/scratch/qimaqi/checkpoints_25_5_invnet_max_6000_lr1e-4/5.pth',
+    parser.add_argument('-f', '--load', dest='load', type=str, default='/cluster/scratch/qimaqi/checkpoints_17_5_unet_max_6000_lr1e-4/5.pth',
                         help='Load model from a pretrain .pth file')
     parser.add_argument('-v', '--validation', dest='val', type=float, default=10.0,
                         help='Percent of the data that is used as validation (0-100)')            
@@ -285,9 +285,9 @@ if __name__ == '__main__':
     output_channel = args.output
     assert output_channel == 1 or output_channel == 3, 'output channel is not grey or RGB'
 
-    net = InvNet(n_channels=256, n_classes=1)   
+    # net = InvNet(n_channels=256, n_classes=1)   
     # bilinear good or not???
-    #net = UNet(n_channels=input_channel, n_classes=output_channel, bilinear=True)
+    net = UNet(n_channels=input_channel, n_classes=output_channel, bilinear=True)
     logging.info('Network: Invnet \n'
             '\t %s Max points used\n' 
             '\t %s channels input channels\n' 
