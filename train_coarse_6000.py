@@ -253,11 +253,7 @@ def get_args():
                         help='Batch size', dest='batchsize')
     parser.add_argument('-l', '--learning-rate', metavar='LR', type=float, nargs='?', default=1e-5,
                         help='Learning rate', dest='lr')
-<<<<<<< HEAD
     parser.add_argument('-f', '--load', dest='load', type=str, default='/cluster/scratch/qimaqi/checkpoints_17_5_unet_max_6000_lr1e-4/5.pth',
-=======
-    parser.add_argument('-f', '--load', dest='load', type=str, default='/cluster/scratch/qimaqi/checkpoints_25_5_invnet_max_6000_lr1e-4/4.pth',
->>>>>>> 5f847b496267ad3ba1fb56c3d860f49a6b8a1f3f
                         help='Load model from a pretrain .pth file')
     parser.add_argument('-v', '--validation', dest='val', type=float, default=10.0,
                         help='Percent of the data that is used as validation (0-100)')            
