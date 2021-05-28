@@ -4,7 +4,7 @@ import torch.nn as nn
 import logging
 
 from vgg import VGGPerception
-from utils.dataset import dataset_superpoint_5k
+from utils.dataset import dataset_superpoint_5k, dataset_superpoint_5k_online
 from torch.utils.data import DataLoader
 
 from torchvision.utils import save_image
@@ -25,18 +25,26 @@ def load_annotations(fname):
 
 # train_5k=load_annotations(os.path.join(base_image_dir,'anns/demo_5k/val.txt'))
 # train_5k_image_rgb=list(train_5k[:,4])
-
-infer_output_dir = '/cluster/scratch/qimaqi/data_5k/infer_256/'
-dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_17_5_unet_max_6000_lr1e-4/5.pth'
+infer_output_dir = '/cluster/scratch/qimaqi/data_5k/infer_end_demo_online1000/'
+dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_27_5_unet_online_max_1000_lr1e-4/8.pth'
 base_image_dir = '/cluster/scratch/qimaqi/data_5k/data' 
 base_feature_dir  = '/cluster/scratch/qimaqi/data_5k/save_source_dir/resize_data_superpoint_1'
+
+try:
+    os.mkdir(infer_output_dir)
+    logging.info('Created infer_output_dir directory')
+except OSError:
+    pass
 
 
 test_5k=load_annotations(os.path.join(base_image_dir,'anns/demo_5k/test.txt'))
 test_5k_image_rgb=list(test_5k[:,4])
+val_5k=load_annotations(os.path.join(base_image_dir,'anns/demo_5k/val.txt'))
+val_5k_image_rgb=list(val_5k[:,4])
+
+
 
 image_list=[]
-
 feature_list=[]
 for i in range(len(test_5k_image_rgb)):
     temp_image_name=test_5k_image_rgb[i]
@@ -45,7 +53,16 @@ for i in range(len(test_5k_image_rgb)):
     superpoint_feature_name=temp_image_name.replace('/','^_^')+'.npz'
     feature_list.append(os.path.join(base_feature_dir,superpoint_feature_name))
 
-    
+
+val_image_list=[]
+val_feature_list=[]
+for i in range(len(val_5k_image_rgb)):
+    temp_image_name=val_5k_image_rgb[i]
+    temp_path=os.path.join(base_image_dir,temp_image_name)
+    val_image_list.append(temp_path)
+    superpoint_feature_name=temp_image_name.replace('/','^_^')+'.npz'
+    val_feature_list.append(os.path.join(base_feature_dir,superpoint_feature_name))
+
 
 
 def run_infer(net,infer_loader,device):
@@ -98,6 +115,7 @@ if __name__ == '__main__':
     img_scale = 1
     crop_size = 0
     pct_3D_points = 0
+    max_points = 1000
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     net = UNet(n_channels=256, n_classes=1)   # input should be 256, resize to 32 so ram enough
@@ -105,17 +123,18 @@ if __name__ == '__main__':
         torch.load(dir_checkpoint)
         )
 
-    dataset = dataset_superpoint_5k(image_list,feature_list,img_scale, pct_3D_points, crop_size)
+    dataset = dataset_superpoint_5k(val_image_list,val_feature_list,img_scale, pct_3D_points, crop_size, max_points)
+    # val_dataset = dataset_superpoint_5k_online(val_image_list,val_feature_list,img_scale, pct_3D_points, crop_size, max_points)
     infer_loader = DataLoader(dataset, batch_size=batch_size, shuffle=False, num_workers=1, pin_memory=True, drop_last=True)
     n_infer = int(len(dataset))
 
-    # logging.info('Starting infering:\n'        
-    # '\tBatch size:       %s\n'        
-    # '\tInfer size:       %s\n'
-    # '\tCheckpoints:      %s\n' 
-    # '\tDevice:           %s\n'          
-    # , batch_size, n_infer, dir_checkpoint, device.type
-    # )
+    logging.info('Starting infering:\n'        
+    '\tBatch size:       %s\n'        
+    '\tInfer size:       %s\n'
+    '\tCheckpoints:      %s\n' 
+    '\tDevice:           %s\n'          
+    , batch_size, n_infer, dir_checkpoint, device.type
+    )
     
 
 

@@ -234,7 +234,7 @@ class BasicDataset3(Dataset):
 
 
 class dataset_superpoint_5k(Dataset):
-    def __init__(self, image_list, feature_list,scale, pct_3D_points, crop_size, max_points=4000):
+    def __init__(self, image_list, feature_list,scale, pct_3D_points, crop_size, max_points=6000):
         self.image_list = image_list
         self.feature_list = feature_list
         self.scale = scale
