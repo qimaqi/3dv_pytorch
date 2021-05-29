@@ -62,7 +62,7 @@ for i in range(len(test_5k_image_rgb)):
 
 val_image_list=[]
 val_feature_list=[]
-for i in range(len(val_5k_image_rgb)):
+for i in (7,11,53,56,103,113,149,173,200,217,267,306,309,425,431,535,537,564,577,621,657,984): #range(len(val_5k_image_rgb)):
     temp_image_name=val_5k_image_rgb[i]
     temp_path=os.path.join(base_image_dir,temp_image_name)
     val_image_list.append(temp_path)
@@ -76,7 +76,8 @@ def run_infer(net,infer_loader,device):
     for batch in infer_loader:
         try:
             with torch.no_grad():
-                if i in (11,56,103,149,217,425,309,7,53,113,173,200,267,306,431,535,537,564,577,621,657,984):
+                if True: 
+                #if i in (11,56,103,149,217,425,309,7,53,113,173,200,267,306,431,535,537,564,577,621,657,984):
                 # if i in (32, 317, 335, 476, 499, 36, 60, 79, 116, 118, 533, 587, 610, 650, 1003)
                     net.to(device=device)
                     net.eval()
