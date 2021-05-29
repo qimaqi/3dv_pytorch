@@ -116,11 +116,11 @@ if __name__ == '__main__':
     crop_size = 0
     pct_3D_points = 0
     max_points = 1000
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    device = torch.device('cpu')#torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     net = UNet(n_channels=256, n_classes=1)   # input should be 256, resize to 32 so ram enough
     net.load_state_dict(
-        torch.load(dir_checkpoint)
+        torch.load(dir_checkpoint,map_location=device)
         )
 
     dataset = dataset_superpoint_5k(val_image_list,val_feature_list,img_scale, pct_3D_points, crop_size, max_points)
