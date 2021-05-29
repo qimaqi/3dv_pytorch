@@ -28,9 +28,12 @@ logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 # train_5k=load_annotations(os.path.join(base_image_dir,'anns/demo_5k/val.txt'))
 # train_5k_image_rgb=list(train_5k[:,4])
 infer_output_dir = '/cluster/scratch/qimaqi/data_5k/test_unet++6000_cpu_origin_max20000/'
-dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_27_5_unet++_6000/4.pth' # '/cluster/scratch/qimaqi/checkpoints_27_unet_online_max_1000_lr1e-4/8.pth' #'/cluster/scratch/qimaqi/checkpoints_28_unet_online_max_2000_lr1e-4/7.pth' 
+dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_28_5_unet_max_6000_lr1e-4/4.pth' # '/cluster/scratch/qimaqi/checkpoints_27_unet_online_max_1000_lr1e-4/8.pth' #'/cluster/scratch/qimaqi/checkpoints_28_unet_online_max_2000_lr1e-4/7.pth' 
 base_image_dir = '/cluster/scratch/qimaqi/data_5k/data' 
 base_feature_dir  = '/cluster/scratch/qimaqi/data_5k/save_source_dir/resize_data_superpoint_1'
+# unet++
+#'/cluster/scratch/qimaqi/checkpoints_27_5_unet++_6000/4.pth'
+#
 
 try:
     os.mkdir(infer_output_dir)
