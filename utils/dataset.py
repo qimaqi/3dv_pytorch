@@ -525,7 +525,7 @@ class dataset_superpoint_5k_online(Dataset):
             y = int(new_pts[1][j]) #480
             feature_pad[y,x,:] = new_desc[:,j]   # to compensate with zero
 
-        crop_size = np.min()
+        # crop_size = np.min()
   
         feature_rb = border_remove(feature_pad,self.crop_size) #remove border
         feature_trans = feature_rb.transpose((2,0,1)) # HWC to CHW
