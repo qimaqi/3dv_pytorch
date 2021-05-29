@@ -108,8 +108,8 @@ def run_infer(net,infer_loader,device):
             #     torch.cuda.empty_cache()
             #     i+=1
         print('finish ',float(i)/1000)
-        if i == 100:
-           break
+        # if i == 100:
+        #    break
 
 def save_image_tensor(input_tensor, filename):
     assert (len(input_tensor.shape) == 4 and input_tensor.shape[0] == 1)
@@ -121,8 +121,8 @@ def save_image_tensor(input_tensor, filename):
 
 if __name__ == '__main__':
     batch_size = 1
-    img_scale = 1
-    crop_size = 0
+    img_scale = 0.5
+    crop_size = 256
     pct_3D_points = 0
     max_points = 10000
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')  #torch.device('cpu')#
