@@ -24,24 +24,24 @@ def read_image(impath,resize_scale):
     new_w = int(resize_scale*w)
     new_h = int(resize_scale*h)
     resize_color_img = color_img.resize((new_w, new_h), Image.ANTIALIAS)
-    # center_w = int(new_w/2)
-    # center_h = int(new_h/2)
-    # crop_rectangle = (center_w - 128, center_h -128, center_w+128,center_h+128)  
-    # crop_img = resize_color_img.crop(crop_rectangle)
-    # crop_gray =  crop_img.convert('L')
+    center_w = int(new_w/2)
+    center_h = int(new_h/2)
+    crop_rectangle = (center_w - 128, center_h -128, center_w+128,center_h+128)  
+    crop_img = resize_color_img.crop(crop_rectangle)
+    crop_gray =  crop_img.convert('L')
     resize_gray_img = resize_color_img.convert('L')
 
-    # return crop_img, crop_gray
-    return resize_color_img, resize_gray_img
+    return crop_img, crop_gray
+    # return resize_color_img, resize_gray_img
 
 if __name__ == '__main__':
     ## what you should do
     base_image_dir= '/cluster/scratch/qimaqi/data_5k/' #'/Users/wangrui/Projects/invsfm/'
-    save_truth_resize = '/cluster/scratch/qimaqi/data_5k/colorization_test/test_truth_origin/'
-    save_gray_resize = '/cluster/scratch/qimaqi/data_5k/colorization_test/test_gray_origin/'
+    save_truth_resize = '/cluster/scratch/qimaqi/data_5k/colorization_test/test_truth_scale0.5/'
+    save_gray_resize = '/cluster/scratch/qimaqi/data_5k/colorization_test/test_gray_scale0.5/'
     save_source_dir = '/Users/wangrui/Projects/invsfm/'
     feature_type = 'superpoint'
-    resize_scale = 1 ## [0.6, 0.8, 1]
+    resize_scale = 0.5 ## [0.6, 0.8, 1]
     ##
     # train_5k=load_annotations(os.path.join(base_image_dir,'data/anns/demo_5k/train.txt'))
     # train_5k=train_5k[:,4]
