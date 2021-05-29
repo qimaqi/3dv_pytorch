@@ -24,15 +24,15 @@ def read_image(impath,resize_scale):
     new_w = int(resize_scale*w)
     new_h = int(resize_scale*h)
     resize_color_img = color_img.resize((new_w, new_h), Image.ANTIALIAS)
-    center_w = int(new_w/2)
-    center_h = int(new_h/2)
-    crop_rectangle = (center_w - 128, center_h -128, center_w+128,center_h+128)  
-    crop_img = resize_color_img.crop(crop_rectangle)
-    crop_gray =  crop_img.convert('L')
+    # center_w = int(new_w/2)
+    # center_h = int(new_h/2)
+    # crop_rectangle = (center_w - 128, center_h -128, center_w+128,center_h+128)  
+    # crop_img = resize_color_img.crop(crop_rectangle)
+    # crop_gray =  crop_img.convert('L')
     resize_gray_img = resize_color_img.convert('L')
 
-    return crop_img, crop_gray
-    # return resize_color_img, resize_gray_img
+    # return crop_img, crop_gray
+    return resize_color_img, resize_gray_img
 
 if __name__ == '__main__':
     ## what you should do
