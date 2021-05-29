@@ -467,10 +467,10 @@ class dataset_superpoint_5k_online(Dataset):
             img_aug = img_
             img_grey_aug = img_grey_
 
-        flip_rand_seed = torch.rand(1)
-        if flip_rand_seed <= 0.3:
-            img_aug = np.flip(img_aug,1)
-            img_grey_aug = np.flip(img_grey_aug,1)
+        # flip_rand_seed = torch.rand(1)
+        # if flip_rand_seed <= 0.3:
+        #     img_aug = np.flip(img_aug,1)
+        #     img_grey_aug = np.flip(img_grey_aug,1)
         
         return img_aug, img_grey_aug
 
