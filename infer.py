@@ -52,7 +52,7 @@ val_5k_image_rgb=list(val_5k[:,4])
 
 image_list=[]
 feature_list=[]
-for i in range(len(test_5k_image_rgb)):
+for i in (32,36,60,79,116,118, 317, 335, 476, 499, 533, 587, 610, 650, 1003): #range(len(test_5k_image_rgb)):
     temp_image_name=test_5k_image_rgb[i]
     temp_path=os.path.join(base_image_dir,temp_image_name)
     image_list.append(temp_path)
