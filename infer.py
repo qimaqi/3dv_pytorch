@@ -27,7 +27,7 @@ logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 
 # train_5k=load_annotations(os.path.join(base_image_dir,'anns/demo_5k/val.txt'))
 # train_5k_image_rgb=list(train_5k[:,4])
-infer_output_dir = '/cluster/scratch/qimaqi/data_5k/test_end_demo_online6000_gpu/'
+infer_output_dir = '/cluster/scratch/qimaqi/data_5k/test_end_demo_online_gpu/'
 dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_27_unet_online_max_1000_lr1e-4/8.pth'
 base_image_dir = '/cluster/scratch/qimaqi/data_5k/data' 
 base_feature_dir  = '/cluster/scratch/qimaqi/data_5k/save_source_dir/resize_data_superpoint_1'
@@ -124,7 +124,7 @@ if __name__ == '__main__':
     img_scale = 1
     crop_size = 0
     pct_3D_points = 0
-    max_points = 6000
+    max_points = 10000
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')  #torch.device('cpu')#
 
     net = UNet(n_channels=256, n_classes=1)   # input should be 256, resize to 32 so ram enough
@@ -132,12 +132,12 @@ if __name__ == '__main__':
         torch.load(dir_checkpoint,map_location=device)
         )
 
-    dataset = dataset_superpoint_5k(image_list,feature_list,img_scale, pct_3D_points, crop_size, max_points)
-    infer_loader = DataLoader(dataset, batch_size=batch_size, shuffle=False, num_workers=1, pin_memory=True, drop_last=True)
-    n_infer = int(len(dataset))
-    # val_dataset = dataset_superpoint_5k_online(val_image_list,val_feature_list,img_scale, pct_3D_points, crop_size, max_points)
-    # infer_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=1, pin_memory=True, drop_last=True)
-    # n_infer = int(len(val_dataset))
+    # dataset = dataset_superpoint_5k(image_list,feature_list,img_scale, pct_3D_points, crop_size, max_points)
+    # infer_loader = DataLoader(dataset, batch_size=batch_size, shuffle=False, num_workers=1, pin_memory=True, drop_last=True)
+    # n_infer = int(len(dataset))
+    val_dataset = dataset_superpoint_5k_online(val_image_list,val_feature_list,img_scale, pct_3D_points, crop_size, max_points)
+    infer_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=1, pin_memory=True, drop_last=True)
+    n_infer = int(len(val_dataset))
 
     logging.info('Starting infering:\n'        
     '\tBatch size:       %s\n'        
