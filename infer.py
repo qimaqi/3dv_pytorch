@@ -87,23 +87,24 @@ def run_infer(net,infer_loader,device):
                 torch.cuda.empty_cache()
                 i+=1
         except:
-            with torch.no_grad():
-                net.to(device='cpu')
-                net.eval()
-                input_features = batch['feature']
-                #name_i = batch['name']
-                #print(name_i)
-                #name_i = name_i[0]
-                name_i = name_i.replace('/','^_^')
-                input_features = input_features.to(device='cpu', dtype=torch.float32)
-                pred = net(input_features).detach()
-                pred = (pred+1.)*127.5
-                pred = pred.to('cpu')
-                ouput_path = infer_output_dir + str(i)+ '.png'
-                save_image_tensor(pred,ouput_path)
-                del pred 
-                torch.cuda.empty_cache()
-                i+=1
+            pass
+            # with torch.no_grad():
+            #     net.to(device='cpu')
+            #     net.eval()
+            #     input_features = batch['feature']
+            #     #name_i = batch['name']
+            #     #print(name_i)
+            #     #name_i = name_i[0]
+            #     name_i = name_i.replace('/','^_^')
+            #     input_features = input_features.to(device='cpu', dtype=torch.float32)
+            #     pred = net(input_features).detach()
+            #     pred = (pred+1.)*127.5
+            #     pred = pred.to('cpu')
+            #     ouput_path = infer_output_dir + str(i)+ '.png'
+            #     save_image_tensor(pred,ouput_path)
+            #     del pred 
+            #     torch.cuda.empty_cache()
+            #     i+=1
         print('finish ',float(i)/100)
         if i == 100:
             break
@@ -122,7 +123,7 @@ if __name__ == '__main__':
     crop_size = 0
     pct_3D_points = 0
     max_points = 6000
-    device = torch.device('cpu')#torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')  #torch.device('cpu')#
 
     net = UNet(n_channels=256, n_classes=1)   # input should be 256, resize to 32 so ram enough
     net.load_state_dict(
