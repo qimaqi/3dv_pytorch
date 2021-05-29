@@ -108,7 +108,7 @@ def run_infer(net,infer_loader,device):
             #     torch.cuda.empty_cache()
             #     i+=1
         print('finish ',float(i)/1000)
-        if i == 300:
+        if i == 100:
            break
 
 def save_image_tensor(input_tensor, filename):
