@@ -56,8 +56,8 @@ if __name__ == '__main__':
     temp_name = 'resize_data_'
     #save_dir = os.path.join(save_source_dir,temp_name+feature_type+'_'+str(resize_scale))
 
-    if not os.path.exists(save_truth_resize):
-        os.makedirs(save_truth_resize)
+    # if not os.path.exists(save_truth_resize):
+    #     os.makedirs(save_truth_resize)
 
     if not os.path.exists(save_gray_resize):
         os.makedirs(save_gray_resize)
