@@ -18,6 +18,8 @@ def load_annotations(fname):
         data = [line.strip().split(' ') for line in f]
     return np.array(data)
 
+logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
+
 # infer_output_dir = './infer_256/'
 # dir_checkpoint = './checkpoints/11.pth'
 # base_image_dir = '/home/wangr/invsfm/data'
@@ -25,7 +27,7 @@ def load_annotations(fname):
 
 # train_5k=load_annotations(os.path.join(base_image_dir,'anns/demo_5k/val.txt'))
 # train_5k_image_rgb=list(train_5k[:,4])
-infer_output_dir = '/cluster/scratch/qimaqi/data_5k/infer_end_demo_online6000_cpu/'
+infer_output_dir = '/cluster/scratch/qimaqi/data_5k/test_end_demo_online6000_gpu/'
 dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_27_unet_online_max_1000_lr1e-4/8.pth'
 base_image_dir = '/cluster/scratch/qimaqi/data_5k/data' 
 base_feature_dir  = '/cluster/scratch/qimaqi/data_5k/save_source_dir/resize_data_superpoint_1'
@@ -105,9 +107,9 @@ def run_infer(net,infer_loader,device):
             #     del pred 
             #     torch.cuda.empty_cache()
             #     i+=1
-        print('finish ',float(i)/100)
-        if i == 100:
-            break
+        print('finish ',float(i)/1000)
+        #if i == 100:
+        #    break
 
 def save_image_tensor(input_tensor, filename):
     assert (len(input_tensor.shape) == 4 and input_tensor.shape[0] == 1)
@@ -130,10 +132,12 @@ if __name__ == '__main__':
         torch.load(dir_checkpoint,map_location=device)
         )
 
-    dataset = dataset_superpoint_5k(val_image_list,val_feature_list,img_scale, pct_3D_points, crop_size, max_points)
-    # val_dataset = dataset_superpoint_5k_online(val_image_list,val_feature_list,img_scale, pct_3D_points, crop_size, max_points)
+    dataset = dataset_superpoint_5k(image_list,feature_list,img_scale, pct_3D_points, crop_size, max_points)
     infer_loader = DataLoader(dataset, batch_size=batch_size, shuffle=False, num_workers=1, pin_memory=True, drop_last=True)
     n_infer = int(len(dataset))
+    # val_dataset = dataset_superpoint_5k_online(val_image_list,val_feature_list,img_scale, pct_3D_points, crop_size, max_points)
+    # infer_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=1, pin_memory=True, drop_last=True)
+    # n_infer = int(len(val_dataset))
 
     logging.info('Starting infering:\n'        
     '\tBatch size:       %s\n'        

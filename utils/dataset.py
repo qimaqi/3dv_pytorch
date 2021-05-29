@@ -438,24 +438,30 @@ class dataset_superpoint_5k_online(Dataset):
     @classmethod
     def preprocess(cls, img, img_grey, rescale_size, crop_size):
         # include rescale, crop and flip, flip set 30% 
-        w,h = img.size
-        scale_rand_seed_w = torch.rand(1)
-        random_scale = rescale_size + (1-rescale_size)*scale_rand_seed_w
-        new_w = int(random_scale*w)
-        new_h = int(random_scale*h)
-        img = img.resize((new_w, new_h), Image.ANTIALIAS)
-        img_grey = img_grey.resize((new_w, new_h), Image.ANTIALIAS)
-        assert crop_size <= new_h and crop_size <= new_w,'crop_size is bigger than new rescale image'
-        
+
+        if rescale_size != 1:
+            w,h = img.size
+            scale_rand_seed_w = torch.rand(1)
+            random_scale = rescale_size + (1-rescale_size)*scale_rand_seed_w
+            new_w = int(random_scale*w)
+            new_h = int(random_scale*h)
+            img = img.resize((new_w, new_h), Image.ANTIALIAS)
+            img_grey = img_grey.resize((new_w, new_h), Image.ANTIALIAS)
+            assert crop_size <= new_h and crop_size <= new_w,'crop_size is bigger than new rescale image'
+
         img_ = np.array(img)
         img_grey_ = np.array(img_grey)
 
-        crop_rand_seed_w = torch.rand(1)
-        crop_rand_seed_h = torch.rand(1)
-        crop_w = int(torch.floor((new_w - crop_size) * crop_rand_seed_w))   # 640 - 480 
-        crop_h = int(torch.floor((new_h - crop_size) * crop_rand_seed_h))
-        img_aug = img_[crop_h:crop_h+crop_size, crop_w:crop_w+crop_size]
-        img_grey_aug = img_grey_[crop_h:crop_h+crop_size, crop_w:crop_w+crop_size]
+        if crop_size!=0:
+            crop_rand_seed_w = torch.rand(1)
+            crop_rand_seed_h = torch.rand(1)
+            crop_w = int(torch.floor((new_w - crop_size) * crop_rand_seed_w))   # 640 - 480 
+            crop_h = int(torch.floor((new_h - crop_size) * crop_rand_seed_h))
+            img_aug = img_[crop_h:crop_h+crop_size, crop_w:crop_w+crop_size]
+            img_grey_aug = img_grey_[crop_h:crop_h+crop_size, crop_w:crop_w+crop_size]
+        else:
+            img_aug = img_
+            img_grey_aug = img_grey_
 
         flip_rand_seed = torch.rand(1)
         if flip_rand_seed <= 0.3:
