@@ -10,10 +10,10 @@ import torch.nn as nn
 from torch import optim
 
 from eval import eval_net
-#from unet import InvNet
 from unet import UNet
+# from unetpp import UNet_Nested
 
-from utils.dataset import dataset_superpoint_5k
+from utils.dataset import BasicDatasetR2D2
 from torch.utils.data import DataLoader, random_split
 import torchvision.models as models
 from vgg import VGGPerception
@@ -32,29 +32,34 @@ def load_annotations(fname):
 
 #some default dir need images descripton, pos and depth. Attention this time desc and pos is in json !!!!!!!!!!
 base_image_dir='/cluster/scratch/jiaqiu/npz_torch_data/'
-rescale = [0.6, 0.8, 1]
-dir_checkpoint = '/cluster/scratch/jiaqiu/checkpoints_01_05/'
+# base_image_dir = 'D:/npz_torch_data/'
+scale = 1
+dir_checkpoint = '/cluster/scratch/jiaqiu/checkpoints_1000_small/'
+base_dir = '/cluster/scratch/jiaqiu/resize_data_r2d2_' + str(scale) + '/'
+# base_dir = 'D:/resize_data_r2d2_1/'
 train_5k=load_annotations(os.path.join(base_image_dir,'anns/demo_5k/train.txt'))
+val_5k=load_annotations(os.path.join(base_image_dir,'anns/demo_5k/val.txt'))
 train_5k_image_rgb=list(train_5k[:,4])
-train_5k_image_depth=list(train_5k[:,5])
-image_list=[]
-depth_list=[]
-feature_list=[]
-rescale_list = []
+val_5k_image_rgb=list(val_5k[:,4])
+train_image_list=[]
+train_feature_list=[]
+val_image_list=[]
+val_feature_list=[]
+
 for i in range(len(train_5k_image_rgb)):
     temp_image_name=train_5k_image_rgb[i]
     temp_path=os.path.join(base_image_dir,temp_image_name)
-    image_list.append(temp_path)
+    train_image_list.append(temp_path)
     r2d2_feature_name=temp_image_name.replace('/','^_^')+'.npz'
-    select_rescale = random.choice(rescale)
-    base_dir = '/cluster/scratch/jiaqiu/resize_data_r2d2_' + str(select_rescale) + '/'
-    feature_list.append(os.path.join(base_dir,r2d2_feature_name))
-    rescale_list.append(select_rescale)
-    temp_depth=train_5k_image_depth[i]
-    temp_depth_path=os.path.join(base_image_dir,train_5k_image_depth[i])
-    if not os.path.exists(temp_depth_path):
-        temp_depth_path=temp_depth_path[:-8]+'.npz'      
-    depth_list.append(temp_depth_path)
+    train_feature_list.append(os.path.join(base_dir,r2d2_feature_name)) 
+
+for i in range(len(val_5k_image_rgb)):
+    temp_image_name=val_5k_image_rgb[i]
+    temp_path=os.path.join(base_image_dir,temp_image_name)
+    val_image_list.append(temp_path)
+    r2d2_feature_name=temp_image_name.replace('/','^_^')+'.npz'
+    val_feature_list.append(os.path.join(base_dir,r2d2_feature_name))
+
 
 
 def save_image_tensor(input_tensor, filename):
@@ -79,9 +84,6 @@ def save_image_tensor(input_tensor, filename):
 def train_net(net,
               device,
               max_points,
-              pct_points,
-              input_channel,
-              output_channel,
               feature,
               crop_size, 
               per_loss_wt,
@@ -89,18 +91,17 @@ def train_net(net,
               epochs=10,
               batch_size=8,
               lr=0.0001,
-              val_percent=0.1,
               save_cp=True
               ):
 
     #dataset = BasicDataset2(dir_img, dir_depth, dir_features, img_scale)  #without dataaugumentation and load direct feature npz
-    dataset = BasicDatasetR2D2(image_list, depth_list, feature_list, pct_points, max_points, crop_size, rescale_list)
-    n_val = int(len(dataset) * val_percent)
-    n_train = len(dataset) - n_val
-    train, val = random_split(dataset, [n_train, n_val])
-    train_loader = DataLoader(train, batch_size=batch_size, shuffle=True, num_workers=2, pin_memory=True)
+    train_dataset = BasicDatasetR2D2(train_image_list, train_feature_list, max_points, crop_size, scale)
+    val_dataset = BasicDatasetR2D2(val_image_list, val_feature_list, max_points, crop_size, scale)
+    n_train = len(train_dataset)
+    n_val = len(val_dataset)
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=True)
     val_batch_size = 1
-    val_loader = DataLoader(val, batch_size=val_batch_size, shuffle=False, num_workers=2, pin_memory=True, drop_last=True)
+    val_loader = DataLoader(val_dataset, batch_size=val_batch_size, shuffle=False, num_workers=4, pin_memory=True, drop_last=True)
     writer = SummaryWriter()
     global_step = 0
 
@@ -113,9 +114,8 @@ def train_net(net,
         '\tCheckpoints:      %s\n' 
         '\tDevice:           %s\n' 
         '\tCrop Size:        %s\n'
-        '\tPercentage of points     %s\n'
         '\tFeature used     %s\n'
-        , epochs, batch_size, lr, n_train, n_val, save_cp, device.type, crop_size,pct_points,feature
+        , epochs, batch_size, lr, n_train, n_val, save_cp, device.type, crop_size, feature
         )
 
     #optimizer = optim.RMSprop(net.parameters(), lr=lr, weight_decay=1e-8, momentum=0.9)
@@ -128,7 +128,6 @@ def train_net(net,
     percepton_criterion = VGGPerception()
     percepton_criterion.to(device=device)
     l2_loss = nn.MSELoss()
-    ssim_loss = pytorch_ssim.SSIM()
 
     #if net.n_classes > 1:    # RGB need to reform
     #    criterion = nn.CrossEntropyLoss()
@@ -155,13 +154,7 @@ def train_net(net,
             # print(true_imgs.size()) #([1, 1, 168, 224])
             pixel_loss = pixel_criterion(cpred/255,true_imgs/255) 
             
-            # ssim_value = pytorch_ssim.ssim(cpred, true_imgs).data[0]
-            # ssim_out = -ssim_loss(cpred, true_imgs)
-            # ssim_value = - ssim_out.item()
-
-            # loss = ssim_out 
-            pixel_loss*pix_loss_wt + perception_loss*per_loss_wt
-
+            loss = pixel_loss*pix_loss_wt + perception_loss*per_loss_wt
             epoch_loss += loss.item()
             writer.add_scalar('Loss/train', loss.item(), global_step)
             optimizer.zero_grad()
@@ -191,7 +184,7 @@ def train_net(net,
                 #print('eval start time',time.ctime())
                 val_score = eval_net(net, val_loader, device)
                 scheduler.step(val_score)
-                print('Coarsenet score: ',(val_score), 'in epoch', epoch )
+                logging.info('Coarsenet score : %s in epoch %s', val_score, epoch)
                 writer.add_scalar('learning_rate', optimizer.param_groups[0]['lr'], global_step)
                 writer.add_scalar('total_loss', val_score, global_step)
                 writer.add_images('output', cpred/255, global_step)
@@ -231,13 +224,13 @@ def train_net(net,
 def get_args():
     parser = argparse.ArgumentParser(description='Train the CoarseNet on images and correspond superpoint descripton',
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('-e', '--epochs', metavar='E', type=int, default=18,
+    parser.add_argument('-e', '--epochs', metavar='E', type=int, default=16,
                         help='Number of epochs', dest='epochs')
-    parser.add_argument('-b', '--batch-size', metavar='B', type=int, nargs='?', default=8,
+    parser.add_argument('-b', '--batch-size', metavar='B', type=int, nargs='?', default=4,
                         help='Batch size', dest='batchsize')
-    parser.add_argument('-l', '--learning-rate', metavar='LR', type=float, nargs='?', default=1e-3,
+    parser.add_argument('-l', '--learning-rate', metavar='LR', type=float, nargs='?', default=1e-5,
                         help='Learning rate', dest='lr')
-    parser.add_argument('-f', '--load', dest='load', type=str, default=False,
+    parser.add_argument('-f', '--load', dest='load', type=str, default='/cluster/scratch/jiaqiu/checkpoints_1000/8.pth',
                         help='Load model from a pretrain .pth file')
     parser.add_argument('-v', '--validation', dest='val', type=float, default=10.0,
                         help='Percent of the data that is used as validation (0-100)')            
@@ -245,7 +238,7 @@ def get_args():
                         help="%(type)s: Size to crop images to (default: %(default)s)")
     parser.add_argument("--pct_points", type=float, default=1.0,
                         help="choose disparse point for reconstruction")
-    parser.add_argument("--max_points", type=int, default=4000,
+    parser.add_argument("--max_points", type=int, default=1000,
                         help="maximum feature used for reconstruction")
     parser.add_argument("--per_loss_wt", type=float, default=5.0, help="%(type)s: Perceptual loss weight (default: %(default)s)")   
     parser.add_argument("--pix_loss_wt", type=float, default=1.0, help="%(type)s: Pixel loss weight (default: %(default)s)")           
@@ -275,7 +268,7 @@ if __name__ == '__main__':
 
     #net = InvNet(n_channels=257, n_classes=1)   
     # bilinear good or not???
-    net = UNet(n_channels=input_channel, n_classes=output_channel, bilinear=True)
+    net = UNet(n_channels=input_channel, n_classes=output_channel)
     logging.info('Network: Unet\n'
             '\t %s channels input channels\n' 
             '\t %s output channels (grey brightness)', net.n_channels,  net.n_classes)
@@ -297,15 +290,11 @@ if __name__ == '__main__':
                   batch_size=args.batchsize,
                   lr=args.lr,
                   device=device,
-                  pct_points = args.pct_points,
                   max_points = args.max_points,
                   crop_size = args.crop_size,
                   per_loss_wt = args.per_loss_wt,
                   pix_loss_wt = args.pix_loss_wt,
-                  feature = args.feature,
-                  input_channel = input_channel,
-                  output_channel = output_channel,
-                  val_percent=args.val / 100)
+                  feature = args.feature)
     except KeyboardInterrupt:
         torch.save(net.state_dict(), 'INTERRUPTED.pth')
         #logging.info('Saved interrupt')
