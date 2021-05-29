@@ -135,7 +135,7 @@ if __name__ == '__main__':
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')  #torch.device('cpu')#
 
     # net = UNet(n_channels=256, n_classes=1)   # input should be 256, resize to 32 so ram enough
-    net = UNet_Nested(n_channels=input_channel, n_classes=output_channel)
+    net = UNet_Nested(n_channels=256, n_classes=1)
     net.load_state_dict(
         torch.load(dir_checkpoint,map_location=device)
         )
