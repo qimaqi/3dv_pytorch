@@ -16,7 +16,7 @@ from eval import eval_net
 from unet import UNet_Nested
 # from unet import UNet
 
-from utils.dataset import BasicDataset2, dataset_superpoint_5k
+from utils.dataset import BasicDataset2, dataset_superpoint_5k,dataset_superpoint_5k_online
 from torch.utils.data import DataLoader, random_split
 import torchvision.models as models
 from vgg import VGGPerception
@@ -41,7 +41,7 @@ def load_annotations(fname):
 # dir_pos = '/cluster/scratch/qimaqi/nyu_v1_pos/'
 # #log_dir = '/cluster/scratch/qimaqi/log/'    
 
-dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_27_5_unet++_1000/'
+dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_29_5_unet++_online/'
 base_image_dir= '/cluster/scratch/qimaqi/data_5k/data'           #'/Users/wangrui/Projects/invsfm/'
 base_feature_dir = '/cluster/scratch/qimaqi/data_5k/save_source_dir/resize_data_superpoint_1'
 
@@ -99,10 +99,10 @@ def train_net(net,
 
     #save_cp = False
     # dataset = BasicDataset2(dir_img, dir_pos, dir_desc, pct_points, max_points, crop_size)
-    img_scale = 1
-    pct_3D_points = 1
-    dataset = dataset_superpoint_5k(image_list,feature_list,img_scale, pct_3D_points, crop_size, max_points)
-    val_dataset = dataset_superpoint_5k(val_image_list,val_feature_list,img_scale, pct_3D_points, crop_size, max_points)
+    img_scale =0.6 
+    pct_3D_points=0
+    dataset = dataset_superpoint_5k_online(image_list,feature_list,img_scale, pct_3D_points, crop_size, max_points)
+    val_dataset = dataset_superpoint_5k_online(val_image_list,val_feature_list,img_scale, pct_3D_points, crop_size, max_points)
     #n_val = int(len(dataset) * val_percent)
     #n_train = len(dataset) - n_val
     #train, val = random_split(dataset, [n_train, n_val])
@@ -226,7 +226,7 @@ def get_args():
                         help='Batch size', dest='batchsize')
     parser.add_argument('-l', '--learning-rate', metavar='LR', type=float, nargs='?', default=1e-5,
                         help='Learning rate', dest='lr')
-    parser.add_argument('-f', '--load', dest='load', type=str, default='/cluster/scratch/qimaqi/checkpoints_26_5_unet++_1000/4.pth',
+    parser.add_argument('-f', '--load', dest='load', type=str, default=False,#'/cluster/scratch/qimaqi/checkpoints_26_5_unet++_1000/4.pth',
                         help='Load model from a pretrain .pth file')
     parser.add_argument('-v', '--validation', dest='val', type=float, default=10.0,
                         help='Percent of the data that is used as validation (0-100)')            
@@ -234,7 +234,7 @@ def get_args():
                         help="%(type)s: Size to crop images to (default: %(default)s)")
     parser.add_argument("--pct_points", type=float, default=1.0,
                         help="choose disparse point for reconstruction")
-    parser.add_argument("--max_points", type=int, default=1000,
+    parser.add_argument("--max_points", type=int, default=2000,
                         help="maximum feature used for reconstruction")
     parser.add_argument("--per_loss_wt", type=float, default=5.0, help="%(type)s: Perceptual loss weight (default: %(default)s)")   
     parser.add_argument("--pix_loss_wt", type=float, default=1.0, help="%(type)s: Pixel loss weight (default: %(default)s)")           
@@ -265,7 +265,7 @@ if __name__ == '__main__':
     #net = InvNet(n_channels=257, n_classes=1)   
     # bilinear good or not???
     net = UNet_Nested(n_channels=input_channel, n_classes=output_channel)
-    logging.info('Network:Unet++ \n'
+    logging.info('Network:Unet++ online \n'
             '\t %s max_points used\n' 
             '\t %s channels input channels\n' 
             '\t %s output channels (grey brightness)', args.max_points, net.n_channels, output_channel)
