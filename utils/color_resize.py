@@ -37,8 +37,8 @@ def read_image(impath,resize_scale):
 if __name__ == '__main__':
     ## what you should do
     base_image_dir= '/cluster/scratch/qimaqi/data_5k/' #'/Users/wangrui/Projects/invsfm/'
-    save_truth_resize = '/cluster/scratch/qimaqi/data_5k/colorization_val/val_truth/'
-    save_gray_resize = '/cluster/scratch/qimaqi/data_5k/colorization_val/val_gray/'
+    save_truth_resize = '/cluster/scratch/qimaqi/data_5k/colorization_test/test_truth/'
+    save_gray_resize = '/cluster/scratch/qimaqi/data_5k/colorization_test/test_gray/'
     save_source_dir = '/Users/wangrui/Projects/invsfm/'
     feature_type = 'superpoint'
     resize_scale = 1 ## [0.6, 0.8, 1]
