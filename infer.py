@@ -76,27 +76,28 @@ def run_infer(net,infer_loader,device):
     for batch in infer_loader:
         try:
             with torch.no_grad():
-                if True: 
+                # if True: 
                 #if i in (11,56,103,149,217,425,309,7,53,113,173,200,267,306,431,535,537,564,577,621,657,984):
                 # if i in (32, 317, 335, 476, 499, 36, 60, 79, 116, 118, 533, 587, 610, 650, 1003)
-                    net.to(device=device)
-                    net.eval()
-                    input_features = batch['feature']
-                    #name_i = batch['name']
-                    #print(name_i)
-                    #name_i = name_i[0]
-                    #name_i = name_i.replace('/','^_^')
-                    input_features = input_features.to(device=device, dtype=torch.float32)
-                    pred = net(input_features).detach()
-                    pred = (pred+1.)*127.5
-                    pred = pred.to('cpu')
-                    ouput_path = infer_output_dir + str(i)+ '.png'
-                    save_image_tensor(pred,ouput_path)
-                    print('finish already ',i)
-                    del pred 
-                    torch.cuda.empty_cache()
+                net.to(device=device)
+                net.eval()
+                input_features = batch['feature']
+                #name_i = batch['name']
+                #print(name_i)
+                #name_i = name_i[0]
+                #name_i = name_i.replace('/','^_^')
+                input_features = input_features.to(device=device, dtype=torch.float32)
+                pred = net(input_features).detach()
+                pred = (pred+1.)*127.5
+                pred = pred.to('cpu')
+                ouput_path = infer_output_dir + str(i)+ '.png'
+                save_image_tensor(pred,ouput_path)
+                print('finish already ',i)
+                del pred 
+                torch.cuda.empty_cache()
                 i+=1
         except:
+            print('image have problem in ', i)
             pass
             # with torch.no_grad():
             #     net.to(device='cpu')
