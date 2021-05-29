@@ -51,7 +51,7 @@ if __name__ == '__main__':
     
     val_5k=load_annotations(os.path.join(base_image_dir,'data/anns/demo_5k/val.txt'))
     val_5k=val_5k[:,4]
-    image_list=list(val_5k)#(train_5k)  #+list(test_5k)+list(val_5k)
+    image_list=list(test_5k)#(train_5k)  #+list(test_5k)+list(val_5k)
     print('==> Loading pre-trained network.')
     temp_name = 'resize_data_'
     #save_dir = os.path.join(save_source_dir,temp_name+feature_type+'_'+str(resize_scale))
