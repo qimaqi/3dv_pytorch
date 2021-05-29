@@ -41,7 +41,7 @@ if __name__ == '__main__':
     save_gray_resize = '/cluster/scratch/qimaqi/data_5k/colorization_test/test_gray/'
     save_source_dir = '/Users/wangrui/Projects/invsfm/'
     feature_type = 'superpoint'
-    resize_scale = 0.5 ## [0.6, 0.8, 1]
+    resize_scale = 1 ## [0.6, 0.8, 1]
     ##
     # train_5k=load_annotations(os.path.join(base_image_dir,'data/anns/demo_5k/train.txt'))
     # train_5k=train_5k[:,4]
