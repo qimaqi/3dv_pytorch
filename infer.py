@@ -66,41 +66,47 @@ for i in range(len(val_5k_image_rgb)):
 
 
 def run_infer(net,infer_loader,device):
-  for batch in infer_loader:
-    try:
-        with torch.no_grad():
-            net.to(device=device)
-            net.eval()
-            input_features = batch['feature']
-            name_i = batch['name']
-            print(name_i)
-            name_i = name_i[0]
-            name_i = name_i.replace('/','^_^')
-            input_features = input_features.to(device=device, dtype=torch.float32)
-            pred = net(input_features).detach()
-            pred = (pred+1.)*127.5
-            pred = pred.to('cpu')
-            ouput_path = infer_output_dir + name_i+ '.png'
-            save_image_tensor(pred,ouput_path)
-            del pred 
-            torch.cuda.empty_cache()
-    except:
-         with torch.no_grad():
-            net.to(device='cpu')
-            net.eval()
-            input_features = batch['feature']
-            name_i = batch['name']
-            print(name_i)
-            name_i = name_i[0]
-            name_i = name_i.replace('/','^_^')
-            input_features = input_features.to(device='cpu', dtype=torch.float32)
-            pred = net(input_features).detach()
-            pred = (pred+1.)*127.5
-            pred = pred.to('cpu')
-            ouput_path = infer_output_dir + name_i+ '.png'
-            save_image_tensor(pred,ouput_path)
-            del pred 
-            torch.cuda.empty_cache()
+    i = 0
+    for batch in infer_loader:
+        try:
+            with torch.no_grad():
+                net.to(device=device)
+                net.eval()
+                input_features = batch['feature']
+                name_i = batch['name']
+                print(name_i)
+                name_i = name_i[0]
+                name_i = name_i.replace('/','^_^')
+                input_features = input_features.to(device=device, dtype=torch.float32)
+                pred = net(input_features).detach()
+                pred = (pred+1.)*127.5
+                pred = pred.to('cpu')
+                ouput_path = infer_output_dir + name_i+ '.png'
+                save_image_tensor(pred,ouput_path)
+                del pred 
+                torch.cuda.empty_cache()
+                i+=1
+        except:
+            with torch.no_grad():
+                net.to(device='cpu')
+                net.eval()
+                input_features = batch['feature']
+                name_i = batch['name']
+                print(name_i)
+                name_i = name_i[0]
+                name_i = name_i.replace('/','^_^')
+                input_features = input_features.to(device='cpu', dtype=torch.float32)
+                pred = net(input_features).detach()
+                pred = (pred+1.)*127.5
+                pred = pred.to('cpu')
+                ouput_path = infer_output_dir + name_i+ '.png'
+                save_image_tensor(pred,ouput_path)
+                del pred 
+                torch.cuda.empty_cache()
+                i+=1
+        print('finish ',float(i)/100)
+        if i == 100:
+            break
 
 def save_image_tensor(input_tensor, filename):
     assert (len(input_tensor.shape) == 4 and input_tensor.shape[0] == 1)
