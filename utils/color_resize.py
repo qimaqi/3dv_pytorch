@@ -37,8 +37,8 @@ def read_image(impath,resize_scale):
 if __name__ == '__main__':
     ## what you should do
     base_image_dir= '/cluster/scratch/qimaqi/data_5k/' #'/Users/wangrui/Projects/invsfm/'
-    save_truth_resize = '/cluster/scratch/qimaqi/data_5k/colorization_val/test_truth_256/'
-    save_gray_resize = '/cluster/scratch/qimaqi/data_5k/colorization_val/test_gray_256/'
+    save_truth_resize = '/cluster/scratch/qimaqi/data_5k/colorization_test/test_truth_origin/'
+    save_gray_resize = '/cluster/scratch/qimaqi/data_5k/colorization_test/test_gray_origin/'
     save_source_dir = '/Users/wangrui/Projects/invsfm/'
     feature_type = 'superpoint'
     resize_scale = 1 ## [0.6, 0.8, 1]
@@ -46,12 +46,12 @@ if __name__ == '__main__':
     # train_5k=load_annotations(os.path.join(base_image_dir,'data/anns/demo_5k/train.txt'))
     # train_5k=train_5k[:,4]
     
-    #test_5k=load_annotations(os.path.join(base_image_dir,'data/anns/demo_5k/test.txt'))
-    #test_5k=test_5k[:,4]
+    test_5k=load_annotations(os.path.join(base_image_dir,'data/anns/demo_5k/test.txt'))
+    test_5k=test_5k[:,4]
     
     val_5k=load_annotations(os.path.join(base_image_dir,'data/anns/demo_5k/val.txt'))
     val_5k=val_5k[:,4]
-    image_list=list(val_5k)#(train_5k)  #+list(test_5k)+list(val_5k)
+    image_list=list(test_5k)#(train_5k)  #+list(test_5k)+list(val_5k)
     print('==> Loading pre-trained network.')
     temp_name = 'resize_data_'
     #save_dir = os.path.join(save_source_dir,temp_name+feature_type+'_'+str(resize_scale))
