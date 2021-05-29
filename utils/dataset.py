@@ -485,6 +485,7 @@ class dataset_superpoint_5k_online(Dataset):
         img_rgb = Image.open(image_file)
         img_aug, img_grey = self.preprocess(img_rgb, img_grey, self.rescale_size, self.crop_size)
         img_grey_normalized = (img_grey.astype('float32')/255.)
+        
         #print(pos_file)
 
         # superpoint load and infer
@@ -523,6 +524,8 @@ class dataset_superpoint_5k_online(Dataset):
             x = int(new_pts[0][j]) #640
             y = int(new_pts[1][j]) #480
             feature_pad[y,x,:] = new_desc[:,j]   # to compensate with zero
+
+        crop_size = np.min()
   
         feature_rb = border_remove(feature_pad,self.crop_size) #remove border
         feature_trans = feature_rb.transpose((2,0,1)) # HWC to CHW
