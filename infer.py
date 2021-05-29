@@ -27,7 +27,7 @@ logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 
 # train_5k=load_annotations(os.path.join(base_image_dir,'anns/demo_5k/val.txt'))
 # train_5k_image_rgb=list(train_5k[:,4])
-infer_output_dir = '/cluster/scratch/qimaqi/data_5k/val_end_demo_online_cpu_256/'
+infer_output_dir = '/cluster/scratch/qimaqi/data_5k/val_end_demo_online_cpu_256_max1000/'
 dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_27_unet_online_max_1000_lr1e-4/8.pth'
 base_image_dir = '/cluster/scratch/qimaqi/data_5k/data' 
 base_feature_dir  = '/cluster/scratch/qimaqi/data_5k/save_source_dir/resize_data_superpoint_1'
@@ -108,8 +108,8 @@ def run_infer(net,infer_loader,device):
             #     torch.cuda.empty_cache()
             #     i+=1
         print('finish ',float(i)/1000)
-        # if i == 100:
-        #    break
+        if i == 100:
+           break
 
 def save_image_tensor(input_tensor, filename):
     assert (len(input_tensor.shape) == 4 and input_tensor.shape[0] == 1)
@@ -124,7 +124,7 @@ if __name__ == '__main__':
     img_scale = 0.6
     crop_size = 256
     pct_3D_points = 0
-    max_points = 10000
+    max_points = 1000
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')  #torch.device('cpu')#
 
     net = UNet(n_channels=256, n_classes=1)   # input should be 256, resize to 32 so ram enough
