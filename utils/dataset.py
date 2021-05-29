@@ -447,7 +447,11 @@ class dataset_superpoint_5k_online(Dataset):
             new_h = int(random_scale*h)
             img = img.resize((new_w, new_h), Image.ANTIALIAS)
             img_grey = img_grey.resize((new_w, new_h), Image.ANTIALIAS)
-            assert crop_size <= new_h and crop_size <= new_w,'crop_size is bigger than new rescale image'
+            #assert crop_size <= new_h and crop_size <= new_w,'crop_size is bigger than new rescale image'
+            if crop_size > new_h:
+                crop_size = new_h
+            if crop_size > new_w:
+                crop_size = new_w
 
         img_ = np.array(img)
         img_grey_ = np.array(img_grey)
