@@ -49,7 +49,7 @@ val_5k=load_annotations(os.path.join(base_image_dir,'anns/demo_5k/val.txt'))
 val_5k_image_rgb=list(val_5k[:,4])
 
 
-
+test_list = [32,36,60,79,116,118, 317, 335, 476, 499, 533, 587, 610, 650, 1003]
 image_list=[]
 feature_list=[]
 for i in (32,36,60,79,116,118, 317, 335, 476, 499, 533, 587, 610, 650, 1003): #range(len(test_5k_image_rgb)):
@@ -60,9 +60,10 @@ for i in (32,36,60,79,116,118, 317, 335, 476, 499, 533, 587, 610, 650, 1003): #r
     feature_list.append(os.path.join(base_feature_dir,superpoint_feature_name))
 
 
+val_list = [7,11,53,56,103,113,149,173,200,217,267,306,309,425,431,535,537,564,577,621,657,984]
 val_image_list=[]
 val_feature_list=[]
-for i in (7,11,53,56,103,113,149,173,200,217,267,306,309,425,431,535,537,564,577,621,657,984): #range(len(val_5k_image_rgb)):
+for i in (7,11,53,56,103,113,149,173,200,217,267,306,309,425,431,535,537,564,577,621,657,984): #range(len(val_5k_image_rgb)):  # problem have in 7: 636x960, 53:1200x855,  56: 896x584, 103:1200x900  113: 757x631  149: 888x1200
     temp_image_name=val_5k_image_rgb[i]
     temp_path=os.path.join(base_image_dir,temp_image_name)
     val_image_list.append(temp_path)
@@ -92,13 +93,15 @@ def run_infer(net,infer_loader,device):
                 pred = pred.to('cpu')
                 ouput_path = infer_output_dir + str(i)+ '.png'
                 save_image_tensor(pred,ouput_path)
-                print('finish already ',i)
+                print('finish already ',test_list[i])
+                #print('finish already ',val_list[i])
                 del pred 
                 torch.cuda.empty_cache()
-                i+=1
+                
         except:
             print('image have problem in ', i)
             pass
+        i+=1
             # with torch.no_grad():
             #     net.to(device='cpu')
             #     net.eval()
@@ -145,7 +148,7 @@ if __name__ == '__main__':
     # dataset = dataset_superpoint_5k(image_list,feature_list,img_scale, pct_3D_points, crop_size, max_points)
     # infer_loader = DataLoader(dataset, batch_size=batch_size, shuffle=False, num_workers=1, pin_memory=True, drop_last=True)
     # n_infer = int(len(dataset))
-    val_dataset = dataset_superpoint_5k_online(val_image_list,val_feature_list,img_scale, pct_3D_points, crop_size, max_points)
+    val_dataset = dataset_superpoint_5k_online(image_list,feature_list,img_scale, pct_3D_points, crop_size, max_points)
     infer_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=1, pin_memory=True, drop_last=True)
     n_infer = int(len(val_dataset))
 
