@@ -414,17 +414,17 @@ class dataset_superpoint_5k_online_infer(Dataset):
     @classmethod
     def preprocess(cls, img, img_grey, rescale_size, crop_size):
         # include rescale, crop and flip, flip set 30% 
-        w,h = img.size
-        if w > h:
-            bug_w = 640
-            bug_h = 480
-            img = img.resize((bug_w, bug_h), Image.ANTIALIAS)
-            img_grey = img_grey.resize((bug_w, bug_h), Image.ANTIALIAS)
-        elif w < h and h>640:
-            bug_w = 480
-            bug_h = 640
-            img = img.resize((bug_w, bug_h), Image.ANTIALIAS)
-            img_grey = img_grey.resize((bug_w, bug_h), Image.ANTIALIAS)
+        # w,h = img.size
+        # if w > h:
+        #     bug_w = 640
+        #     bug_h = 480
+        #     img = img.resize((bug_w, bug_h), Image.ANTIALIAS)
+        #     img_grey = img_grey.resize((bug_w, bug_h), Image.ANTIALIAS)
+        # elif w < h and h>640:
+        #     bug_w = 480
+        #     bug_h = 640
+        #     img = img.resize((bug_w, bug_h), Image.ANTIALIAS)
+        #     img_grey = img_grey.resize((bug_w, bug_h), Image.ANTIALIAS)
         
 
         if rescale_size != 1:
