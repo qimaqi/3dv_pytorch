@@ -414,13 +414,13 @@ class dataset_superpoint_5k_online_infer(Dataset):
     @classmethod
     def preprocess(cls, img, img_grey, rescale_size, crop_size):
         # include rescale, crop and flip, flip set 30% 
-        w,h = img.size
-        if h>640 or h>480:
-            #img_MEGA = img[100:612, 100:612]
-            img_grey_MEGA = img_grey[100:612, 100:612]
-            #img = img_MEGA
-            img_grey = img_grey_MEGA
-        print(np.shape(img))
+        
+        # if h>640 or h>480:
+        #     #img_MEGA = img[100:612, 100:612]
+        #     img_grey_MEGA = img_grey[100:612, 100:612]
+        #     #img = img_MEGA
+        #     img_grey = img_grey_MEGA
+        # print(np.shape(img))
         # elif w < h and h>640:
         #     bug_w = 480
         #     bug_h = 640
@@ -444,6 +444,14 @@ class dataset_superpoint_5k_online_infer(Dataset):
 
         img_ = np.array(img)
         img_grey_ = np.array(img_grey)
+
+        w,h = np.shape(img)
+        if w >480:
+            img_MEGA = img_[100:612, 100:612]
+            img_grey_MEGA = img_grey[100:612, 100:612]
+            img_ = img_MEGA
+            img_grey_ = img_grey_MEGA
+
 
         if crop_size!=0:
             crop_rand_seed_w = torch.rand(1)
