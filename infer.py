@@ -63,7 +63,7 @@ for i in (32,36,60,79,116,118, 317, 335, 476, 499, 533, 587, 610, 650, 1003): #r
 val_list = [7,11,53,56,103,113,149,173,200,217,267,306,309,425,431,535,537,564,577,621,657,984]
 val_image_list=[]
 val_feature_list=[]
-for i in (7,11,53,56,103,113,149,173,200,217,267,306,309,425,431,535,537,564,577,621,657,984): #range(len(val_5k_image_rgb)):  # problem have in 7: 636x960, 53:1200x855,  56: 896x584, 103:1200x900  113: 757x631  149: 888x1200
+for i in (9):#(7,11,53,56,103,113,149,173,200,217,267,306,309,425,431,535,537,564,577,621,657,984): #range(len(val_5k_image_rgb)):  # problem have in 7: 636x960, 53:1200x855,  56: 896x584, 103:1200x900  113: 757x631  149: 888x1200
     temp_image_name=val_5k_image_rgb[i]
     temp_path=os.path.join(base_image_dir,temp_image_name)
     val_image_list.append(temp_path)
@@ -94,7 +94,7 @@ def run_infer(net,infer_loader,device):
                 ouput_path = infer_output_dir + str(i)+ '.png'
                 save_image_tensor(pred,ouput_path)
                 # print('finish already ',test_list[i])
-                print('finish already ',val_list[i])
+                print('finish already ',i)#val_list[i])
                 del pred 
                 torch.cuda.empty_cache()
                 
