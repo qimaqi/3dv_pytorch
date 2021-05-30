@@ -449,7 +449,7 @@ class dataset_superpoint_5k_online_infer(Dataset):
         print(w)
         if w >480:
             img_MEGA = img_[100:612, 100:612]
-            img_grey_MEGA = img_grey[100:612, 100:612]
+            img_grey_MEGA = img_grey_[100:612, 100:612]
             img_ = img_MEGA
             img_grey_ = img_grey_MEGA
 
