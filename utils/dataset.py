@@ -445,7 +445,8 @@ class dataset_superpoint_5k_online_infer(Dataset):
         img_ = np.array(img)
         img_grey_ = np.array(img_grey)
 
-        w,h = np.shape(img)
+        w = np.shape(img)[0]
+        print(w)
         if w >480:
             img_MEGA = img_[100:612, 100:612]
             img_grey_MEGA = img_grey[100:612, 100:612]
