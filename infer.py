@@ -93,8 +93,8 @@ def run_infer(net,infer_loader,device):
                 pred = pred.to('cpu')
                 ouput_path = infer_output_dir + str(i)+ '.png'
                 save_image_tensor(pred,ouput_path)
-                print('finish already ',test_list[i])
-                #print('finish already ',val_list[i])
+                # print('finish already ',test_list[i])
+                print('finish already ',val_list[i])
                 del pred 
                 torch.cuda.empty_cache()
                 
