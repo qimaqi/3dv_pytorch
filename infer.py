@@ -8,7 +8,9 @@ from utils.dataset import dataset_superpoint_5k, dataset_superpoint_5k_online_in
 from torch.utils.data import DataLoader
 
 from torchvision.utils import save_image
-from unet import UNet
+#from unet import UNet
+from unet import InvNet
+
 from PIL import Image
 import os
 import numpy as np
@@ -27,8 +29,8 @@ logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 
 # train_5k=load_annotations(os.path.join(base_image_dir,'anns/demo_5k/val.txt'))
 # train_5k_image_rgb=list(train_5k[:,4])
-infer_output_dir ='/cluster/scratch/qimaqi/data_5k/val_unet_1000_3_cpu_origin_max1000/' #'/cluster/scratch/qimaqi/data_5k/test_unet_6000_cpu_origin_max20000/'
-dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_28_5_unet_max_1000_lr1e-4/4.pth' #'/cluster/scratch/qimaqi/checkpoints_28_unet_online_max_2000_lr1e-4/7.pth'   # '/cluster/scratch/qimaqi/checkpoints_27_unet_online_max_1000_lr1e-4/8.pth' #'/cluster/scratch/qimaqi/checkpoints_28_unet_online_max_2000_lr1e-4/7.pth' 
+infer_output_dir ='/cluster/scratch/qimaqi/data_5k/val_invnet_6000_3_cpu_origin_max6000/' #'/cluster/scratch/qimaqi/data_5k/test_unet_6000_cpu_origin_max20000/'
+dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_27_5_invnet_max_6000_lr1e-4/5.pth' #'/cluster/scratch/qimaqi/checkpoints_28_unet_online_max_2000_lr1e-4/7.pth'   # '/cluster/scratch/qimaqi/checkpoints_27_unet_online_max_1000_lr1e-4/8.pth' #'/cluster/scratch/qimaqi/checkpoints_28_unet_online_max_2000_lr1e-4/7.pth' 
 base_image_dir = '/cluster/scratch/qimaqi/data_5k/data' 
 base_feature_dir  = '/cluster/scratch/qimaqi/data_5k/save_source_dir/resize_data_superpoint_1'
 # unet++
@@ -132,10 +134,11 @@ if __name__ == '__main__':
     img_scale = 1
     crop_size = 0
     pct_3D_points = 0
-    max_points = 1000
+    max_points = 6000
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')  #torch.device('cpu')#
 
-    net = UNet(n_channels=256, n_classes=1)   # input should be 256, resize to 32 so ram enough
+    #net = UNet(n_channels=256, n_classes=1)   # input should be 256, resize to 32 so ram enough
+    net = InvNet(n_channels=256, n_classes=1)  
     net.load_state_dict(
         torch.load(dir_checkpoint,map_location=device)
         )
