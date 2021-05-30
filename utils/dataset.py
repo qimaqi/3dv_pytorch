@@ -345,76 +345,149 @@ class dataset_superpoint_5k(Dataset):
         }
 
 # use for infer, 
-class InferDataset(Dataset):
-    def __init__(self, imgs_dir, depth_dir, pos_dir, desc_dir, pct_3D_points):
-        self.imgs_dir = imgs_dir
-        self.pos_dir = pos_dir
-        self.desc_dir = desc_dir
-        self.depth_dir = depth_dir
+class dataset_superpoint_5k_online_infer(Dataset):
+    def __init__(self, image_list, feature_list,scale, pct_3D_points, crop_size, max_points=4000):
+        self.image_list = image_list
+        self.feature_list = feature_list
+        self.rescale_size = scale
         self.pct_3D_points = pct_3D_points
+        self.crop_size = crop_size
+        self.max_points = max_points
+        assert 0 < scale <= 1, 'Scale must be between 0 and 1'
 
-        self.ids = [splitext(file)[0] for file in listdir(imgs_dir)
-                    if not file.startswith('.')]
+        self.ids = list(range(len(image_list)))
+
         logging.info('Creating dataset with %s examples', len(self.ids))
 
     def __len__(self):
         return len(self.ids)
 
     @classmethod
-    def preprocess(cls, feature):
-        # feature: HWC, img in np shape: HWC. img in size WHC
-        h, w, c = np.shape(feature) 
-        #print(h,w,c) # 480, 640, 256
-  
-        feature_nd = np.array(feature)
-        crop_size = 256
+    def preprocess(cls, img, img_grey, rescale_size, crop_size):
+        # include rescale, crop and flip, flip set 30% 
+        
+        # if h>640 or h>480:
+        #     #img_MEGA = img[100:612, 100:612]
+        #     img_grey_MEGA = img_grey[100:612, 100:612]
+        #     #img = img_MEGA
+        #     img_grey = img_grey_MEGA
+        # print(np.shape(img))
+        # elif w < h and h>640:
+        #     bug_w = 480
+        #     bug_h = 640
+        # img = img.resize((960, 600), Image.ANTIALIAS)
+        # img_grey = img_grey.resize((960, 600), Image.ANTIALIAS)
+        
 
-        assert crop_size >= 0, 'Crop Size must be positive'
-        if crop_size != 0:
+        if rescale_size != 1:
+            w,h = img.size
+            scale_rand_seed_w = torch.rand(1)
+            random_scale = rescale_size + (1-rescale_size)*scale_rand_seed_w
+            new_w = int(random_scale*w)
+            new_h = int(random_scale*h)
+            img = img.resize((new_w, new_h), Image.ANTIALIAS)
+            img_grey = img_grey.resize((new_w, new_h), Image.ANTIALIAS)
+            #assert crop_size <= new_h and crop_size <= new_w,'crop_size is bigger than new rescale image'
+            if crop_size > new_h:
+                crop_size = new_h
+            if crop_size > new_w:
+                crop_size = new_w
+
+        img_ = np.array(img)
+        img_grey_ = np.array(img_grey)
+
+        w = np.shape(img)[0]
+        print(w)
+        if w >480:
+            img_MEGA = img_[100:612, 100:612]
+            img_grey_MEGA = img_grey_[100:612, 100:612]
+            img_ = img_MEGA
+            img_grey_ = img_grey_MEGA
+
+
+        if crop_size!=0:
             crop_rand_seed_w = torch.rand(1)
             crop_rand_seed_h = torch.rand(1)
-            crop_w = int(torch.floor((w - crop_size) * crop_rand_seed_w))   # 640 - 480 
-            crop_h = int(torch.floor((h - crop_size) * crop_rand_seed_h))
-            feature_nd = feature_nd[crop_h:crop_h+crop_size, crop_w:crop_w+crop_size, :]
+            crop_w = int(torch.floor((new_w - crop_size) * crop_rand_seed_w))   # 640 - 480 
+            crop_h = int(torch.floor((new_h - crop_size) * crop_rand_seed_h))
+            img_aug = img_[crop_h:crop_h+crop_size, crop_w:crop_w+crop_size]
+            img_grey_aug = img_grey_[crop_h:crop_h+crop_size, crop_w:crop_w+crop_size]
+        else:
+            img_aug = img_
+            img_grey_aug = img_grey_
 
-        # HWC to CHW 
-        feature_trans = feature_nd.transpose((2, 0, 1)) # channel x 480 x 640
-        return feature_trans
+        # flip_rand_seed = torch.rand(1)
+        # if flip_rand_seed <= 0.3:
+        #     img_aug = np.flip(img_aug,1)
+        #     img_grey_aug = np.flip(img_grey_aug,1)
+        
+        return img_aug, img_grey_aug
 
     def __getitem__(self, i):
         idx = self.ids[i]
-        depth_file = glob(self.depth_dir + idx + '.*')  # one depth npz
-        pos_file = glob(self.pos_dir + idx + '.*')      # one pos json !!! not npz here 
-        desc_file = glob(self.desc_dir + idx + '.*')    # one desc json !!! not npz here
-        img_file = glob(self.imgs_dir + idx + '.*')     # one image jpg
+        feature_file=self.feature_list[idx]   
+        image_file = self.image_list[idx]  
 
-        depth = np.load(depth_file[0])['depth']
-        img = Image.open(img_file[0]).convert('L')
+        #img = data_load.load_img(img_list[i])
+   
+        img_grey = Image.open(image_file).convert('L')
+        img_rgb = Image.open(image_file)
+        img_aug, img_grey = self.preprocess(img_rgb, img_grey, self.rescale_size, self.crop_size)
+        img_grey_normalized = (img_grey.astype('float32')/255.)
+        
+        #print(pos_file)
 
-        pos = np.array(data_load.load_json(pos_file[0]))   # 3 x points_num  list, the third is confidence
-        desc = np.array(data_load.load_json(desc_file[0]))  # 256 x points_num  list, 256 features
+        # superpoint load and infer
+        weights_path = './utils/superpoint_v1.pth'
+        nms_dist = 4
+        conf_thresh = 0
+        nn_thresh = 0.7
+        cuda = False
+        fe = SuperPointFrontend(weights_path= weights_path,
+                          nms_dist= nms_dist,
+                          conf_thresh=conf_thresh,
+                          nn_thresh=nn_thresh,
+                          cuda=cuda)
 
-        pos_num = np.shape(pos)[1]
-        desc_num = np.shape(desc)[1]
+        pts, desc, _ = fe.run(img_grey_normalized)
+
+        new_pts=pts[:,0:self.max_points]
+        new_desc=desc[:,0:self.max_points]
+
+        #temp=np.load(feature_file,allow_pickle=True)
+        #pos=temp['pts']
+        #desc=temp['desc']
+
+        pos_num = np.shape(new_pts)[1]
+        desc_num = np.shape(new_desc)[1]
         assert pos_num == desc_num, 'superpoint number matching problem'
-        height, width = np.shape(img)  # 480,640
-        desc_length = np.shape(desc)[0]  # 256 
+        height, width = np.shape(img_grey)  # 480,640
+        desc_length = np.shape(new_desc)[0]  # 256 
 
+        if pos_num >= self.max_points:
+            pos_num = self.max_points
 
         #feature = np.zeros([width,height,desc_length])   # build a 640 x 480 x 256 array
-        feature = np.zeros([height,width,desc_length+1 ])    # build a 480 x 640 x 257 array   HWC
+        feature_pad = np.zeros([height,width,desc_length])    # build a 480 x 640 x 257 array   HWC
         for j in range(pos_num):
-            x = int(pos[0][j]) #640
-            y = int(pos[1][j]) #480
-            feature[y,x,1:] = desc[:,j]   # to compensate with zero
-            feature[y,x,1] = (np.array(img)[y,x]/127.5-1)
+            x = int(new_pts[0][j]) #640
+            y = int(new_pts[1][j]) #480
+            feature_pad[y,x,:] = new_desc[:,j]   # to compensate with zero
 
-        feature = self.preprocess(feature)
+        # crop_size = np.min()
+  
+        feature_rb = border_remove(feature_pad,self.crop_size) #remove border
+        feature_trans = feature_rb.transpose((2,0,1)) # HWC to CHW
+        img_nd = np.expand_dims(img_grey,axis=2)
+        img_trans = img_nd.transpose((2,0,1)) # HWC to CHW
 
+        # after preprocess, the feature and image will be well transposed and augumented
+        #feature, img,img_rgb = self.preprocess(feature, img, img_rgb, self.scale, self.crop_size)   ### QM: the process only transpose channel, need more data augumentation
 
         return {
-            'feature': torch.from_numpy(feature.copy()).type(torch.FloatTensor),
-            'index': idx  # feature name
+            'feature': torch.from_numpy(feature_trans.copy()).type(torch.FloatTensor),
+            'image': torch.from_numpy(img_trans.copy()).type(torch.FloatTensor) # ground truth need to be considered
+            #'img_rgb': torch.from_numpy(img_rgb.copy()).type(torch.FloatTensor)
         }
 
 

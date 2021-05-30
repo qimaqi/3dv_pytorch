@@ -4,7 +4,7 @@ import torch.nn as nn
 import logging
 
 from vgg import VGGPerception
-from utils.dataset import dataset_superpoint_5k, dataset_superpoint_5k_online
+from utils.dataset import dataset_superpoint_5k, dataset_superpoint_5k_online_infer
 from torch.utils.data import DataLoader
 
 from torchvision.utils import save_image
@@ -27,8 +27,8 @@ logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 
 # train_5k=load_annotations(os.path.join(base_image_dir,'anns/demo_5k/val.txt'))
 # train_5k_image_rgb=list(train_5k[:,4])
-infer_output_dir ='/cluster/scratch/qimaqi/data_5k/test_unet_online_2_cpu_origin_max20000/' #'/cluster/scratch/qimaqi/data_5k/test_unet_6000_cpu_origin_max20000/'
-dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_28_unet_online_max_2000_lr1e-4/7.pth'  # '/cluster/scratch/qimaqi/checkpoints_28_5_unet_max_6000_lr1e-4/4.pth' # '/cluster/scratch/qimaqi/checkpoints_27_unet_online_max_1000_lr1e-4/8.pth' #'/cluster/scratch/qimaqi/checkpoints_28_unet_online_max_2000_lr1e-4/7.pth' 
+infer_output_dir ='/cluster/scratch/qimaqi/data_5k/val_unet_6000_3_cpu_origin_max6000/' #'/cluster/scratch/qimaqi/data_5k/test_unet_6000_cpu_origin_max20000/'
+dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_28_5_unet_max_6000_lr1e-4/4.pth' #'/cluster/scratch/qimaqi/checkpoints_28_unet_online_max_2000_lr1e-4/7.pth'   # '/cluster/scratch/qimaqi/checkpoints_27_unet_online_max_1000_lr1e-4/8.pth' #'/cluster/scratch/qimaqi/checkpoints_28_unet_online_max_2000_lr1e-4/7.pth' 
 base_image_dir = '/cluster/scratch/qimaqi/data_5k/data' 
 base_feature_dir  = '/cluster/scratch/qimaqi/data_5k/save_source_dir/resize_data_superpoint_1'
 # unet++
@@ -60,7 +60,7 @@ for i in (32,36,60,79,116,118, 317, 335, 476, 499, 533, 587, 610, 650, 1003): #r
 
 val_image_list=[]
 val_feature_list=[]
-for i in (7,11,53,56,103,113,149,173,200,217,267,306,309,425,431,535,537,564,577,621,657,984): #range(len(val_5k_image_rgb)):
+for i in (9,564,577):#(7,11,53,56,103,113,149,173,200,217,267,306,309,425,431,535,537,564,577,621,657,984): #range(len(val_5k_image_rgb)):
     temp_image_name=val_5k_image_rgb[i]
     temp_path=os.path.join(base_image_dir,temp_image_name)
     val_image_list.append(temp_path)
@@ -132,7 +132,7 @@ if __name__ == '__main__':
     img_scale = 1
     crop_size = 0
     pct_3D_points = 0
-    max_points = 20000
+    max_points = 6000
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')  #torch.device('cpu')#
 
     net = UNet(n_channels=256, n_classes=1)   # input should be 256, resize to 32 so ram enough
@@ -143,7 +143,7 @@ if __name__ == '__main__':
     # dataset = dataset_superpoint_5k(image_list,feature_list,img_scale, pct_3D_points, crop_size, max_points)
     # infer_loader = DataLoader(dataset, batch_size=batch_size, shuffle=False, num_workers=1, pin_memory=True, drop_last=True)
     # n_infer = int(len(dataset))
-    val_dataset = dataset_superpoint_5k_online(image_list,feature_list,img_scale, pct_3D_points, crop_size, max_points)
+    val_dataset = dataset_superpoint_5k_online_infer(image_list,feature_list,img_scale, pct_3D_points, crop_size, max_points)
     infer_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=1, pin_memory=True, drop_last=True)
     n_infer = int(len(val_dataset))
 
