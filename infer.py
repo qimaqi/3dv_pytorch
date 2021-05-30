@@ -136,7 +136,7 @@ if __name__ == '__main__':
     img_scale = 1
     crop_size = 0
     pct_3D_points = 0
-    max_points = 3000
+    max_points = 6000
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')  #torch.device('cpu')#
 
     # net = UNet(n_channels=256, n_classes=1)   # input should be 256, resize to 32 so ram enough
