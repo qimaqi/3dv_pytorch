@@ -365,19 +365,15 @@ class dataset_superpoint_5k_online_infer(Dataset):
     @classmethod
     def preprocess(cls, img, img_grey, rescale_size, crop_size):
         # include rescale, crop and flip, flip set 30% 
-        
-        # if h>640 or h>480:
-        #     #img_MEGA = img[100:612, 100:612]
-        #     img_grey_MEGA = img_grey[100:612, 100:612]
+        w = np.shape(img)[0]
+
+        # if w>480:
+        #     img = img.resize((960, 640), Image.ANTIALIAS)
+        #     img_grey = img_grey.resize((960, 640), Image.ANTIALIAS)
+        #     #img_MEGA = img[100:612, 100:612]]
         #     #img = img_MEGA
-        #     img_grey = img_grey_MEGA
-        # print(np.shape(img))
-        # elif w < h and h>640:
-        #     bug_w = 480
-        #     bug_h = 640
-        # img = img.resize((960, 600), Image.ANTIALIAS)
-        # img_grey = img_grey.resize((960, 600), Image.ANTIALIAS)
-        
+        #     #img_grey = img_grey_MEGA
+        # print(np.shape(img_grey))
 
         if rescale_size != 1:
             w,h = img.size
@@ -396,13 +392,13 @@ class dataset_superpoint_5k_online_infer(Dataset):
         img_ = np.array(img)
         img_grey_ = np.array(img_grey)
 
-        w = np.shape(img)[0]
-        print(w)
-        if w >480:
-            img_MEGA = img_[100:612, 100:612]
-            img_grey_MEGA = img_grey_[100:612, 100:612]
-            img_ = img_MEGA
-            img_grey_ = img_grey_MEGA
+        # w = np.shape(img)[0]
+        # print(w)
+        # if w >480:
+        #     img_MEGA = img_[100:612, 100:612]
+        #     img_grey_MEGA = img_grey_[100:612, 100:612]
+        #     img_ = img_MEGA
+        #     img_grey_ = img_grey_MEGA
 
 
         if crop_size!=0:
