@@ -4,7 +4,7 @@ import torch.nn as nn
 import logging
 
 from vgg import VGGPerception
-from utils.dataset import dataset_superpoint_5k, dataset_superpoint_5k_online
+from utils.dataset import dataset_superpoint_5k, dataset_superpoint_5k_online_infer
 from torch.utils.data import DataLoader
 
 from torchvision.utils import save_image
@@ -52,7 +52,7 @@ val_5k_image_rgb=list(val_5k[:,4])
 test_list = [32,36,60,79,116,118, 317, 335, 476, 499, 533, 587, 610, 650, 1003]
 image_list=[]
 feature_list=[]
-for i in (32,36,60,79,116,118, 317, 335, 476, 499, 533, 587, 610, 650, 1003): #range(len(test_5k_image_rgb)):
+for i in (32,36,60,79,116,118, 317, 335, 476, 499, 533, 587, 610, 650, 1003): #range(len(test_5k_image_rgb)):  # problem have in 32: 753x502, 36:960x707, 60: 795x1200, 79: 797x1200, 116: 1200x890, 118:1200x893, 317: 1200x786, 335:681x1200 , 476: 1200x789, 499:1200x609  
     temp_image_name=test_5k_image_rgb[i]
     temp_path=os.path.join(base_image_dir,temp_image_name)
     image_list.append(temp_path)
@@ -148,7 +148,7 @@ if __name__ == '__main__':
     # dataset = dataset_superpoint_5k(image_list,feature_list,img_scale, pct_3D_points, crop_size, max_points)
     # infer_loader = DataLoader(dataset, batch_size=batch_size, shuffle=False, num_workers=1, pin_memory=True, drop_last=True)
     # n_infer = int(len(dataset))
-    val_dataset = dataset_superpoint_5k_online(image_list,feature_list,img_scale, pct_3D_points, crop_size, max_points)
+    val_dataset = dataset_superpoint_5k_online_infer(image_list,feature_list,img_scale, pct_3D_points, crop_size, max_points)
     infer_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=1, pin_memory=True, drop_last=True)
     n_infer = int(len(val_dataset))
 
