@@ -15,6 +15,7 @@ from torch import optim
 from eval import eval_net
 #from unet import InvNet
 from unet import UNet
+import pytorch_ssim
 
 from utils.dataset import dataset_superpoint_5k
 from torch.utils.data import DataLoader, random_split
@@ -39,7 +40,7 @@ def load_annotations(fname):
 # dir_img = '../data/nyu_v1_images/'     ####### QM:change data directory path
 # #dir_features = '../data/nyu_v1_features/'
 # dir_desc = '../data/nyu_v1_desc/'
-dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_28_5_unet_max_1000_lr1e-4/'
+dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_30_5_unet_max_6000_lr1e-4_ssim/'
 # dir_depth = '../data/nyu_v1_depth/'
 # dir_pos = '../data/nyu_v1_pos/'
 #base_image_dir = '/home/wangr/invsfm/data'
@@ -140,6 +141,7 @@ def train_net(net,
     percepton_criterion = VGGPerception()
     percepton_criterion.to(device=device)
     l2_loss = nn.MSELoss()
+    ssim_loss = pytorch_ssim.SSIM()
 
     #if net.n_classes > 1:    # RGB need to reform
     #    criterion = nn.CrossEntropyLoss()
@@ -167,7 +169,9 @@ def train_net(net,
             #print(cpred.size())#([1, 1, 168, 224])
             # print(true_imgs.size()) #([1, 1, 168, 224])
             pixel_loss = pixel_criterion(cpred/255,true_imgs/255) 
-            loss = pixel_loss*pix_loss_wt + perception_loss*per_loss_wt
+            ssim_out = -ssim_loss(cpred, true_imgs)
+            ssim_value = - ssim_out.item()
+            loss = pixel_loss*pix_loss_wt + perception_loss*per_loss_wt + ssim_out
 
             epoch_loss += loss.item()
             writer.add_scalar('Loss/train', loss.item(), global_step)
@@ -248,9 +252,9 @@ def get_args():
                         help='Number of epochs', dest='epochs')
     parser.add_argument('-b', '--batch-size', metavar='B', type=int, nargs='?', default=4,
                         help='Batch size', dest='batchsize')
-    parser.add_argument('-l', '--learning-rate', metavar='LR', type=float, nargs='?', default=1e-5,
+    parser.add_argument('-l', '--learning-rate', metavar='LR', type=float, nargs='?', default=1e-4,
                         help='Learning rate', dest='lr')
-    parser.add_argument('-f', '--load', dest='load', type=str, default= '/cluster/scratch/qimaqi/checkpoints_17_5_unet_max_1000_lr1e-4/5.pth',
+    parser.add_argument('-f', '--load', dest='load', type=str, default= False,#'/cluster/scratch/qimaqi/checkpoints_17_5_unet_max_1000_lr1e-4/5.pth',
                         help='Load model from a pretrain .pth file')
     parser.add_argument('-v', '--validation', dest='val', type=float, default=10.0,
                         help='Percent of the data that is used as validation (0-100)')            
@@ -258,7 +262,7 @@ def get_args():
                         help="%(type)s: Size to crop images to (default: %(default)s)")
     parser.add_argument("--pct_points", type=float, default=1.0,
                         help="choose disparse point for reconstruction")
-    parser.add_argument("--max_points", type=int, default=1000,
+    parser.add_argument("--max_points", type=int, default=6000,
                         help="maximum feature used for reconstruction")
     parser.add_argument("--per_loss_wt", type=float, default=5.0, help="%(type)s: Perceptual loss weight (default: %(default)s)")   
     parser.add_argument("--pix_loss_wt", type=float, default=1.0, help="%(type)s: Pixel loss weight (default: %(default)s)")           
@@ -289,7 +293,7 @@ if __name__ == '__main__':
     #net = InvNet(n_channels=256, n_classes=1)   
     # bilinear good or not???
     net = UNet(n_channels=input_channel, n_classes=output_channel, bilinear=True)
-    logging.info('Network: Invnet \n'
+    logging.info('Network: Unet with SSIM \n'
             '\t %s Max points used\n' 
             '\t %s channels input channels\n' 
             '\t %s output channels (grey brightness)',args.max_points, net.n_channels,  net.n_classes)
