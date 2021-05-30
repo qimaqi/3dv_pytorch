@@ -415,7 +415,7 @@ class dataset_superpoint_5k_online_infer(Dataset):
     def preprocess(cls, img, img_grey, rescale_size, crop_size):
         # include rescale, crop and flip, flip set 30% 
         w,h = img.size
-        if h>640 and w>480:
+        if h>640 or h>480:
             img_MEGA = img[100:612, 100:612]
             img_grey_MEGA = img_grey[100:612, 100:612]
             img = img_MEGA
