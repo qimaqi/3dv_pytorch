@@ -8,8 +8,8 @@ from utils.dataset import dataset_superpoint_5k, dataset_superpoint_5k_online_in
 from torch.utils.data import DataLoader
 
 from torchvision.utils import save_image
-#from unet import UNet
-from unet import InvNet
+from unet import UNet
+#from unet import InvNet
 
 from PIL import Image
 import os
@@ -137,8 +137,8 @@ if __name__ == '__main__':
     max_points = 20000
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')  #torch.device('cpu')#
 
-    #net = UNet(n_channels=256, n_classes=1)   # input should be 256, resize to 32 so ram enough
-    net = InvNet(n_channels=256, n_classes=1)  
+    net = UNet(n_channels=256, n_classes=1)   # input should be 256, resize to 32 so ram enough
+    #net = InvNet(n_channels=256, n_classes=1)  
     net.load_state_dict(
         torch.load(dir_checkpoint,map_location=device)
         )
