@@ -423,8 +423,8 @@ class dataset_superpoint_5k_online_infer(Dataset):
         # elif w < h and h>640:
         #     bug_w = 480
         #     bug_h = 640
-        #     img = img.resize((bug_w, bug_h), Image.ANTIALIAS)
-        #     img_grey = img_grey.resize((bug_w, bug_h), Image.ANTIALIAS)
+        img = img.resize((960, 600), Image.ANTIALIAS)
+        img_grey = img_grey.resize((960, 600), Image.ANTIALIAS)
         
 
         if rescale_size != 1:
