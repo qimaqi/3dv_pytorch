@@ -143,7 +143,7 @@ if __name__ == '__main__':
     # dataset = dataset_superpoint_5k(image_list,feature_list,img_scale, pct_3D_points, crop_size, max_points)
     # infer_loader = DataLoader(dataset, batch_size=batch_size, shuffle=False, num_workers=1, pin_memory=True, drop_last=True)
     # n_infer = int(len(dataset))
-    val_dataset = dataset_superpoint_5k_online_infer(image_list,feature_list,img_scale, pct_3D_points, crop_size, max_points)
+    val_dataset = dataset_superpoint_5k_online_infer(val_image_list,val_feature_list,img_scale, pct_3D_points, crop_size, max_points)
     infer_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=1, pin_memory=True, drop_last=True)
     n_infer = int(len(val_dataset))
 
