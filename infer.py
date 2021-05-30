@@ -94,6 +94,7 @@ def run_infer(net,infer_loader,device):
                 torch.cuda.empty_cache()
                 
         except:
+            print('problems in image', i)
             pass
             # with torch.no_grad():
             #     net.to(device='cpu')
