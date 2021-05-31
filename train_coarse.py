@@ -41,7 +41,7 @@ def load_annotations(fname):
 # dir_pos = '/cluster/scratch/qimaqi/nyu_v1_pos/'
 # #log_dir = '/cluster/scratch/qimaqi/log/'    
 
-dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_29_5_unet++_online/'
+dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_30_5_unet++_online/'
 base_image_dir= '/cluster/scratch/qimaqi/data_5k/data'           #'/Users/wangrui/Projects/invsfm/'
 base_feature_dir = '/cluster/scratch/qimaqi/data_5k/save_source_dir/resize_data_superpoint_1'
 
@@ -224,9 +224,9 @@ def get_args():
                         help='Number of epochs', dest='epochs')
     parser.add_argument('-b', '--batch-size', metavar='B', type=int, nargs='?', default=2,
                         help='Batch size', dest='batchsize')
-    parser.add_argument('-l', '--learning-rate', metavar='LR', type=float, nargs='?', default=1e-4,
+    parser.add_argument('-l', '--learning-rate', metavar='LR', type=float, nargs='?', default=1e-5,
                         help='Learning rate', dest='lr')
-    parser.add_argument('-f', '--load', dest='load', type=str, default=False,#'/cluster/scratch/qimaqi/checkpoints_26_5_unet++_1000/4.pth',
+    parser.add_argument('-f', '--load', dest='load', type=str, default='/cluster/scratch/qimaqi/checkpoints_29_5_unet++_online/7.pth',
                         help='Load model from a pretrain .pth file')
     parser.add_argument('-v', '--validation', dest='val', type=float, default=10.0,
                         help='Percent of the data that is used as validation (0-100)')            
@@ -265,7 +265,7 @@ if __name__ == '__main__':
     #net = InvNet(n_channels=257, n_classes=1)   
     # bilinear good or not???
     net = UNet_Nested(n_channels=input_channel, n_classes=output_channel)
-    logging.info('Network:Unet++ online \n'
+    logging.info('Network:Unet++ online second \n'
             '\t %s max_points used\n' 
             '\t %s channels input channels\n' 
             '\t %s output channels (grey brightness)', args.max_points, net.n_channels, output_channel)
