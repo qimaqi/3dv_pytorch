@@ -28,8 +28,8 @@ logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 
 # train_5k=load_annotations(os.path.join(base_image_dir,'anns/demo_5k/val.txt'))
 # train_5k_image_rgb=list(train_5k[:,4])
-infer_output_dir ='/cluster/scratch/qimaqi/data_5k/val_unet++_6000_cpu_origin_max6000_resize/' #'/cluster/scratch/qimaqi/data_5k/test_unet_6000_cpu_origin_max20000/'
-dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_27_5_unet++_6000/4.pth' # '/cluster/scratch/qimaqi/checkpoints_28_5_unet_max_6000_lr1e-4/4.pth' # '/cluster/scratch/qimaqi/checkpoints_27_unet_online_max_1000_lr1e-4/8.pth' #'/cluster/scratch/qimaqi/checkpoints_28_unet_online_max_2000_lr1e-4/7.pth' 
+infer_output_dir ='/cluster/scratch/qimaqi/data_5k/val_unet++_online_cpu_origin_max20000_512/' #'/cluster/scratch/qimaqi/data_5k/test_unet_6000_cpu_origin_max20000/'
+dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_30_5_unet++_online/6.pth' # '/cluster/scratch/qimaqi/checkpoints_28_5_unet_max_6000_lr1e-4/4.pth' # '/cluster/scratch/qimaqi/checkpoints_27_unet_online_max_1000_lr1e-4/8.pth' #'/cluster/scratch/qimaqi/checkpoints_28_unet_online_max_2000_lr1e-4/7.pth' 
 base_image_dir = '/cluster/scratch/qimaqi/data_5k/data' 
 base_feature_dir  = '/cluster/scratch/qimaqi/data_5k/save_source_dir/resize_data_superpoint_1'
 # unet++
@@ -63,7 +63,7 @@ for i in (32,36,60,79,116,118, 317, 335, 476, 499, 533, 587, 610, 650, 1003): #r
 val_list = [7,11,53,56,103,113,149,173,200,217,267,306,309,425,431,535,537,564,577,621,657,984]
 val_image_list=[]
 val_feature_list=[]
-for i in (9, 564,577): #,11,53,56,103,113,149,173,200,217,267,306,309,425,431,535,537,564,577,621,657,984): #range(len(val_5k_image_rgb)):  # problem have in 7: 636x960, 53:1200x855,  56: 896x584, 103:1200x900  113: 757x631  149: 888x1200
+for i in range(len(val_5k_image_rgb)): #(9, 564,577): #,11,53,56,103,113,149,173,200,217,267,306,309,425,431,535,537,564,577,621,657,984): #range(len(val_5k_image_rgb)):  # problem have in 7: 636x960, 53:1200x855,  56: 896x584, 103:1200x900  113: 757x631  149: 888x1200
     temp_image_name=val_5k_image_rgb[i]
     temp_path=os.path.join(base_image_dir,temp_image_name)
     val_image_list.append(temp_path)
@@ -136,7 +136,7 @@ if __name__ == '__main__':
     img_scale = 1
     crop_size = 0
     pct_3D_points = 0
-    max_points =6000
+    max_points =20000
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')  #torch.device('cpu')#
 
     # net = UNet(n_channels=256, n_classes=1)   # input should be 256, resize to 32 so ram enough
