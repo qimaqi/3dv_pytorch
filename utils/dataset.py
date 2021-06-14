@@ -1,6 +1,3 @@
-# Edited by Qi Ma
-# qimaqi@student.ethz.ch
-
 from os.path import splitext
 from os import listdir
 import numpy as np
@@ -13,7 +10,7 @@ from PIL import Image
 from utils import data_load
 from .superpoint import SuperPoint
 from .tools import frame2tensor
-from mega_r2d2 import extract_keypoints
+from r2d2 import extract_keypoints
 import os
 
 # Data basic2 load pos_dir and des_dir to construct a feature 480x640x256 with other point zero
@@ -77,19 +74,8 @@ class BasicDataset2(Dataset):
         desc = last_data['descriptors']
 
         keypoints_np = keypoints[0].numpy()
-        # scores_np = scores[0].numpy()
+
         desc_np = desc[0].detach().numpy()
-        # print(len(keypoints))
-        #print(keypoints_tensor.size())
-        #print(scores)
-
-        #keypoints_np = np.array(keypoints)
-        #scores_np = np.array(scores)
-        #desc_np = np.array(desc)
-
-        # print((keypoints_np[0].size())) #
-        #print(np.shape(scores_np)) #
-        #print(np.shape(desc_np)) #
 
         points_num = np.shape(keypoints_np)[1]
 
@@ -180,19 +166,6 @@ class R2D2_dataset(Dataset):
         keypoints_np = last_data['keypoints']
         # scores = last_data['scores']
         desc_np = last_data['descriptors']
-        # scores_np = scores[0].numpy()
-
-        # print(len(keypoints))
-        #print(keypoints_tensor.size())
-        #print(scores)
-
-        #keypoints_np = np.array(keypoints)
-        #scores_np = np.array(scores)
-        #desc_np = np.array(desc)
-
-        # print((keypoints_np[0].size())) #
-        #print(np.shape(scores_np)) #
-        #print(np.shape(desc_np)) #
 
         points_num = np.shape(keypoints_np)[0]
 
@@ -216,7 +189,6 @@ class R2D2_dataset(Dataset):
             'image': torch.from_numpy(img_trans.copy()).type(torch.FloatTensor)  # ground truth need to be considered
         }
 
-
 # use for infer, 
 class InferDataset(Dataset):
     def __init__(self, dataset_config = {}):
@@ -224,44 +196,27 @@ class InferDataset(Dataset):
         self.R2D2 = dataset_config.get('R2D2')
         self.crop_size = self.augumentation_config['crop_size']
         self.dir_img = self.augumentation_config['dir_img']
-        data=load_annotations(os.path.join(self.dir_img ,'anns/demo_5k/test.txt'))
-        
-        self.image_rgb=list(data[:,4])
+        data_val=load_annotations(os.path.join(self.dir_img ,'anns/demo_5k/val.txt'))
+        self.image_rgb = list(data_val[:, 4])
         self.ids = list(range(len(self.image_rgb)))
         logging.info('Creating dataset with %s examples', len(self.ids))
 
     def __len__(self):
         return len(self.ids)
 
-    @classmethod
-    def preprocess(cls, img, crop_size):
-        w,h = img.size
-        min_side = min(w, h)
-        if min_side == w:
-            img = img.resize((300, int(h * 300 / w)), Image.ANTIALIAS)
-        else:
-            img = img.resize((int(w * 300 / h), 300), Image.ANTIALIAS)
-
-        new_w, new_h = img.size
-        assert crop_size <= new_h and crop_size <= new_w
-        img = np.array(img)
-        crop_w = int((np.floor(new_w - crop_size)/2))
-        crop_h = int((np.floor(new_h - crop_size)/2))
-        img_crop = img[crop_h:crop_h+crop_size, crop_w:crop_w+crop_size]
-
-        return img_crop
-
     def __getitem__(self, i):
         idx = self.ids[i]
-        image_file = os.path.join(self.dir_img, self.image_rgb[idx])     # one image jpg
+        image_file = os.path.join(self.dir_img, str(self.image_rgb[idx]))     # one image jpg
         img = Image.open(image_file).convert('RGB') 
+        if idx == 0:
+            img = img.resize((960, 640), Image.ANTIALIAS)
         # img = self.preprocess(img, self.scale)
-        img = self.preprocess(img, self.crop_size)
+        # img = self.preprocess(img, self.crop_size)
+        img = np.array(img)
         img_cnt = np.ascontiguousarray(img)
         last_data = extract_keypoints(img_cnt, self.R2D2)
 
         keypoints_np = last_data['keypoints']
-        # scores = last_data['scores']
         desc_np = last_data['descriptors']
 
         points_num = np.shape(keypoints_np)[0]

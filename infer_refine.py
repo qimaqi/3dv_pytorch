@@ -88,9 +88,6 @@ def run_infer(net,refine,infer_loader,device):
 
 def save_image_tensor(input_tensor, filename):
     assert (len(input_tensor.shape) == 4 and input_tensor.shape[0] == 1)
-
-    # to cpu
-    # input_tensor = input_tensor.to(torch.device('cpu'))
     save_image(input_tensor, filename, normalize=True)
 
 
@@ -111,17 +108,6 @@ if __name__ == '__main__':
     dataset = dataset_superpoint_5k(image_list,feature_list,img_scale, pct_3D_points, crop_size)
     infer_loader = DataLoader(dataset, batch_size=batch_size, shuffle=False, num_workers=1, pin_memory=True, drop_last=True)
     n_infer = int(len(dataset))
-
-    # logging.info('Starting infering:\n'        
-    # '\tBatch size:       %s\n'        
-    # '\tInfer size:       %s\n'
-    # '\tCheckpoints:      %s\n' 
-    # '\tDevice:           %s\n'          
-    # , batch_size, n_infer, dir_checkpoint, device.type
-    # )
-    
-
-
     run_infer(net,refine,infer_loader,device)
 
         

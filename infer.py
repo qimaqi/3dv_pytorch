@@ -1,3 +1,5 @@
+import unet
+from unetpp.Unet_pluspluls import UNet_Nested
 import torch
 import torch.nn.functional as F
 import torch.nn as nn
@@ -9,14 +11,15 @@ from torch.utils.data import DataLoader
 from PIL import Image
 
 from torchvision.utils import save_image
-from unet import UNet
+# from unet import UNet
+# from unet import InvNet
+from unetpp import UNet_Nested
 import os
 
 # infer_output_dir = '/cluster/scratch/jiaqiu/infer_output_13_05/'
-infer_output_dir = 'D:/infer_output_2000_1/'
-infer_origin_dir = 'D:/infer_origin/'
-# dir_checkpoint = '/cluster/scratch/jiaqiu/checkpoints_12_5_test/14.pth'
-dir_checkpoint = 'D:/scale1_2000/14.pth'
+infer_output_dir = 'D:/pp_6000/'
+# infer_origin_dir = 'D:/infer_origin/'
+dir_checkpoint = 'D:/checkpoints_pp_6000/9.pth'
 
 
 
@@ -38,7 +41,7 @@ if __name__ == '__main__':
     # pct_3D_points = 0
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-    net = UNet(n_channels=128, n_classes=1)  
+    net = UNet_Nested(n_channels=128, n_classes=1)  
     net.load_state_dict(
         torch.load(dir_checkpoint)
         )
@@ -58,15 +61,15 @@ if __name__ == '__main__':
             'scale_f': 2**0.25,
             'min_scale': 0,
             'max_scale': 1,
-            'min_size': 128, 
+            'min_size': 256, 
             'max_size': 1024,
-            'max_keypoints': 2000
+            'max_keypoints': 6000
         }
     }
     try:
         logging.info('Created checkpoint directory')
         os.mkdir(infer_output_dir)
-        os.mkdir(infer_origin_dir)
+        # os.mkdir(infer_origin_dir)
     except OSError:
         pass
 
@@ -103,9 +106,9 @@ if __name__ == '__main__':
                 pred = (pred+1.)*127.5
                 # pred = upsample(pred)
                 ouput_path = infer_output_dir + str(index) + '.png'
-                origin_path = infer_origin_dir + str(index) + '.png'
+                # origin_path = infer_origin_dir + str(index) + '.png'
                 save_image_tensor(pred,ouput_path)
-                save_image_tensor(image,origin_path)
+                # save_image_tensor(image,origin_path)
                 del pred 
                 torch.cuda.empty_cache()
         except:
@@ -120,8 +123,8 @@ if __name__ == '__main__':
                 pred = (pred+1.)*127.5
                 # pred = upsample(pred)
                 ouput_path = infer_output_dir + str(index) + '.png'
-                origin_path = infer_origin_dir + str(index) + '.png'
+                # origin_path = infer_origin_dir + str(index) + '.png'
                 save_image_tensor(pred,ouput_path)
-                save_image_tensor(image,origin_path)
+                # save_image_tensor(image,origin_path)
                 del pred 
                 torch.cuda.empty_cache()

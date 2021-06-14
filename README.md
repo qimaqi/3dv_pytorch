@@ -9,3 +9,11 @@
 
 
 
+matplotlib
+numpy
+Pillow
+torch
+torchvision
+tensorboard
+future
+tqdm

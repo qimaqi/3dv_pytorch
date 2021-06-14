@@ -14,7 +14,8 @@ from torch import optim
 
 from eval import eval_net
 from unet import UNet
-# from unet import UNet
+# from unet import InvNet
+# from unetpp import UNet_Nested
 
 from utils.dataset import R2D2_dataset
 from torch.utils.data import DataLoader
@@ -34,13 +35,9 @@ def train_net(net,
               epochs=10,
               batch_size=8,
               lr=0.001,
-              val_percent=0.1,
               save_cp=True
               ):
 
-    #save_cp = False
-    
-    # imgs_dir, pos_dir, desc_dir, pct_points, max_points, crop_size
     train = R2D2_dataset('train', dataset_config)
     n_train = len(train)
     val = R2D2_dataset('val', dataset_config)
@@ -66,21 +63,13 @@ def train_net(net,
     #optimizer = optim.RMSprop(net.parameters(), lr=lr, weight_decay=1e-8, momentum=0.9)
     optimizer = optim.Adam(net.parameters(), lr=lr, eps = 1e-8)
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=3)
-    #scheduler = optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=5, T_mult=1) pytorch 1.01
-    #scheduler = optim.lr_scheduler.MultiStepLR(optimizer, milestones=[5,12,16], gamma=0.1)
-
     pixel_criterion = nn.L1Loss()       
     percepton_criterion = VGGPerception()
     percepton_criterion.to(device=device)
     l2_loss = nn.MSELoss()
 
-    #if net.n_classes > 1:    # RGB need to reform
-    #    criterion = nn.CrossEntropyLoss()
-    #else:
-    #    criterion = nn.BCEWithLogitsLoss()
     for epoch in range(epochs):
         net.train()
-        #print('epoch start time',time.ctime())
 
         epoch_loss = 0
         for batch in train_loader:
@@ -97,8 +86,6 @@ def train_net(net,
             P_pred = percepton_criterion(cpred)
             P_img = percepton_criterion(true_imgs)   ### check perceptional repeat
             perception_loss = ( l2_loss(P_pred[0],P_img[0]) + l2_loss(P_pred[1],P_img[1]) + l2_loss(P_pred[2],P_img[2])) / 3
-            #print(cpred.size())#([1, 1, 168, 224])
-            # print(true_imgs.size()) #([1, 1, 168, 224])
             pixel_loss = pixel_criterion(cpred/255,true_imgs/255) 
             loss = pixel_loss*pix_loss_wt + perception_loss*per_loss_wt
 
@@ -112,19 +99,7 @@ def train_net(net,
             loss.backward()
             nn.utils.clip_grad_value_(net.parameters(), 0.1)
             optimizer.step()
-            # print('pixel_loss: ',pixel_loss, 'perception_loss:', perception_loss)
             global_step += 1
-            # debug part
-            #if global_step % (n_train // (10 * batch_size)) == 0:
-            #    tmp_output_dir = '/cluster/scratch/qimaqi/debug_output/' +str(global_step) + '.png'
-            #    tmp_img_dir = '/cluster/scratch/qimaqi/debug_images/'+ str(global_step) + '.png'
-            #    save_image_tensor(cpred,tmp_output_dir)
-            #    save_image_tensor(true_imgs,tmp_img_dir)
-            #    print('cpred maximum', torch.max(cpred))
-            #    print('cpred minimum', torch.min(cpred))
-            #    print('true_images maximum', torch.max(true_imgs))
-            #    print('true_images minimum', torch.min(true_imgs))
-
             if global_step % (n_train // (10 * batch_size)) == 0:
                 for tag, value in net.named_parameters():
                     tag = tag.replace('.', '/')
@@ -149,27 +124,6 @@ def train_net(net,
             torch.save(net.state_dict(),
                        dir_checkpoint + str(epoch+1) + '.pth')
             logging.info('Checkpoint %s saved! ',epoch+1)
-
-    #writer.close()
-
-# def parse_args():
-#     parser = argparse.ArgumentParser(description='Train the CoarseNet on images and correspond superpoint descripton',
-#                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-#     parser.add_argument(
-#         '-c',
-#         '--config',
-#         type=str,
-#         default='configs/train_parameter.yaml',
-#         help='config file path')
-#     parser.add_argument(
-#         '-o',
-#         '--override',
-#         action='append',
-#         default=[],
-#         help='config options to be overridden')
-#     args = parser.parse_args()
-#     return args
-
 
 def get_args():
     parser = argparse.ArgumentParser(description='Train the CoarseNet on images and correspond superpoint descripton',
@@ -243,8 +197,6 @@ if __name__ == '__main__':
     output_channel = args.output
     assert output_channel == 1 or output_channel == 3, 'output channel is not grey or RGB'
 
-    #net = InvNet(n_channels=257, n_classes=1)   
-    # bilinear good or not???
     net = UNet(n_channels=input_channel, n_classes=output_channel, bilinear=True)
     logging.info('Network:UNet \n'
             '\t %s channels input channels\n' 
@@ -258,8 +210,6 @@ if __name__ == '__main__':
         logging.info('Model loaded from %s', args.load)
 
     net.to(device=device)
-    # faster convolutions, but more memory
-    # cudnn.benchmark = True
 
     try:
         train_net(net=net,
@@ -269,11 +219,10 @@ if __name__ == '__main__':
                   device=device,
                   dataset_config = dataset_config,
                   per_loss_wt = args.per_loss_wt,
-                  pix_loss_wt = args.pix_loss_wt,
-                  val_percent=args.val / 100)
+                  pix_loss_wt = args.pix_loss_wt
+                  )
     except KeyboardInterrupt:
         torch.save(net.state_dict(), 'INTERRUPTED.pth')
-        #logging.info('Saved interrupt')
         try:
             sys.exit(0)
         except SystemExit:
