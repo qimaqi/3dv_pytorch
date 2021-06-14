@@ -233,11 +233,10 @@ class BasicDataset3(Dataset):
 
 
 class dataset_superpoint_5k(Dataset):
-    def __init__(self, image_list, feature_list,scale, pct_3D_points, crop_size, max_points=4000):
+    def __init__(self, image_list, feature_list,scale, crop_size, max_points=4000):
         self.image_list = image_list
         self.feature_list = feature_list
         self.scale = scale
-        self.pct_3D_points = pct_3D_points
         self.crop_size = crop_size
         self.max_points = max_points
         assert 0 < scale <= 1, 'Scale must be between 0 and 1'
@@ -418,11 +417,10 @@ class InferDataset(Dataset):
 
 
 class dataset_superpoint_5k_online(Dataset):
-    def __init__(self, image_list, feature_list,scale, pct_3D_points, crop_size, max_points=4000):
+    def __init__(self, image_list, feature_list,scale, crop_size, max_points=4000):
         self.image_list = image_list
         self.feature_list = feature_list
         self.scale = scale
-        self.pct_3D_points = pct_3D_points
         self.crop_size = crop_size
         self.max_points = max_points
         assert 0 < scale <= 1, 'Scale must be between 0 and 1'

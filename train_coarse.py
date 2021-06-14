@@ -75,26 +75,23 @@ def save_image_tensor(input_tensor, filename):
 
 def train_net(net,
               device,
+              img_scale,
               max_points,
-              pct_points,
-              input_channel,
-              output_channel,
               crop_size, 
               per_loss_wt,
               pix_loss_wt,
               epochs=10,
               batch_size=8,
               lr=0.001,
-              val_percent=0.1,
               save_cp=True
               ):
 
-    #save_cp = Fals
-    img_scale = 1 
-    pct_3D_points=0
-    dataset = dataset_superpoint_5k(image_list,feature_list,img_scale, pct_3D_points, crop_size, max_points)
-    val_dataset = dataset_superpoint_5k(val_image_list,val_feature_list,img_scale, pct_3D_points, crop_size, max_points)
-    # dataset = dataset_superpoint_5k_online(image_list,feature_list,img_scale, pct_3D_points, crop_size, max_points)
+    ########### if you want to use already generate feature then use offline below ##############
+    dataset = dataset_superpoint_5k(image_list,feature_list,img_scale, crop_size, max_points)
+    val_dataset = dataset_superpoint_5k(val_image_list,val_feature_list,img_scale, crop_size, max_points)
+    
+    ############## if you want to use superpoint online in parallel to process with data ##############
+    # dataset = dataset_superpoint_5k_online(image_list,feature_list,img_scale, pct_3D_points, crop_size, max_points)  
     # val_dataset = dataset_superpoint_5k_online(val_image_list,val_feature_list,img_scale, pct_3D_points, crop_size, max_points)
     n_train = len(dataset)
     n_val = len(val_dataset)
@@ -116,6 +113,8 @@ def train_net(net,
         , epochs, batch_size, lr, n_train, n_val, save_cp, device.type, crop_size
         )
 
+    ########## different optimizer and learning rate scheduler strategy ##############
+
     #optimizer = optim.RMSprop(net.parameters(), lr=lr, weight_decay=1e-8, momentum=0.9)
     optimizer = optim.Adam(net.parameters(), lr=lr, eps = 1e-8)
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=2)
@@ -128,13 +127,8 @@ def train_net(net,
     l2_loss = nn.MSELoss()
     ssim_loss = pytorch_ssim.SSIM()
 
-    #if net.n_classes > 1:    # RGB need to reform
-    #    criterion = nn.CrossEntropyLoss()
-    #else:
-    #    criterion = nn.BCEWithLogitsLoss()
     for epoch in range(epochs):
         net.train()
-        #print('epoch start time',time.ctime())
 
         epoch_loss = 0
         for batch in train_loader:
@@ -145,14 +139,13 @@ def train_net(net,
             input_features = input_features.to(device=device, dtype=torch.float32)
             true_imgs = true_imgs.to(device=device, dtype=torch.float32)
 
-            pred = net(input_features)  # ##### check the max and min
+            pred = net(input_features)  
             cpred = (pred+1.)*127.5     # 0-255
             
             P_pred = percepton_criterion(cpred)
-            P_img = percepton_criterion(true_imgs)   ### check perceptional repeat
+            P_img = percepton_criterion(true_imgs)  
             perception_loss = ( l2_loss(P_pred[0],P_img[0]) + l2_loss(P_pred[1],P_img[1]) + l2_loss(P_pred[2],P_img[2])) / 3
-            #print(cpred.size())#([1, 1, 168, 224])
-            # print(true_imgs.size()) #([1, 1, 168, 224])
+
             pixel_loss = pixel_criterion(cpred/255,true_imgs/255) 
             ssim_out = -ssim_loss(cpred, true_imgs)
             ssim_value = - ssim_out.item()
@@ -171,25 +164,13 @@ def train_net(net,
 
 
             global_step += 1
-            # debug part
-            #if global_step % (n_train // (10 * batch_size)) == 0:
-            #    tmp_output_dir = '/cluster/scratch/qimaqi/debug_output/' +str(global_step) + '.png'
-            #    tmp_img_dir = '/cluster/scratch/qimaqi/debug_images/'+ str(global_step) + '.png'
-            #    save_image_tensor(cpred,tmp_output_dir)
-            #    save_image_tensor(true_imgs,tmp_img_dir)
-            #    print('cpred maximum', torch.max(cpred))
-            #    print('cpred minimum', torch.min(cpred))
-            #    print('true_images maximum', torch.max(true_imgs))
-            #    print('true_images minimum', torch.min(true_imgs))
-
             if global_step % (n_train // (5 * batch_size)) == 0:
                 for tag, value in net.named_parameters():
                     tag = tag.replace('.', '/')
                     writer.add_histogram('weights/' + tag, value.data.cpu().numpy(), global_step)
                     writer.add_histogram('grads/' + tag, value.grad.data.cpu().numpy(), global_step)
-                #print('eval start time',time.ctime())
+
                 val_score = eval_net(net, val_loader, device)
-                #print('epoch end time',time.ctime())
                 scheduler.step(val_score)
                 print('Coarsenet score: ',(val_score), 'in epoch', epoch )
                 writer.add_scalar('learning_rate', optimizer.param_groups[0]['lr'], global_step)
@@ -208,7 +189,7 @@ def train_net(net,
                         dir_checkpoint + str(epoch+1) + '.pth')
                 logging.info('Checkpoint %s saved! ',epoch+1)
 
-    #writer.close()
+    writer.close()
 
 
 def get_args():
@@ -226,8 +207,8 @@ def get_args():
                         help='Percent of the data that is used as validation (0-100)')            
     parser.add_argument("--crop_size", type=int, default=256,     # to do
                         help="%(type)s: Size to crop images to (default: %(default)s)")
-    parser.add_argument("--pct_points", type=float, default=1.0,
-                        help="choose disparse point for reconstruction")
+    parser.add_argument("--image_rescale", type=float, default=1.0,
+                        help="choose scale to resize images in data augumentation")
     parser.add_argument("--max_points", type=int, default=6000,
                         help="maximum feature used for reconstruction")
     parser.add_argument("--per_loss_wt", type=float, default=5.0, help="%(type)s: Perceptual loss weight (default: %(default)s)")   # 5 perceptual loss
@@ -256,9 +237,10 @@ if __name__ == '__main__':
     output_channel = args.output
     assert output_channel == 1 or output_channel == 3, 'output channel is not grey or RGB'
 
-    # change here if you want to change different model
+    ########### change here if you want to change different model ##############
     # net = InvNet(n_channels=256, n_classes=1)    
-    # net = UNet_Nested(n_channels=input_channel, n_classes=output_channel) 
+    # net = UNet_Nested(n_channels=input_channel, n_classes=output_channel)
+     
     net = UNet(n_channels=input_channel, n_classes=output_channel, bilinear=True)
     logging.info('Network: Unet with SSIM \n'
             '\t %s Max points used\n' 
@@ -273,8 +255,6 @@ if __name__ == '__main__':
         logging.info('Model loaded from %s', args.load)
 
     net.to(device=device)
-    # faster convolutions, but more memory
-    # cudnn.benchmark = True
 
     try:
         train_net(net=net,
@@ -282,17 +262,14 @@ if __name__ == '__main__':
                   batch_size=args.batchsize,
                   lr=args.lr,
                   device=device,
-                  pct_points = args.pct_points,
+                  img_scale= args.image_rescale,
                   max_points = args.max_points,
                   crop_size = args.crop_size,
                   per_loss_wt = args.per_loss_wt,
-                  pix_loss_wt = args.pix_loss_wt,
-                  input_channel = input_channel,
-                  output_channel = output_channel,
-                  val_percent=args.val / 100)
+                  pix_loss_wt = args.pix_loss_wt)
     except KeyboardInterrupt:
         torch.save(net.state_dict(), 'INTERRUPTED.pth')
-        #logging.info('Saved interrupt')
+        logging.info('Saved interrupt')
         try:
             sys.exit(0)
         except SystemExit:
