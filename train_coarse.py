@@ -1,6 +1,3 @@
-# Edited By Qi Ma 
-# qimaqi@student.ethz.ch
-
 import argparse
 import logging
 import os
