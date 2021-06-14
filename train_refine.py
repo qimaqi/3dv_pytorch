@@ -1,5 +1,5 @@
-# Edited By Qi Ma 
-# qimaqi@student.ethz.ch
+# Edited By Rui Wang
+# ruiwang46@student.ethz.ch
 
 import argparse
 import logging
