@@ -7,6 +7,8 @@
 > pip install -r requirements.txt
 
 ```
+## dataset preparation 
+[Superpoint pretrained Weight](https://github.com/magicleap/SuperPointPretrainedNetwork.git)
 
 ## Training Reconstruction Network
 
