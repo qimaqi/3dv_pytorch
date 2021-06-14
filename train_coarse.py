@@ -14,8 +14,8 @@ from torch import optim
 
 from eval import eval_net
 from unet import UNet
-# from unet import InvNet
-# from unetpp import UNet_Nested
+from invnet import InvNet
+from unetpp import UNet_Nested
 
 from utils.dataset import R2D2_dataset
 from torch.utils.data import DataLoader
@@ -91,11 +91,7 @@ def train_net(net,
 
             epoch_loss += loss.item()
             writer.add_scalar('Loss/train', loss.item(), global_step)
-
-
             optimizer.zero_grad()
-
-
             loss.backward()
             nn.utils.clip_grad_value_(net.parameters(), 0.1)
             optimizer.step()

@@ -7,11 +7,12 @@ from tools import common
 from tools.dataloader import norm_RGB
 from nets.patchnet import *
 
-
 def load_network(model_fn): 
     checkpoint = torch.load(model_fn)
+    print("\n>> Creating net = " + checkpoint['net']) 
     net = eval(checkpoint['net'])
     nb_of_weights = common.model_size(net)
+    print(f" ( Model size: {nb_of_weights/1000:.0f}K parameters )")
 
     # initialization
     weights = checkpoint['state_dict']
@@ -38,6 +39,7 @@ class NonMaxSuppression (torch.nn.Module):
         maxima *= (reliability   >= self.rel_thr)
 
         return maxima.nonzero().t()[2:4]
+
 
 def extract_multiscale( net, img, detector, scale_f=2**0.25, 
                         min_scale=0.0, max_scale=1, 
@@ -99,44 +101,22 @@ def extract_multiscale( net, img, detector, scale_f=2**0.25,
     D = torch.cat(D)
     return XYS, D, scores
 
-# def load_annotations(fname):
-#     with open(fname,'r') as f:
-#         data = [line.strip().split(' ') for line in f]
-#     return np.array(data)
+def load_annotations(fname):
+    with open(fname,'r') as f:
+        data = [line.strip().split(' ') for line in f]
+    return np.array(data)
     
-# def read_image(impath,resize_scale):
-#     img = Image.open(impath).convert('RGB')
-#     w,h = img.size
-#     new_w = int(resize_scale*w)
-#     new_h = int(resize_scale*h)
-#     img = img.resize((new_w, new_h), Image.ANTIALIAS)
-#     img = np.array(img)
-#     return img
+def read_image(impath,resize_scale):
+    img = Image.open(impath).convert('RGB')
+    w,h = img.size
+    new_w = int(resize_scale*w)
+    new_h = int(resize_scale*h)
+    img = img.resize((new_w, new_h), Image.ANTIALIAS)
+    img = np.array(img)
+    return img
 
 
-
-def remove_borders(keypoints, descriptors, scores, border: int, height: int, width: int):
-    """ Removes keypoints too close to the border """
-    mask = []
-    for i in range(keypoints.shape[0]):
-        mask_w = (keypoints[i, 0] >= border) & (keypoints[i, 0] < (width - border))
-        mask_h = (keypoints[i, 1] >= border) & (keypoints[i, 1] < (height - border))
-        if mask_h & mask_w == 1:
-            mask.append(i)
-    return keypoints[mask], descriptors[mask], scores[mask]
-
-def extract_keypoints(input_img, config):
-    gpu = config['gpu']
-    model = config['model']
-    reliability_thr = config['reliability_thr']
-    repeatability_thr = config['repeatability_thr']
-    scale_f = config['scale_f']
-    min_scale = config['min_scale'] 
-    max_scale = config['max_scale'] 
-    min_size = config['min_size']
-    max_size = config['max_size'] 
-    top_k = config['max_keypoints']
-
+def extract_keypoints(input_img, gpu, model, reliability_thr, repeatability_thr, scale_f, min_scale, max_scale, min_size, max_size, top_k):
     iscuda = common.torch_set_gpu(gpu)
 
     # load the network...
@@ -148,27 +128,69 @@ def extract_keypoints(input_img, config):
         rel_thr = reliability_thr, 
         rep_thr = repeatability_thr)
     
-    img = input_img  
-    H, W, _ = img.shape
-
+    img = input_img
     img = norm_RGB(img)[None]
-
+    print(i)
     if iscuda: img = img.cuda()
 
     # extract keypoints/descriptors for a single image
     xys, desc, scores = extract_multiscale(net, img, detector, scale_f, min_scale, 
-        max_scale, min_size, max_size, verbose = False)
+        max_scale, min_size, max_size, verbose = True)
     
     xys = xys.cpu().numpy()
     desc = desc.cpu().numpy()
     scores = scores.cpu().numpy()
-    border = 4
-    xys, desc, scores = remove_borders(xys, desc, scores, border, H, W)
     idxs = scores.argsort()[-top_k or None:]
+
+    print(f"Saving {len(idxs)}")
     keypoints = xys[idxs]
     descriptors = desc[idxs]
-    return {
-            'keypoints': keypoints,
-            'descriptors': descriptors,
-        }
 
+    return keypoints, descriptors
+
+if __name__ == '__main__':
+
+    model = './models/r2d2_WAF_N16.pt'
+    scale_f = 2**0.25
+    min_size = 256
+    max_size = 1024
+    min_scale = 0
+    max_scale = 1
+    reliability_thr = 0.7
+    repeatability_thr = 0.7
+    gpu = 0
+    top_k = 6000
+
+    base_image_dir= '/cluster/scratch/jiaqiu/npz_torch_data/'
+    save_source_dir = '/cluster/scratch/jiaqiu/'
+    feature_type = 'r2d2'
+    resize_scale = 1 ## [0.6, 0.8, 1]
+
+    train_5k=load_annotations(os.path.join(base_image_dir,'anns/demo_5k/train.txt'))
+    train_5k=train_5k[:,4]
+    
+    test_5k=load_annotations(os.path.join(base_image_dir,'anns/demo_5k/test.txt'))
+    test_5k=test_5k[:,4]
+    
+    val_5k=load_annotations(os.path.join(base_image_dir,'anns/demo_5k/val.txt'))
+    val_5k=val_5k[:,4]
+
+    image_list=list(train_5k)+list(test_5k)+list(val_5k)
+
+    temp_name = 'resize_data_'
+    save_dir = os.path.join(save_source_dir,temp_name+feature_type+'_'+str(resize_scale))
+
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
+
+    print('start saving data')
+    for i in range(len(image_list)):
+        temp=image_list[i].strip()
+        test_image=os.path.join(base_image_dir, temp)
+        save_name=temp.replace('/','^_^')
+        #Get points and descriptors.
+        input_img = read_image(test_image,resize_scale)
+
+        keypoints, descriptors = extract_keypoints(input_img, gpu, model, reliability_thr, repeatability_thr, scale_f, min_scale, max_scale, min_size, max_size, top_k)
+
+        np.savez_compressed(os.path.join(save_dir,save_name), pts=keypoints, desc=descriptors)
