@@ -8,10 +8,14 @@
 
 ```
 ## dataset preparation 
-[Superpoint pretrained Weight](https://github.com/magicleap/SuperPointPretrainedNetwork.git)
+Download Megadepth and NYU dataset at [dgrive](https://drive.google.com/file/d/1StpUiEauckZcxHZeBzoq6L2K7pcB9v3E/view?usp=drive_open). Untar the file at the project folder.
+
+Dwonload SuperPoint Pretrained Weight from [repo](https://github.com/magicleap/SuperPointPretrainedNetwork.git). And run Superpoint_data_preparation.py to prepare SuperPoint data.
 
 ## Training Reconstruction Network
+Use train_coarse.py to use the reconstruction network.
 
+The weight are set to be 1, 5 for pixel loss and perceptron loss respectively, trained with 24 epochs. The images are reconstructed with high quality. The spacity of input feature could be manupulated in the corresponding dataloader.
 
 ## Training Refine Network
 
