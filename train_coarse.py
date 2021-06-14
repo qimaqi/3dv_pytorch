@@ -13,7 +13,7 @@ import torch.nn as nn
 from torch import optim
 
 from eval import eval_net
-#from unet import InvNet
+from invnet import InvNet
 from unet import UNet
 import pytorch_ssim
 
@@ -24,37 +24,22 @@ from vgg import VGGPerception
 from torch.utils.tensorboard import SummaryWriter
 import time
 
-# To do
-# delete useless code and make it clear
-# to use logging and attribute feature 
-# infer to test the result
-
-
-#some default dir need images descripton, pos and depth. Attention this time desc and pos is in json !!!!!!!!!!
 def load_annotations(fname):
     with open(fname,'r') as f:
         data = [line.strip().split(' ') for line in f]
     return np.array(data)
 
-#some default dir need images descripton, pos and depth. Attention this time desc and pos is in json !!!!!!!!!!
-# dir_img = '../data/nyu_v1_images/'     ####### QM:change data directory path
-# #dir_features = '../data/nyu_v1_features/'
-# dir_desc = '../data/nyu_v1_desc/'
-dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_30_5_unet_max_6000_lr1e-4_ssim/'
-# dir_depth = '../data/nyu_v1_depth/'
-# dir_pos = '../data/nyu_v1_pos/'
-#base_image_dir = '/home/wangr/invsfm/data'
-#base_feature_dir = '/home/wangr/superpoint_resize/resize_data_superpoint_1'
-base_image_dir= '/cluster/scratch/qimaqi/data_5k/data'           #'/Users/wangrui/Projects/invsfm/'
-base_feature_dir = '/cluster/scratch/qimaqi/data_5k/save_source_dir/resize_data_superpoint_1'
 
+###### change for your own implementation
+dir_checkpoint = '/cluster/scratch/qimaqi/checkpoints_30_5_unet_max_6000_lr1e/'  # The path that you want to save checkpoint
+base_image_dir= '/cluster/scratch/qimaqi/data_5k/data'  # The path when you data_5k images are saved
+base_feature_dir = '/cluster/scratch/qimaqi/data_5k/save_source_dir/resize_data_superpoint_1' # The path when you data_5k feature are saved (offline mode)
+
+
+# build image list for training and validation 
 train_5k=load_annotations(os.path.join(base_image_dir,'anns/demo_5k/train.txt'))
 val_5k=load_annotations(os.path.join(base_image_dir,'anns/demo_5k/val.txt'))
 test_5k=load_annotations(os.path.join(base_image_dir,'anns/demo_5k/test.txt'))
-# train_5k_pcl_xyz=train_5k[:,0]
-# train_5k_pcl_rgb=train_5k[:,1]
-# train_5k_pcl_sift=train_5k[:,2]
-# train_5k_camera=train_5k[:,3]
 train_5k_image_rgb=list(train_5k[:,4])
 val_5k_image_rgb=list(val_5k[:,4])
 test_5k_image_rgb=list(test_5k[:,4])
@@ -225,25 +210,6 @@ def train_net(net,
 
     #writer.close()
 
-# def parse_args():
-#     parser = argparse.ArgumentParser(description='Train the CoarseNet on images and correspond superpoint descripton',
-#                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-#     parser.add_argument(
-#         '-c',
-#         '--config',
-#         type=str,
-#         default='configs/train_parameter.yaml',
-#         help='config file path')
-#     parser.add_argument(
-#         '-o',
-#         '--override',
-#         action='append',
-#         default=[],
-#         help='config options to be overridden')
-#     args = parser.parse_args()
-#     return args
-# some checkpoints
-# unet1000 '/cluster/scratch/qimaqi/checkpoints_17_5_unet_max_1000_lr1e-4/5.pth',
 
 def get_args():
     parser = argparse.ArgumentParser(description='Train the CoarseNet on images and correspond superpoint descripton',
@@ -254,7 +220,7 @@ def get_args():
                         help='Batch size', dest='batchsize')
     parser.add_argument('-l', '--learning-rate', metavar='LR', type=float, nargs='?', default=1e-4,
                         help='Learning rate', dest='lr')
-    parser.add_argument('-f', '--load', dest='load', type=str, default= False,#'/cluster/scratch/qimaqi/checkpoints_17_5_unet_max_1000_lr1e-4/5.pth',
+    parser.add_argument('-f', '--load', dest='load', type=str, default= False,# load your pth for example '/cluster/scratch/qimaqi/checkpoints_17_5_unet_max_1000_lr1e-4/5.pth',
                         help='Load model from a pretrain .pth file')
     parser.add_argument('-v', '--validation', dest='val', type=float, default=10.0,
                         help='Percent of the data that is used as validation (0-100)')            
@@ -264,8 +230,8 @@ def get_args():
                         help="choose disparse point for reconstruction")
     parser.add_argument("--max_points", type=int, default=6000,
                         help="maximum feature used for reconstruction")
-    parser.add_argument("--per_loss_wt", type=float, default=5.0, help="%(type)s: Perceptual loss weight (default: %(default)s)")   
-    parser.add_argument("--pix_loss_wt", type=float, default=1.0, help="%(type)s: Pixel loss weight (default: %(default)s)")           
+    parser.add_argument("--per_loss_wt", type=float, default=5.0, help="%(type)s: Perceptual loss weight (default: %(default)s)")   # 5 perceptual loss
+    parser.add_argument("--pix_loss_wt", type=float, default=1.0, help="%(type)s: Pixel loss weight (default: %(default)s)")        # 1 perceptual loss do not recommend to change
     parser.add_argument("--feature", type=str, default='Superpoint', help="%(type)s: R2D2 or Superpoint (default: %(default)s)")           
     parser.add_argument("--output", type=int, default=1, help="%(type)s: output 1 is greyscale and output 3 is RGB (default: %(default)s)")           
 
@@ -290,8 +256,8 @@ if __name__ == '__main__':
     output_channel = args.output
     assert output_channel == 1 or output_channel == 3, 'output channel is not grey or RGB'
 
-    #net = InvNet(n_channels=256, n_classes=1)   
-    # bilinear good or not???
+    #net = InvNet(n_channels=256, n_classes=1)    # change here if you want to change different model
+
     net = UNet(n_channels=input_channel, n_classes=output_channel, bilinear=True)
     logging.info('Network: Unet with SSIM \n'
             '\t %s Max points used\n' 
