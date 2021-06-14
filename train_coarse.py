@@ -15,9 +15,10 @@ from torch import optim
 from eval import eval_net
 from invnet import InvNet
 from unet import UNet
+from unetplusplus import UNet_Nested
 import pytorch_ssim
 
-from utils.dataset import dataset_superpoint_5k
+from utils.dataset import dataset_superpoint_5k, dataset_superpoint_5k_online
 from torch.utils.data import DataLoader, random_split
 import torchvision.models as models
 from vgg import VGGPerception
@@ -93,9 +94,8 @@ def train_net(net,
     pct_3D_points=0
     dataset = dataset_superpoint_5k(image_list,feature_list,img_scale, pct_3D_points, crop_size, max_points)
     val_dataset = dataset_superpoint_5k(val_image_list,val_feature_list,img_scale, pct_3D_points, crop_size, max_points)
-    # n_val = int(len(dataset) * val_percent)
-    # n_train = len(dataset) - n_val
-    # train, val = random_split(dataset, [n_train, n_val])
+    # dataset = dataset_superpoint_5k_online(image_list,feature_list,img_scale, pct_3D_points, crop_size, max_points)
+    # val_dataset = dataset_superpoint_5k_online(val_image_list,val_feature_list,img_scale, pct_3D_points, crop_size, max_points)
     n_train = len(dataset)
     n_val = len(val_dataset)
     train_loader = DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=True)
@@ -256,8 +256,9 @@ if __name__ == '__main__':
     output_channel = args.output
     assert output_channel == 1 or output_channel == 3, 'output channel is not grey or RGB'
 
-    #net = InvNet(n_channels=256, n_classes=1)    # change here if you want to change different model
-
+    # change here if you want to change different model
+    # net = InvNet(n_channels=256, n_classes=1)    
+    # net = UNet_Nested(n_channels=input_channel, n_classes=output_channel) 
     net = UNet(n_channels=input_channel, n_classes=output_channel, bilinear=True)
     logging.info('Network: Unet with SSIM \n'
             '\t %s Max points used\n' 
